@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JHR Quantum Roulette - Professional Casino Gaming</title>
+    <link rel="icon" type="image/png" href="https://www.genspark.ai/api/files/s/m7ZXdmBM">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a1f14 0%, #1a472a 100%);
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        #rouletteCanvas {
+            display: block;
+            margin: 0 auto;
+            background: #1a472a;
+        }
+        
+        .info-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .version {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .shortcuts {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .shortcuts span {
+            margin: 0 10px;
+        }
+        
+        .shortcuts kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- Info Bar -->
+    <div class="info-bar">
+        <div class="version">
+            🎰 JHR QUANTUM ROULETTE - v1.0.1 🎵
+        </div>
+        <div class="shortcuts">
+            <span><kbd>SPACE</kbd> Test Spin</span>
+            <span><kbd>S</kbd> Stats</span>
+            <span><kbd>H</kbd> Hot/Cold</span>
+            <span><kbd>R</kbd> Reality Check</span>
+            <span><kbd>M</kbd> Music Toggle</span>
+        </div>
+    </div>
+    
+    <!-- Canvas Principal -->
+    <canvas id="rouletteCanvas"></canvas>
+    
+    <!-- ========== SCRIPTS: v1.0.1 (MULTIMEDIA) ========== -->
+    
+    <script src="assets/assets-config.js"></script>
+    <script src="audio/audio-manager.js"></script>
+    
+    <!-- ========== SCRIPTS: CORE ========== -->
+    
+    <!-- v0.1.1: RNG Engine -->
+    <script src="engine/roulette-data.js"></script>
+    <script src="engine/wheel-order.js"></script>
+    <script src="engine/rng-production.js"></script>
+    <script src="engine/rng-seeded.js"></script>
+    <script src="engine/roulette-engine.js"></script>
+    
+    <!-- v0.1.2: Canvas Manager -->
+    <script src="core/canvas-manager.js"></script>
+    <script src="core/orientation-lock.js"></script>
+    
+    <!-- v0.1.3: Payout System -->
+    <script src="betting/bet-types.js"></script>
+    <script src="betting/payout-calculator.js"></script>
+    
+    <!-- v0.1.4: Bankroll -->
+    <script src="betting/bankroll-manager.js"></script>
+    <script src="ui/balance-ui.js"></script>
+    
+    <!-- ========== SCRIPTS: v0.1.13 (HISTORIAL + HOT/COLD) ========== -->
+    
+    <script src="betting/history-manager.js"></script>
+    <script src="betting/hot-cold-calculator.js"></script>
+    <script src="ui/ui-history-ticker.js"></script>
+    <script src="ui/ui-hot-cold-panel.js"></script>
+    <script src="betting/spin-controller.js"></script>
+    
+    <!-- ========== SCRIPTS: v0.1.14 (SESIÓN + TIEMPO) ========== -->
+    
+    <script src="effects/visual-effects.js"></script>
+    <script src="session/session-clock.js"></script>
+    <script src="session/session-timer.js"></script>
+    <script src="session/reality-check.js"></script>
+    <script src="session/session-stats.js"></script>
+    <script src="ui/ui-session-info.js"></script>
+    
+    <!-- ========== SCRIPTS: TESTS ========== -->
+    
+    <script src="tests/tests-engine.js"></script>
+    <script src="tests/tests-payout.js"></script>
+    <script src="tests/tests-bankroll.js"></script>
+    <script src="tests/tests-history.js"></script>
+    
+    <!-- ========== MAIN APP ========== -->
+    
+    <script src="main.js"></script>
+    
+    <script>
+        // Log de carga
+        console.log('%c ═══════════════════════════════════════════', 'color: #FFD700');
+        console.log('%c   JHR QUANTUM ROULETTE - v1.0.1 (MULTIMEDIA)', 'color: #FFD700; font-weight: bold; font-size: 16px');
+        console.log('%c ═══════════════════════════════════════════', 'color: #FFD700');
+        console.log('');
+        console.log('%c ✓ Sistema de historial cargado', 'color: #00FF00');
+        console.log('%c ✓ Análisis Hot/Cold cargado', 'color: #00FF00');
+        console.log('%c ✓ Sistema de sesión cargado', 'color: #00FF00');
+        console.log('%c ✓ Reality Check cargado', 'color: #00FF00');
+        console.log('%c ✓ Sistema de audio cargado', 'color: #00FF00');
+        console.log('%c ✓ Assets visuales cargados', 'color: #00FF00');
+        console.log('');
+        console.log('%c Funciones disponibles:', 'color: #FFD700; font-weight: bold');
+        console.log('  • testSpin() - Giro de prueba');
+        console.log('  • quickTest5Spins() - 5 giros rápidos');
+        console.log('  • simulateSession(N) - Simular N giros');
+        console.log('  • printStats() - Mostrar estadísticas');
+        console.log('  • exportSession() - Exportar a JSON');
+        console.log('  • runHistoryTests() - Tests de historial');
+        console.log('  • audioManager.toggleMusic() - Toggle música');
+        console.log('');
+        console.log('%c Atajos de teclado:', 'color: #FFD700; font-weight: bold');
+        console.log('  • SPACE - Test Spin');
+        console.log('  • S - Mostrar estadísticas');
+        console.log('  • H - Análisis Hot/Cold');
+        console.log('  • R - Reality Check manual');
+        console.log('  • M - Toggle música');
+        console.log('');
+    </script>
+</body>
+</html>

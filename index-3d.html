@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JHR Quantum Roulette 3D - AAA Casino Experience</title>
+    <link rel="icon" type="image/png" href="https://www.genspark.ai/api/files/s/m7ZXdmBM">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a1f14 0%, #1a472a 100%);
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        #rouletteCanvas {
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #canvas3D {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+        
+        .info-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .version {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .mode-badge {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .shortcuts {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .shortcuts span {
+            margin: 0 10px;
+        }
+        
+        .shortcuts kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: monospace;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 31, 20, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-screen.hidden {
+            display: none;
+        }
+        
+        .loading-screen h1 {
+            color: #FFD700;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <h1>🎰 JHR QUANTUM ROULETTE</h1>
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Inicializando motor 3D...</p>
+    </div>
+    
+    <!-- Info Bar -->
+    <div class="info-bar">
+        <div class="version">
+            🎰 JHR QUANTUM ROULETTE - v2.0.0 (FASE 2: 3D) 🎨
+            <span class="mode-badge">HIPERREALISMO VISUAL</span>
+        </div>
+        <div class="shortcuts">
+            <span><kbd>SPACE</kbd> Spin 3D</span>
+            <span><kbd>1-4</kbd> Cámaras</span>
+            <span><kbd>T</kbd> Toggle 3D/2D</span>
+            <span><kbd>M</kbd> Music</span>
+        </div>
+    </div>
+    
+    <!-- Canvas 3D (Three.js) -->
+    <canvas id="canvas3D"></canvas>
+    
+    <!-- Canvas 2D Overlay (UI) -->
+    <canvas id="rouletteCanvas"></canvas>
+    
+    <!-- ========== THREE.JS ========== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- ========== SCRIPTS: AUDIO & ASSETS ========== -->
+    <script src="assets/assets-config.js"></script>
+    <script src="audio/audio-manager.js"></script>
+    
+    <!-- ========== SCRIPTS: CORE ========== -->
+    <script src="engine/roulette-data.js"></script>
+    <script src="engine/wheel-order.js"></script>
+    <script src="engine/rng-production.js"></script>
+    <script src="engine/rng-seeded.js"></script>
+    <script src="engine/roulette-engine.js"></script>
+    
+    <script src="core/canvas-manager.js"></script>
+    <script src="core/orientation-lock.js"></script>
+    
+    <script src="betting/bet-types.js"></script>
+    <script src="betting/payout-calculator.js"></script>
+    <script src="betting/bankroll-manager.js"></script>
+    <script src="ui/balance-ui.js"></script>
+    
+    <!-- ========== SCRIPTS: HISTORIAL + HOT/COLD ========== -->
+    <script src="betting/history-manager.js"></script>
+    <script src="betting/hot-cold-calculator.js"></script>
+    <script src="ui/ui-history-ticker.js"></script>
+    <script src="ui/ui-hot-cold-panel.js"></script>
+    <script src="betting/spin-controller.js"></script>
+    
+    <!-- ========== SCRIPTS: SESIÓN + TIEMPO ========== -->
+    <script src="session/session-clock.js"></script>
+    <script src="session/session-timer.js"></script>
+    <script src="session/reality-check.js"></script>
+    <script src="session/session-stats.js"></script>
+    <script src="ui/ui-session-info.js"></script>
+    
+    <!-- ========== SCRIPTS: TUTORIAL ========== -->
+    <script src="tutorial/tutorial-manager.js"></script>
+    <script src="tutorial/ui-tutorial-overlay.js"></script>
+    
+    <!-- ========== SCRIPTS: TESTS ========== -->
+    <script src="tests/tests-engine.js"></script>
+    <script src="tests/tests-payout.js"></script>
+    <script src="tests/tests-bankroll.js"></script>
+    <script src="tests/tests-history.js"></script>
+    
+    <!-- ========== SCRIPTS: FASE 2 - MOTOR 3D ========== -->
+    <script src="effects/visual-effects.js"></script>
+    <script src="rendering/three-renderer.js"></script>
+    <script src="physics/physics-engine.js"></script>
+    <script src="animation/spin-animation-3d.js"></script>
+    
+    <!-- ========== MAIN APP ========== -->
+    <script src="main.js"></script>
+    <script src="main-3d.js"></script>
+    
+    <script>
+        // Log de carga con estilo Fase 2
+        console.log('%c ═══════════════════════════════════════════', 'color: #FFD700');
+        console.log('%c   JHR QUANTUM ROULETTE - v2.0.0 🎰', 'color: #FFD700; font-weight: bold; font-size: 18px');
+        console.log('%c   FASE 2: HIPERREALISMO VISUAL + MOTOR 3D', 'color: #00FF88; font-weight: bold; font-size: 14px');
+        console.log('%c ═══════════════════════════════════════════', 'color: #FFD700');
+        console.log('');
+        console.log('%c ✓ Sistema de historial cargado', 'color: #00FF00');
+        console.log('%c ✓ Análisis Hot/Cold cargado', 'color: #00FF00');
+        console.log('%c ✓ Sistema de sesión cargado', 'color: #00FF00');
+        console.log('%c ✓ Reality Check cargado', 'color: #00FF00');
+        console.log('%c ✓ Sistema de audio cargado', 'color: #00FF00');
+        console.log('%c ✓ Assets visuales cargados', 'color: #00FF00');
+        console.log('%c ✓ Three.js renderizador cargado', 'color: #00FF88; font-weight: bold');
+        console.log('%c ✓ Motor de física realista cargado', 'color: #00FF88; font-weight: bold');
+        console.log('%c ✓ Sistema de animación 3D cargado', 'color: #00FF88; font-weight: bold');
+        console.log('');
+        console.log('%c Funciones disponibles:', 'color: #FFD700; font-weight: bold');
+        console.log('  • testSpin3D() - Giro 3D completo');
+        console.log('  • toggle3DMode() - Cambiar entre 2D/3D');
+        console.log('  • changeCameraView("preset") - Cambiar cámara');
+        console.log('  • simulateSession(N) - Simular N giros');
+        console.log('  • printStats() - Mostrar estadísticas');
+        console.log('');
+        console.log('%c Atajos de teclado FASE 2:', 'color: #FFD700; font-weight: bold');
+        console.log('  • SPACE - Giro 3D con física realista');
+        console.log('  • 1 - Vista general (overview)');
+        console.log('  • 2 - Vista cercana (closeup)');
+        console.log('  • 3 - Vista dramática (dramatic)');
+        console.log('  • 4 - Vista cenital (top-down)');
+        console.log('  • T - Toggle entre modo 3D y 2D');
+        console.log('  • M - Toggle música');
+        console.log('  • S - Estadísticas');
+        console.log('  • H - Análisis Hot/Cold');
+        console.log('');
+        
+        // Ocultar loading screen cuando todo cargue
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                console.log('%c ✓ FASE 2 CARGADA COMPLETAMENTE', 'color: #00FF88; font-weight: bold; font-size: 16px');
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
