@@ -1,0 +1,346 @@
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\BettingBoard.jsx
+  36:87  error  'history' is assigned a value but never used. Allowed unused args must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\CasinoTable.jsx
+    2:38  error    'useCallback' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  153:18  error    'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  360:19  error    'handleSpinComplete' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  375:17  error    Error: Cannot access variable before it is declared
+
+`resolvePayouts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  373 |
+  374 |                 setLastWin(number)
+> 375 |                 resolvePayouts(number)
+      |                 ^^^^^^^^^^^^^^ `resolvePayouts` accessed before it is declared
+  376 |
+  377 |                 // Clear highlights after 5 seconds
+  378 |                 betsTimeoutRef.current = setTimeout(() => {
+
+  491 |
+  492 |
+> 493 |     const resolvePayouts = (winningNumber) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 494 |         const totalWinnings = calculateWinnings(winningNumber, currentBets)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 495 |
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 507 |         setCurrentBets({})
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 508 |     }
+      | ^^^^^^ `resolvePayouts` is declared here
+  509 |
+  510 |     // --- POTENTIAL WIN LOGIC ---
+  511 |     const [bestPayout, setBestPayout] = useState({ amount: 0, numbers: [] })                                                                                                                                                                                                    react-hooks/immutability
+  468:21  error    Error: Cannot access variable before it is declared
+
+`handleRepeat` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  466 |                 // 1. Repeat Bets
+  467 |                 if (Object.keys(currentBets).length === 0 && Object.keys(lastBets).length > 0) {
+> 468 |                     handleRepeat()
+      |                     ^^^^^^^^^^^^ `handleRepeat` accessed before it is declared
+  469 |                 } else if (Object.keys(currentBets).length === 0) {
+  470 |                     // No bets to repeat and empty table? Stop.
+  471 |                     addToast("Autoplay detenido: No hay apuestas para repetir", "error")
+
+  675 |     }
+  676 |
+> 677 |     const handleRepeat = () => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 678 |         if (isSpinning || Object.keys(lastBets).length === 0) return
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 679 |         if (Object.keys(currentBets).length > 0) {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 704 |         soundManager.playChip()
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 705 |     }
+      | ^^^^^^ `handleRepeat` is declared here
+  706 |
+  707 |     const handleDouble = () => {
+  708 |         if (isSpinning || Object.keys(currentBets).length === 0) return  react-hooks/immutability
+  486:8   warning  React Hook useEffect has missing dependencies: 'addToast', 'handleRepeat', and 'handleSpin'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\Draggable.jsx
+  39:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  37 |     useEffect(() => {
+  38 |         if (initialPos) {
+> 39 |             setPos(initialPos)
+     |             ^^^^^^ Avoid calling setState() directly within an effect
+  40 |         }
+  41 |     }, [initialPos.x, initialPos.y]) // Deep compare coords to avoid loops, or just use object ref if stable
+  42 |  react-hooks/set-state-in-effect
+  41:8   warning  React Hook useEffect has a missing dependency: 'initialPos'. Either include it or remove the dependency array. If 'setPos' needs the current value of 'initialPos', you can also switch to useReducer instead of useState and read 'initialPos' in the reducer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\HistoryPanel.jsx
+  56:13  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   54 |     try {
+   55 |         return (
+>  56 |             <div style={{
+      |             ^^^^^^^^^^^^^
+>  57 |                 background: 'rgba(20, 20, 20, 0.95)',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  58 |                 padding: '15px', borderRadius: '15px',
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 105 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  106 |         );
+  107 |     } catch (e) {
+  108 |         console.error("HistoryRender Error", e)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/error-boundaries
+  66:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  64 |             }}>
+  65 |                 {/* HEADER */}
+> 66 |                 <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 67 |                     <h3 style={{ margin: 0, color: '#4dabf7', textTransform: 'uppercase', fontSize: '1rem' }}>Historial & Tendencias</h3>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 68 |                 </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  69 |
+  70 |                 {/* LAST 20 */}
+  71 |                 <div style={{ marginBottom: '15px' }}>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/error-boundaries
+  67:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  65 |                 {/* HEADER */}
+  66 |                 <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
+> 67 |                     <h3 style={{ margin: 0, color: '#4dabf7', textTransform: 'uppercase', fontSize: '1rem' }}>Historial & Tendencias</h3>
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  68 |                 </div>
+  69 |
+  70 |                 {/* LAST 20 */}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/error-boundaries
+  71:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  69 |
+  70 |                 {/* LAST 20 */}
+> 71 |                 <div style={{ marginBottom: '15px' }}>
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 72 |                     <div style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '5px' }}>ÚLTIMOS 20</div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 73 |                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 80 |                     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 81 |                 </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  82 |
+  83 |                 {/* HOT & COLD */}
+  84 |                 <div style={{ marginBottom: '15px' }}>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/error-boundaries
+  72:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  70 |                 {/* LAST 20 */}
+  71 |                 <div style={{ marginBottom: '15px' }}>
+> 72 |                     <div style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '5px' }}>ÚLTIMOS 20</div>
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  73 |                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+  74 |                         {last20.length === 0 ? <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.8rem' }}>Sin historial...</div> : null}
+  75 |                         {last20.map((num, i) => (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/error-boundaries
+  73:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  71 |                 <div style={{ marginBottom: '15px' }}>
+  72 |                     <div style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '5px' }}>ÚLTIMOS 20</div>
+> 73 |                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 74 |                         {last20.length === 0 ? <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.8rem' }}>Sin historial...</div> : null}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 75 |                         {last20.map((num, i) => (
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 76 |                             <div key={i} style={i === 0 ? { border: '2px solid gold', borderRadius: '50%', padding: '2px', boxShadow: '0:0 10px gold' } : {}}>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 77 |                                 <NumberBadge number={num} size={i === 0 ? 44 : 26} />
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 78 |                             </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 79 |                         ))}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 80 |                     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  81 |                 </div>
+  82 |
+  83 |                 {/* HOT & COLD */}                                                                                                                                                                                           react-hooks/error-boundaries
+  74:48  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  72 |                     <div style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '5px' }}>ÚLTIMOS 20</div>
+  73 |                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+> 74 |                         {last20.length === 0 ? <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.8rem' }}>Sin historial...</div> : null}
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  75 |                         {last20.map((num, i) => (
+  76 |                             <div key={i} style={i === 0 ? { border: '2px solid gold', borderRadius: '50%', padding: '2px', boxShadow: '0:0 10px gold' } : {}}>
+  77 |                                 <NumberBadge number={num} size={i === 0 ? 44 : 26} />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/error-boundaries
+  84:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  82 |
+  83 |                 {/* HOT & COLD */}
+> 84 |                 <div style={{ marginBottom: '15px' }}>
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 85 |                     <div style={{ fontSize: '0.8rem', color: '#ff6b6b', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 86 |                         🔥 CALIENTES
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 87 |                     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 88 |                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 89 |                         {hotNumbers.map((item, i) => (
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 90 |                             <NumberBadge key={i} number={item.num} size={28} />
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 91 |                         ))}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 92 |                     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 93 |                 </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  94 |
+  95 |                 <div style={{ marginBottom: '5px' }}>
+  96 |                     <div style={{ fontSize: '0.8rem', color: '#4dabf7', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>  react-hooks/error-boundaries
+  85:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  83 |                 {/* HOT & COLD */}
+  84 |                 <div style={{ marginBottom: '15px' }}>
+> 85 |                     <div style={{ fontSize: '0.8rem', color: '#ff6b6b', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 86 |                         🔥 CALIENTES
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 87 |                     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  88 |                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+  89 |                         {hotNumbers.map((item, i) => (
+  90 |                             <NumberBadge key={i} number={item.num} size={28} />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/error-boundaries
+  88:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  86 |                         🔥 CALIENTES
+  87 |                     </div>
+> 88 |                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 89 |                         {hotNumbers.map((item, i) => (
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 90 |                             <NumberBadge key={i} number={item.num} size={28} />
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 91 |                         ))}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 92 |                     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  93 |                 </div>
+  94 |
+  95 |                 <div style={{ marginBottom: '5px' }}>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/error-boundaries
+  95:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   93 |                 </div>
+   94 |
+>  95 |                 <div style={{ marginBottom: '5px' }}>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  96 |                     <div style={{ fontSize: '0.8rem', color: '#4dabf7', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |                         ❄️ FRÍOS
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |                     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |                         {coldNumbers.map((item, i) => (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |                             <NumberBadge key={i} number={item.num} size={28} />
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |                         ))}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |                     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  105 |             </div>
+  106 |         );
+  107 |     } catch (e) {                                                                                                                                                   react-hooks/error-boundaries
+  96:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   94 |
+   95 |                 <div style={{ marginBottom: '5px' }}>
+>  96 |                     <div style={{ fontSize: '0.8rem', color: '#4dabf7', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |                         ❄️ FRÍOS
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |                     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+   99 |                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+  100 |                         {coldNumbers.map((item, i) => (
+  101 |                             <NumberBadge key={i} number={item.num} size={28} />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/error-boundaries
+  99:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   97 |                         ❄️ FRÍOS
+   98 |                     </div>
+>  99 |                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |                         {coldNumbers.map((item, i) => (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |                             <NumberBadge key={i} number={item.num} size={28} />
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |                         ))}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |                     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  104 |                 </div>
+  105 |             </div>
+  106 |         );                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/error-boundaries
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\ProjectionsPanel.jsx
+   19:36  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  17 |
+  18 |     // Local ticker to update time
+> 19 |     const [now, setNow] = useState(Date.now())
+     |                                    ^^^^^^^^^^ Cannot call impure function
+  20 |     useEffect(() => {
+  21 |         const interval = setInterval(() => setNow(Date.now()), 1000)
+  22 |         return () => clearInterval(interval)  react-hooks/purity
+  104:39  error  'idx' is defined but never used. Allowed unused args must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\StatisticsPanel.jsx
+   85:18  warning  React Hook useMemo has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+  180:18  warning  React Hook useMemo has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+  236:8   warning  React Hook useMemo has an unnecessary dependency: 'history'. Either exclude it or remove the dependency array                           react-hooks/exhaustive-deps
+
+✖ 27 problems (22 errors, 5 warnings)
+

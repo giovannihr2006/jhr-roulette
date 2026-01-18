@@ -1,0 +1,69 @@
+{
+    "common": {
+        "appTitle": "GHR Ruleta Royale",
+        "loading": "Cargando...",
+        "error": "Error",
+        "success": "Éxito",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "save": "Guardar",
+        "close": "Cerrar",
+        "yes": "Sí",
+        "no": "No"
+    },
+    "game": {
+        "spin": "GIRAR",
+        "clear": "LIMPIAR",
+        "repeat": "REPETIR",
+        "double": "DOBLAR",
+        "undo": "DESHACER",
+        "balance": "Saldo",
+        "totalBet": "Apuesta Total",
+        "potentialWin": "Ganancia Potencial",
+        "winningNumber": "Número Ganador",
+        "spinning": "Girando..."
+    },
+    "bets": {
+        "red": "Rojo",
+        "black": "Negro",
+        "even": "Par",
+        "odd": "Impar",
+        "low": "Bajo (1-18)",
+        "high": "Alto (19-36)",
+        "dozen1": "1ª Docena",
+        "dozen2": "2ª Docena",
+        "dozen3": "3ª Docena",
+        "column1": "1ª Columna",
+        "column2": "2ª Columna",
+        "column3": "3ª Columna",
+        "straight": "Pleno",
+        "split": "Medio",
+        "street": "Calle",
+        "corner": "Cuadro",
+        "line": "Seisena"
+    },
+    "modals": {
+        "help": "Ayuda",
+        "settings": "Configuración",
+        "history": "Historial",
+        "strategies": "Estrategias",
+        "reload": "Recargar Fondos",
+        "withdraw": "Retirar"
+    },
+    "statistics": {
+        "hotNumbers": "Números Calientes",
+        "coldNumbers": "Números Fríos",
+        "last20": "Últimos 20",
+        "opportunities": "Oportunidades",
+        "sleepingSectors": "Sectores Durmientes"
+    },
+    "messages": {
+        "insufficientFunds": "Fondos insuficientes",
+        "betPlaced": "Apuesta colocada",
+        "winAmount": "¡Ganaste {amount}!",
+        "lostRound": "No ganaste esta ronda",
+        "sessionEnded": "Sesión finalizada",
+        "reloadSuccess": "Recarga exitosa",
+        "withdrawSuccess": "Retiro exitoso"
+    }
+}

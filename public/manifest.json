@@ -1,0 +1,30 @@
+{
+    "name": "GHR Ruleta Royale",
+    "short_name": "Ruleta Royale",
+    "description": "Simulador de ruleta europea profesional con análisis estadístico avanzado",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#d4af37",
+    "orientation": "landscape",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "games",
+        "entertainment"
+    ],
+    "lang": "es",
+    "dir": "ltr"
+}

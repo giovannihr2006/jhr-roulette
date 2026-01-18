@@ -1,0 +1,120 @@
+﻿
+> baryonic-blazar@0.0.0 lint
+> eslint .
+
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\CasinoTable.jsx
+  148:45  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  146 |
+  147 |         // 1. Randomize for this spin
+> 148 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+      |                                             ^^^^^^^^^^^^^ Cannot call impure function
+  149 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+  150 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+  151 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]                                                        react-hooks/purity
+  149:46  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  147 |         // 1. Randomize for this spin
+  148 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+> 149 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+      |                                              ^^^^^^^^^^^^^ Cannot call impure function
+  150 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+  151 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+  152 |         const pDirVal = Math.random() > 0.5 ? 1 : -1  react-hooks/purity
+  150:53  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  148 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+  149 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+> 150 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+      |                                                     ^^^^^^^^^^^^^ Cannot call impure function
+  151 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+  152 |         const pDirVal = Math.random() > 0.5 ? 1 : -1
+  153 |                                 react-hooks/purity
+  151:48  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  149 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+  150 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+> 151 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+      |                                                ^^^^^^^^^^^^^ Cannot call impure function
+  152 |         const pDirVal = Math.random() > 0.5 ? 1 : -1
+  153 |
+  154 |         const wheelDirName = pDirVal === 1 ? 'Horario' : 'Anti-Horario'                                              react-hooks/purity
+  152:25  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  150 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+  151 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+> 152 |         const pDirVal = Math.random() > 0.5 ? 1 : -1
+      |                         ^^^^^^^^^^^^^ Cannot call impure function
+  153 |
+  154 |         const wheelDirName = pDirVal === 1 ? 'Horario' : 'Anti-Horario'
+  155 |         const ballDirName = pDirVal === 1 ? 'Anti-Horario' : 'Horario'                                                                           react-hooks/purity
+  181:56  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  179 |
+  180 |         // 3. Winner
+> 181 |         const winningNumber = WHEEL_NUMBERS[Math.floor(Math.random() * WHEEL_NUMBERS.length)]
+      |                                                        ^^^^^^^^^^^^^ Cannot call impure function
+  182 |         const winningIndex = WHEEL_NUMBERS.indexOf(winningNumber)
+  183 |
+  184 |         // 4. Deltas                                                                                                                                                                                                                     react-hooks/purity
+  185:59  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  183 |
+  184 |         // 4. Deltas
+> 185 |         const wheelDelta = pDirVal * ((wheelLaps * 360) + Math.random() * 360)
+      |                                                           ^^^^^^^^^^^^^ Cannot call impure function
+  186 |         const nextWheelRotation = wheelRotation + wheelDelta
+  187 |
+  188 |         const ballDirVal = -pDirVal                                                                                                                                                                                                                       react-hooks/purity
+  334:34  error  'resetLayout' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-undef
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\logic\StatTracker.js
+  11:44  error  '_get' is defined but never used  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\ControlPanel.jsx
+  57:36  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  55 |     useControls('Control Manual (Debug)', {
+  56 |         'Girar (Random y $)': button(() => {
+> 57 |             const num = Math.floor(Math.random() * 37)
+     |                                    ^^^^^^^^^^^^^ Cannot call impure function
+  58 |             addResult(num)
+  59 |
+  60 |             // Simulaci├│n Financiera Simple para testing         react-hooks/purity
+  62:25  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  60 |             // Simulaci├│n Financiera Simple para testing
+  61 |             // 50/50 chance de ganar 1 fichas o perder 1
+> 62 |             const win = Math.random() > 0.5
+     |                         ^^^^^^^^^^^^^ Cannot call impure function
+  63 |             const delta = win ? 3500 : -100
+  64 |             registerSpin(delta)
+  65 |         }),  react-hooks/purity
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\ErrorBoundary.jsx
+  9:37  error  '_' is defined but never used  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\StatsHUD.jsx
+  3:10  error  'useGenesisStore' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+Ô£û 13 problems (13 errors, 0 warnings)
+

@@ -1,0 +1,224 @@
+﻿=== VERIFICACION DE CALCULO DE EFICIENCIA (TRACE) ===
+Modo: Strict Clean Cover (No se permiten fichas que cubran numeros fuera del sector)
+
+--- SYSTEM 0 ---
+NUCLEO [35,3,26,0,32,15,19]: Cost 5 => Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 15 [15] + Straight 19 [19] + Straight 26 [26]
+VECINOS [18,29,7,28,12,35,3,26,0,32,15,19,4,21,2,25,17]: Cost 8 => Corner 25-29 [25,26,28,29] + Trio 0/2/3 [0,2,3] + Split 4/7 [4,7] + Split 12/15 [12,15] + Split 18/21 [18,21] + Split 32/35 [32,35] + Straight 17 [17] + Straight 19 [19]
+HUERF [34,6,27,20,14,31,9,22]: Cost 6 => Split 6/9 [6,9] + Split 31/34 [31,34] + Straight 14 [14] + Straight 20 [20] + Straight 22 [22] + Straight 27 [27]
+TERCIOS [13,36,11,30,8,23,10,5,24,16,33,1]: Cost 8 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 30/33 [30,33] + Split 23/24 [23,24] + Straight 1 [1] + Straight 11 [11] + Straight 16 [16] + Straight 36 [36]
+
+--- SYSTEM 1 ---
+NUCLEO [24,16,33,1,20,14,31]: Cost 7 => Straight 1 [1] + Straight 14 [14] + Straight 16 [16] + Straight 20 [20] + Straight 24 [24] + Straight 31 [31] + Straight 33 [33]
+VECINOS [30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7]: Cost 12 => Street 7-9 [7,8,9] + Street 22-24 [22,23,24] + Split 30/33 [30,33] + Straight 1 [1] + Straight 5 [5] + Straight 10 [10] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 29 [29] + Straight 31 [31]
+HUERF [28,12,35,6,27,13,36,11]: Cost 6 => Split 11/12 [11,12] + Split 35/36 [35,36] + Straight 6 [6] + Straight 13 [13] + Straight 27 [27] + Straight 28 [28]
+TERCIOS [3,26,0,32,15,19,4,21,2,25,17,34]: Cost 9 => Trio 0/2/3 [0,2,3] + Split 25/26 [25,26] + Straight 4 [4] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 32 [32] + Straight 34 [34]
+
+--- SYSTEM 2 ---
+NUCLEO [19,4,21,2,25,17,34]: Cost 7 => Straight 2 [2] + Straight 4 [4] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 34 [34]
+VECINOS [3,26,0,32,15,19,4,21,2,25,17,34,6,27,13,36,11]: Cost 13 => Trio 0/2/3 [0,2,3] + Street 25-27 [25,26,27] + Straight 4 [4] + Straight 6 [6] + Straight 11 [11] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 32 [32] + Straight 34 [34] + Straight 36 [36]
+HUERF [30,8,23,29,7,28,12,35]: Cost 5 => Street 28-30 [28,29,30] + Split 7/8 [7,8] + Straight 12 [12] + Straight 23 [23] + Straight 35 [35]
+TERCIOS [10,5,24,16,33,1,20,14,31,9,22,18]: Cost 12 => Straight 1 [1] + Straight 5 [5] + Straight 9 [9] + Straight 10 [10] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 24 [24] + Straight 31 [31] + Straight 33 [33]
+
+--- SYSTEM 3 ---
+NUCLEO [28,12,35,3,26,0,32]: Cost 5 => Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 12 [12] + Straight 26 [26] + Straight 28 [28]
+VECINOS [9,22,18,29,7,28,12,35,3,26,0,32,15,19,4,21,2]: Cost 9 => Trio 0/2/3 [0,2,3] + Split 4/7 [4,7] + Split 9/12 [9,12] + Split 15/18 [15,18] + Split 19/22 [19,22] + Split 26/29 [26,29] + Split 32/35 [32,35] + Straight 21 [21] + Straight 28 [28]
+HUERF [25,17,34,33,1,20,14,31]: Cost 6 => Split 14/17 [14,17] + Split 31/34 [31,34] + Straight 1 [1] + Straight 20 [20] + Straight 25 [25] + Straight 33 [33]
+TERCIOS [6,27,13,36,11,30,8,23,10,5,24,16]: Cost 9 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 24/27 [24,27] + Straight 6 [6] + Straight 11 [11] + Straight 16 [16] + Straight 23 [23] + Straight 30 [30] + Straight 36 [36]
+
+--- SYSTEM 4 ---
+NUCLEO [32,15,19,4,21,2,25]: Cost 7 => Straight 2 [2] + Straight 4 [4] + Straight 15 [15] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 32 [32]
+VECINOS [12,35,3,26,0,32,15,19,4,21,2,25,17,34,6,27,13]: Cost 11 => Trio 0/2/3 [0,2,3] + Street 25-27 [25,26,27] + Split 12/15 [12,15] + Split 32/35 [32,35] + Straight 4 [4] + Straight 6 [6] + Straight 13 [13] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 34 [34]
+HUERF [36,11,30,22,18,29,7,28]: Cost 6 => Street 28-30 [28,29,30] + Straight 7 [7] + Straight 11 [11] + Straight 18 [18] + Straight 22 [22] + Straight 36 [36]
+TERCIOS [8,23,10,5,24,16,33,1,20,14,31,9]: Cost 10 => Split 5/8 [5,8] + Split 20/23 [20,23] + Straight 1 [1] + Straight 9 [9] + Straight 10 [10] + Straight 14 [14] + Straight 16 [16] + Straight 24 [24] + Straight 31 [31] + Straight 33 [33]
+
+--- SYSTEM 5 ---
+NUCLEO [8,23,10,5,24,16,33]: Cost 5 => Split 5/8 [5,8] + Split 23/24 [23,24] + Straight 10 [10] + Straight 16 [16] + Straight 33 [33]
+VECINOS [27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9]: Cost 10 => Corner 10-14 [10,11,13,14] + Split 5/8 [5,8] + Split 20/23 [20,23] + Split 24/27 [24,27] + Split 30/33 [30,33] + Straight 1 [1] + Straight 9 [9] + Straight 16 [16] + Straight 31 [31] + Straight 36 [36]
+HUERF [22,18,29,2,25,17,34,6]: Cost 6 => Split 22/25 [22,25] + Split 17/18 [17,18] + Straight 2 [2] + Straight 6 [6] + Straight 29 [29] + Straight 34 [34]
+TERCIOS [7,28,12,35,3,26,0,32,15,19,4,21]: Cost 8 => Split 4/7 [4,7] + Split 12/15 [12,15] + Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 19 [19] + Straight 21 [21] + Straight 26 [26] + Straight 28 [28]
+
+--- SYSTEM 6 ---
+NUCLEO [25,17,34,6,27,13,36]: Cost 7 => Straight 6 [6] + Straight 13 [13] + Straight 17 [17] + Straight 25 [25] + Straight 27 [27] + Straight 34 [34] + Straight 36 [36]
+VECINOS [15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10]: Cost 14 => Split 8/11 [8,11] + Split 10/13 [10,13] + Split 27/30 [27,30] + Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+HUERF [5,24,16,35,3,26,0,32]: Cost 6 => Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 5 [5] + Straight 16 [16] + Straight 24 [24] + Straight 26 [26]
+TERCIOS [33,1,20,14,31,9,22,18,29,7,28,12]: Cost 10 => Split 9/12 [9,12] + Split 28/31 [28,31] + Straight 1 [1] + Straight 7 [7] + Straight 14 [14] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 29 [29] + Straight 33 [33]
+
+--- SYSTEM 7 ---
+NUCLEO [22,18,29,7,28,12,35]: Cost 6 => Split 28/29 [28,29] + Straight 7 [7] + Straight 12 [12] + Straight 18 [18] + Straight 22 [22] + Straight 35 [35]
+VECINOS [1,20,14,31,9,22,18,29,7,28,12,35,3,26,0,32,15]: Cost 11 => Corner 28-32 [28,29,31,32] + Split 9/12 [9,12] + Split 15/18 [15,18] + Split 0/1 [0,1] + Straight 3 [3] + Straight 7 [7] + Straight 14 [14] + Straight 20 [20] + Straight 22 [22] + Straight 26 [26] + Straight 35 [35]
+HUERF [19,4,21,10,5,24,16,33]: Cost 5 => Split 16/19 [16,19] + Split 21/24 [21,24] + Split 4/5 [4,5] + Straight 10 [10] + Straight 33 [33]
+TERCIOS [2,25,17,34,6,27,13,36,11,30,8,23]: Cost 10 => Split 8/11 [8,11] + Split 27/30 [27,30] + Straight 2 [2] + Straight 6 [6] + Straight 13 [13] + Straight 17 [17] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 8 ---
+NUCLEO [36,11,30,8,23,10,5]: Cost 5 => Split 5/8 [5,8] + Split 10/11 [10,11] + Straight 23 [23] + Straight 30 [30] + Straight 36 [36]
+VECINOS [17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20]: Cost 12 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 17/20 [17,20] + Split 24/27 [24,27] + Split 30/33 [30,33] + Straight 1 [1] + Straight 6 [6] + Straight 11 [11] + Straight 16 [16] + Straight 23 [23] + Straight 34 [34] + Straight 36 [36]
+HUERF [14,31,9,19,4,21,2,25]: Cost 8 => Straight 2 [2] + Straight 4 [4] + Straight 9 [9] + Straight 14 [14] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 31 [31]
+TERCIOS [22,18,29,7,28,12,35,3,26,0,32,15]: Cost 8 => Split 12/15 [12,15] + Split 26/29 [26,29] + Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 7 [7] + Straight 18 [18] + Straight 22 [22] + Straight 28 [28]
+
+--- SYSTEM 9 ---
+NUCLEO [20,14,31,9,22,18,29]: Cost 7 => Straight 9 [9] + Straight 14 [14] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 29 [29] + Straight 31 [31]
+VECINOS [5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3]: Cost 15 => Split 9/12 [9,12] + Split 28/31 [28,31] + Straight 1 [1] + Straight 3 [3] + Straight 5 [5] + Straight 7 [7] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 24 [24] + Straight 29 [29] + Straight 33 [33] + Straight 35 [35]
+HUERF [26,0,32,11,30,8,23,10]: Cost 6 => Split 8/11 [8,11] + Split 23/26 [23,26] + Straight 0 [0] + Straight 10 [10] + Straight 30 [30] + Straight 32 [32]
+TERCIOS [15,19,4,21,2,25,17,34,6,27,13,36]: Cost 12 => Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 27 [27] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 10 ---
+NUCLEO [30,8,23,10,5,24,16]: Cost 5 => Split 5/8 [5,8] + Split 23/24 [23,24] + Straight 10 [10] + Straight 16 [16] + Straight 30 [30]
+VECINOS [6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31]: Cost 10 => Corner 10-14 [10,11,13,14] + Split 5/8 [5,8] + Split 20/23 [20,23] + Split 24/27 [24,27] + Split 30/33 [30,33] + Straight 1 [1] + Straight 6 [6] + Straight 16 [16] + Straight 31 [31] + Straight 36 [36]
+HUERF [9,22,18,21,2,25,17,34]: Cost 6 => Split 18/21 [18,21] + Split 22/25 [22,25] + Straight 2 [2] + Straight 9 [9] + Straight 17 [17] + Straight 34 [34]
+TERCIOS [29,7,28,12,35,3,26,0,32,15,19,4]: Cost 7 => Split 4/7 [4,7] + Split 12/15 [12,15] + Split 26/29 [26,29] + Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 19 [19] + Straight 28 [28]
+
+--- SYSTEM 11 ---
+NUCLEO [27,13,36,11,30,8,23]: Cost 5 => Split 8/11 [8,11] + Split 27/30 [27,30] + Straight 13 [13] + Straight 23 [23] + Straight 36 [36]
+VECINOS [2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33]: Cost 11 => Split 2/5 [2,5] + Split 8/11 [8,11] + Split 10/13 [10,13] + Split 24/27 [24,27] + Split 30/33 [30,33] + Split 16/17 [16,17] + Straight 6 [6] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+HUERF [1,20,14,32,15,19,4,21]: Cost 4 => Street 19-21 [19,20,21] + Split 1/4 [1,4] + Split 14/15 [14,15] + Straight 32 [32]
+TERCIOS [31,9,22,18,29,7,28,12,35,3,26,0]: Cost 8 => Split 9/12 [9,12] + Split 26/29 [26,29] + Split 28/31 [28,31] + Split 0/3 [0,3] + Straight 7 [7] + Straight 18 [18] + Straight 22 [22] + Straight 35 [35]
+
+--- SYSTEM 12 ---
+NUCLEO [29,7,28,12,35,3,26]: Cost 6 => Split 26/29 [26,29] + Straight 3 [3] + Straight 7 [7] + Straight 12 [12] + Straight 28 [28] + Straight 35 [35]
+VECINOS [14,31,9,22,18,29,7,28,12,35,3,26,0,32,15,19,4]: Cost 9 => Corner 28-32 [28,29,31,32] + Split 4/7 [4,7] + Split 9/12 [9,12] + Split 15/18 [15,18] + Split 19/22 [19,22] + Split 0/3 [0,3] + Straight 14 [14] + Straight 26 [26] + Straight 35 [35]
+HUERF [21,2,25,24,16,33,1,20]: Cost 6 => Split 21/24 [21,24] + Split 1/2 [1,2] + Straight 16 [16] + Straight 20 [20] + Straight 25 [25] + Straight 33 [33]
+TERCIOS [17,34,6,27,13,36,11,30,8,23,10,5]: Cost 9 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 27/30 [27,30] + Straight 6 [6] + Straight 11 [11] + Straight 17 [17] + Straight 23 [23] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 13 ---
+NUCLEO [34,6,27,13,36,11,30]: Cost 6 => Split 27/30 [27,30] + Straight 6 [6] + Straight 11 [11] + Straight 13 [13] + Straight 34 [34] + Straight 36 [36]
+VECINOS [4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24]: Cost 11 => Street 4-6 [4,5,6] + Split 8/11 [8,11] + Split 10/13 [10,13] + Split 21/24 [21,24] + Split 27/30 [27,30] + Straight 2 [2] + Straight 17 [17] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+HUERF [16,33,1,26,0,32,15,19]: Cost 5 => Split 16/19 [16,19] + Split 32/33 [32,33] + Split 0/1 [0,1] + Straight 15 [15] + Straight 26 [26]
+TERCIOS [20,14,31,9,22,18,29,7,28,12,35,3]: Cost 10 => Split 9/12 [9,12] + Split 28/31 [28,31] + Straight 3 [3] + Straight 7 [7] + Straight 14 [14] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 29 [29] + Straight 35 [35]
+
+--- SYSTEM 14 ---
+NUCLEO [33,1,20,14,31,9,22]: Cost 7 => Straight 1 [1] + Straight 9 [9] + Straight 14 [14] + Straight 20 [20] + Straight 22 [22] + Straight 31 [31] + Straight 33 [33]
+VECINOS [23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12]: Cost 12 => Street 22-24 [22,23,24] + Split 7/10 [7,10] + Split 9/12 [9,12] + Split 28/31 [28,31] + Straight 1 [1] + Straight 5 [5] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 29 [29] + Straight 33 [33]
+HUERF [35,3,26,13,36,11,30,8]: Cost 6 => Split 8/11 [8,11] + Split 35/36 [35,36] + Straight 3 [3] + Straight 13 [13] + Straight 26 [26] + Straight 30 [30]
+TERCIOS [0,32,15,19,4,21,2,25,17,34,6,27]: Cost 11 => Split 0/2 [0,2] + Straight 4 [4] + Straight 6 [6] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 27 [27] + Straight 32 [32] + Straight 34 [34]
+
+--- SYSTEM 15 ---
+NUCLEO [26,0,32,15,19,4,21]: Cost 7 => Straight 0 [0] + Straight 4 [4] + Straight 15 [15] + Straight 19 [19] + Straight 21 [21] + Straight 26 [26] + Straight 32 [32]
+VECINOS [7,28,12,35,3,26,0,32,15,19,4,21,2,25,17,34,6]: Cost 11 => Trio 0/2/3 [0,2,3] + Split 4/7 [4,7] + Split 12/15 [12,15] + Split 25/28 [25,28] + Split 32/35 [32,35] + Straight 6 [6] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 26 [26] + Straight 34 [34]
+HUERF [27,13,36,31,9,22,18,29]: Cost 8 => Straight 9 [9] + Straight 13 [13] + Straight 18 [18] + Straight 22 [22] + Straight 27 [27] + Straight 29 [29] + Straight 31 [31] + Straight 36 [36]
+TERCIOS [11,30,8,23,10,5,24,16,33,1,20,14]: Cost 8 => Split 5/8 [5,8] + Split 11/14 [11,14] + Split 20/23 [20,23] + Split 30/33 [30,33] + Straight 1 [1] + Straight 10 [10] + Straight 16 [16] + Straight 24 [24]
+
+--- SYSTEM 16 ---
+NUCLEO [10,5,24,16,33,1,20]: Cost 7 => Straight 1 [1] + Straight 5 [5] + Straight 10 [10] + Straight 16 [16] + Straight 20 [20] + Straight 24 [24] + Straight 33 [33]
+VECINOS [36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18]: Cost 12 => Street 22-24 [22,23,24] + Split 5/8 [5,8] + Split 11/14 [11,14] + Split 30/33 [30,33] + Straight 1 [1] + Straight 9 [9] + Straight 10 [10] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 31 [31] + Straight 36 [36]
+HUERF [29,7,28,17,34,6,27,13]: Cost 7 => Split 28/29 [28,29] + Straight 6 [6] + Straight 7 [7] + Straight 13 [13] + Straight 17 [17] + Straight 27 [27] + Straight 34 [34]
+TERCIOS [12,35,3,26,0,32,15,19,4,21,2,25]: Cost 7 => Trio 0/2/3 [0,2,3] + Split 12/15 [12,15] + Split 32/35 [32,35] + Split 25/26 [25,26] + Straight 4 [4] + Straight 19 [19] + Straight 21 [21]
+
+--- SYSTEM 17 ---
+NUCLEO [21,2,25,17,34,6,27]: Cost 7 => Straight 2 [2] + Straight 6 [6] + Straight 17 [17] + Straight 21 [21] + Straight 25 [25] + Straight 27 [27] + Straight 34 [34]
+VECINOS [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8]: Cost 14 => Split 8/11 [8,11] + Split 27/30 [27,30] + Split 0/2 [0,2] + Straight 4 [4] + Straight 6 [6] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 32 [32] + Straight 34 [34] + Straight 36 [36]
+HUERF [23,10,5,28,12,35,3,26]: Cost 7 => Split 23/26 [23,26] + Straight 3 [3] + Straight 5 [5] + Straight 10 [10] + Straight 12 [12] + Straight 28 [28] + Straight 35 [35]
+TERCIOS [24,16,33,1,20,14,31,9,22,18,29,7]: Cost 12 => Straight 1 [1] + Straight 7 [7] + Straight 9 [9] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 24 [24] + Straight 29 [29] + Straight 31 [31] + Straight 33 [33]
+
+--- SYSTEM 18 ---
+NUCLEO [31,9,22,18,29,7,28]: Cost 6 => Split 28/31 [28,31] + Straight 7 [7] + Straight 9 [9] + Straight 18 [18] + Straight 22 [22] + Straight 29 [29]
+VECINOS [16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26,0]: Cost 13 => Split 9/12 [9,12] + Split 26/29 [26,29] + Split 28/31 [28,31] + Split 0/1 [0,1] + Straight 3 [3] + Straight 7 [7] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 33 [33] + Straight 35 [35]
+HUERF [32,15,19,8,23,10,5,24]: Cost 6 => Split 5/8 [5,8] + Split 23/24 [23,24] + Straight 10 [10] + Straight 15 [15] + Straight 19 [19] + Straight 32 [32]
+TERCIOS [4,21,2,25,17,34,6,27,13,36,11,30]: Cost 11 => Split 27/30 [27,30] + Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 11 [11] + Straight 13 [13] + Straight 17 [17] + Straight 21 [21] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 19 ---
+NUCLEO [0,32,15,19,4,21,2]: Cost 6 => Split 0/2 [0,2] + Straight 4 [4] + Straight 15 [15] + Straight 19 [19] + Straight 21 [21] + Straight 32 [32]
+VECINOS [28,12,35,3,26,0,32,15,19,4,21,2,25,17,34,6,27]: Cost 11 => Trio 0/2/3 [0,2,3] + Street 25-27 [25,26,27] + Split 12/15 [12,15] + Split 32/35 [32,35] + Straight 4 [4] + Straight 6 [6] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 28 [28] + Straight 34 [34]
+HUERF [13,36,11,9,22,18,29,7]: Cost 8 => Straight 7 [7] + Straight 9 [9] + Straight 11 [11] + Straight 13 [13] + Straight 18 [18] + Straight 22 [22] + Straight 29 [29] + Straight 36 [36]
+TERCIOS [30,8,23,10,5,24,16,33,1,20,14,31]: Cost 9 => Split 5/8 [5,8] + Split 20/23 [20,23] + Split 30/33 [30,33] + Straight 1 [1] + Straight 10 [10] + Straight 14 [14] + Straight 16 [16] + Straight 24 [24] + Straight 31 [31]
+
+--- SYSTEM 20 ---
+NUCLEO [16,33,1,20,14,31,9]: Cost 7 => Straight 1 [1] + Straight 9 [9] + Straight 14 [14] + Straight 16 [16] + Straight 20 [20] + Straight 31 [31] + Straight 33 [33]
+VECINOS [8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28]: Cost 12 => Street 7-9 [7,8,9] + Street 22-24 [22,23,24] + Split 28/31 [28,31] + Straight 1 [1] + Straight 5 [5] + Straight 10 [10] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 29 [29] + Straight 33 [33]
+HUERF [12,35,3,27,13,36,11,30]: Cost 5 => Split 27/30 [27,30] + Split 11/12 [11,12] + Split 35/36 [35,36] + Straight 3 [3] + Straight 13 [13]
+TERCIOS [26,0,32,15,19,4,21,2,25,17,34,6]: Cost 10 => Split 25/26 [25,26] + Split 0/2 [0,2] + Straight 4 [4] + Straight 6 [6] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 32 [32] + Straight 34 [34]
+
+--- SYSTEM 21 ---
+NUCLEO [15,19,4,21,2,25,17]: Cost 7 => Straight 2 [2] + Straight 4 [4] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25]
+VECINOS [35,3,26,0,32,15,19,4,21,2,25,17,34,6,27,13,36]: Cost 11 => Trio 0/2/3 [0,2,3] + Street 25-27 [25,26,27] + Street 34-36 [34,35,36] + Straight 4 [4] + Straight 6 [6] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 32 [32]
+HUERF [11,30,8,18,29,7,28,12]: Cost 5 => Street 28-30 [28,29,30] + Split 8/11 [8,11] + Straight 7 [7] + Straight 12 [12] + Straight 18 [18]
+TERCIOS [23,10,5,24,16,33,1,20,14,31,9,22]: Cost 10 => Street 22-24 [22,23,24] + Straight 1 [1] + Straight 5 [5] + Straight 9 [9] + Straight 10 [10] + Straight 14 [14] + Straight 16 [16] + Straight 20 [20] + Straight 31 [31] + Straight 33 [33]
+
+--- SYSTEM 22 ---
+NUCLEO [14,31,9,22,18,29,7]: Cost 7 => Straight 7 [7] + Straight 9 [9] + Straight 14 [14] + Straight 18 [18] + Straight 22 [22] + Straight 29 [29] + Straight 31 [31]
+VECINOS [24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26]: Cost 14 => Split 9/12 [9,12] + Split 26/29 [26,29] + Split 28/31 [28,31] + Straight 1 [1] + Straight 3 [3] + Straight 7 [7] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 24 [24] + Straight 33 [33] + Straight 35 [35]
+HUERF [0,32,15,30,8,23,10,5]: Cost 7 => Split 5/8 [5,8] + Straight 0 [0] + Straight 10 [10] + Straight 15 [15] + Straight 23 [23] + Straight 30 [30] + Straight 32 [32]
+TERCIOS [19,4,21,2,25,17,34,6,27,13,36,11]: Cost 12 => Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 11 [11] + Straight 13 [13] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 27 [27] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 23 ---
+NUCLEO [11,30,8,23,10,5,24]: Cost 4 => Split 5/8 [5,8] + Split 10/11 [10,11] + Split 23/24 [23,24] + Straight 30 [30]
+VECINOS [34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14]: Cost 10 => Corner 10-14 [10,11,13,14] + Split 5/8 [5,8] + Split 20/23 [20,23] + Split 24/27 [24,27] + Split 30/33 [30,33] + Straight 1 [1] + Straight 6 [6] + Straight 16 [16] + Straight 34 [34] + Straight 36 [36]
+HUERF [31,9,22,4,21,2,25,17]: Cost 7 => Split 22/25 [22,25] + Straight 2 [2] + Straight 4 [4] + Straight 9 [9] + Straight 17 [17] + Straight 21 [21] + Straight 31 [31]
+TERCIOS [18,29,7,28,12,35,3,26,0,32,15,19]: Cost 8 => Split 12/15 [12,15] + Split 26/29 [26,29] + Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 7 [7] + Straight 18 [18] + Straight 19 [19] + Straight 28 [28]
+
+--- SYSTEM 24 ---
+NUCLEO [23,10,5,24,16,33,1]: Cost 6 => Split 23/24 [23,24] + Straight 1 [1] + Straight 5 [5] + Straight 10 [10] + Straight 16 [16] + Straight 33 [33]
+VECINOS [13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22]: Cost 10 => Corner 10-14 [10,11,13,14] + Street 22-24 [22,23,24] + Split 5/8 [5,8] + Split 30/33 [30,33] + Straight 1 [1] + Straight 9 [9] + Straight 16 [16] + Straight 20 [20] + Straight 31 [31] + Straight 36 [36]
+HUERF [18,29,7,25,17,34,6,27]: Cost 7 => Split 17/18 [17,18] + Straight 6 [6] + Straight 7 [7] + Straight 25 [25] + Straight 27 [27] + Straight 29 [29] + Straight 34 [34]
+TERCIOS [28,12,35,3,26,0,32,15,19,4,21,2]: Cost 8 => Trio 0/2/3 [0,2,3] + Split 12/15 [12,15] + Split 32/35 [32,35] + Straight 4 [4] + Straight 19 [19] + Straight 21 [21] + Straight 26 [26] + Straight 28 [28]
+
+--- SYSTEM 25 ---
+NUCLEO [4,21,2,25,17,34,6]: Cost 7 => Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 17 [17] + Straight 21 [21] + Straight 25 [25] + Straight 34 [34]
+VECINOS [26,0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30]: Cost 14 => Street 25-27 [25,26,27] + Split 0/2 [0,2] + Straight 4 [4] + Straight 6 [6] + Straight 11 [11] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 30 [30] + Straight 32 [32] + Straight 34 [34] + Straight 36 [36]
+HUERF [8,23,10,7,28,12,35,3]: Cost 7 => Split 7/10 [7,10] + Straight 3 [3] + Straight 8 [8] + Straight 12 [12] + Straight 23 [23] + Straight 28 [28] + Straight 35 [35]
+TERCIOS [5,24,16,33,1,20,14,31,9,22,18,29]: Cost 12 => Straight 1 [1] + Straight 5 [5] + Straight 9 [9] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 24 [24] + Straight 29 [29] + Straight 31 [31] + Straight 33 [33]
+
+--- SYSTEM 26 ---
+NUCLEO [12,35,3,26,0,32,15]: Cost 4 => Split 12/15 [12,15] + Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 26 [26]
+VECINOS [22,18,29,7,28,12,35,3,26,0,32,15,19,4,21,2,25]: Cost 7 => Corner 25-29 [25,26,28,29] + Trio 0/2/3 [0,2,3] + Split 4/7 [4,7] + Split 12/15 [12,15] + Split 18/21 [18,21] + Split 19/22 [19,22] + Split 32/35 [32,35]
+HUERF [17,34,6,1,20,14,31,9]: Cost 5 => Split 6/9 [6,9] + Split 14/17 [14,17] + Split 31/34 [31,34] + Straight 1 [1] + Straight 20 [20]
+TERCIOS [27,13,36,11,30,8,23,10,5,24,16,33]: Cost 8 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 24/27 [24,27] + Split 30/33 [30,33] + Straight 11 [11] + Straight 16 [16] + Straight 23 [23] + Straight 36 [36]
+
+--- SYSTEM 27 ---
+NUCLEO [17,34,6,27,13,36,11]: Cost 7 => Straight 6 [6] + Straight 11 [11] + Straight 13 [13] + Straight 17 [17] + Straight 27 [27] + Straight 34 [34] + Straight 36 [36]
+VECINOS [19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5]: Cost 12 => Street 4-6 [4,5,6] + Split 8/11 [8,11] + Split 10/13 [10,13] + Split 27/30 [27,30] + Straight 2 [2] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+HUERF [24,16,33,3,26,0,32,15]: Cost 6 => Split 32/33 [32,33] + Split 0/3 [0,3] + Straight 15 [15] + Straight 16 [16] + Straight 24 [24] + Straight 26 [26]
+TERCIOS [1,20,14,31,9,22,18,29,7,28,12,35]: Cost 10 => Split 9/12 [9,12] + Split 28/31 [28,31] + Straight 1 [1] + Straight 7 [7] + Straight 14 [14] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 29 [29] + Straight 35 [35]
+
+--- SYSTEM 28 ---
+NUCLEO [18,29,7,28,12,35,3]: Cost 6 => Split 28/29 [28,29] + Straight 3 [3] + Straight 7 [7] + Straight 12 [12] + Straight 18 [18] + Straight 35 [35]
+VECINOS [20,14,31,9,22,18,29,7,28,12,35,3,26,0,32,15,19]: Cost 10 => Corner 28-32 [28,29,31,32] + Split 9/12 [9,12] + Split 15/18 [15,18] + Split 19/22 [19,22] + Split 0/3 [0,3] + Straight 7 [7] + Straight 14 [14] + Straight 20 [20] + Straight 26 [26] + Straight 35 [35]
+HUERF [4,21,2,5,24,16,33,1]: Cost 4 => Corner 1-5 [1,2,4,5] + Split 21/24 [21,24] + Straight 16 [16] + Straight 33 [33]
+TERCIOS [25,17,34,6,27,13,36,11,30,8,23,10]: Cost 9 => Split 8/11 [8,11] + Split 10/13 [10,13] + Split 27/30 [27,30] + Straight 6 [6] + Straight 17 [17] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 29 ---
+NUCLEO [9,22,18,29,7,28,12]: Cost 5 => Split 9/12 [9,12] + Split 28/29 [28,29] + Straight 7 [7] + Straight 18 [18] + Straight 22 [22]
+VECINOS [33,1,20,14,31,9,22,18,29,7,28,12,35,3,26,0,32]: Cost 12 => Corner 28-32 [28,29,31,32] + Split 9/12 [9,12] + Split 0/1 [0,1] + Straight 3 [3] + Straight 7 [7] + Straight 14 [14] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 26 [26] + Straight 33 [33] + Straight 35 [35]
+HUERF [15,19,4,23,10,5,24,16]: Cost 5 => Split 16/19 [16,19] + Split 4/5 [4,5] + Split 23/24 [23,24] + Straight 10 [10] + Straight 15 [15]
+TERCIOS [21,2,25,17,34,6,27,13,36,11,30,8]: Cost 10 => Split 8/11 [8,11] + Split 27/30 [27,30] + Straight 2 [2] + Straight 6 [6] + Straight 13 [13] + Straight 17 [17] + Straight 21 [21] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 30 ---
+NUCLEO [13,36,11,30,8,23,10]: Cost 5 => Split 8/11 [8,11] + Split 10/13 [10,13] + Straight 23 [23] + Straight 30 [30] + Straight 36 [36]
+VECINOS [25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1]: Cost 12 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 24/27 [24,27] + Split 30/33 [30,33] + Split 16/17 [16,17] + Straight 1 [1] + Straight 6 [6] + Straight 11 [11] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+HUERF [20,14,31,15,19,4,21,2]: Cost 5 => Street 19-21 [19,20,21] + Split 14/15 [14,15] + Straight 2 [2] + Straight 4 [4] + Straight 31 [31]
+TERCIOS [9,22,18,29,7,28,12,35,3,26,0,32]: Cost 8 => Split 9/12 [9,12] + Split 26/29 [26,29] + Split 32/35 [32,35] + Split 0/3 [0,3] + Straight 7 [7] + Straight 18 [18] + Straight 22 [22] + Straight 28 [28]
+
+--- SYSTEM 31 ---
+NUCLEO [1,20,14,31,9,22,18]: Cost 7 => Straight 1 [1] + Straight 9 [9] + Straight 14 [14] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 31 [31]
+VECINOS [10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35]: Cost 14 => Split 7/10 [7,10] + Split 9/12 [9,12] + Split 28/31 [28,31] + Straight 1 [1] + Straight 5 [5] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 24 [24] + Straight 29 [29] + Straight 33 [33] + Straight 35 [35]
+HUERF [3,26,0,36,11,30,8,23]: Cost 5 => Split 8/11 [8,11] + Split 23/26 [23,26] + Split 0/3 [0,3] + Straight 30 [30] + Straight 36 [36]
+TERCIOS [32,15,19,4,21,2,25,17,34,6,27,13]: Cost 12 => Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 25 [25] + Straight 27 [27] + Straight 32 [32] + Straight 34 [34]
+
+--- SYSTEM 32 ---
+NUCLEO [3,26,0,32,15,19,4]: Cost 6 => Split 0/3 [0,3] + Straight 4 [4] + Straight 15 [15] + Straight 19 [19] + Straight 26 [26] + Straight 32 [32]
+VECINOS [29,7,28,12,35,3,26,0,32,15,19,4,21,2,25,17,34]: Cost 9 => Corner 25-29 [25,26,28,29] + Trio 0/2/3 [0,2,3] + Split 4/7 [4,7] + Split 12/15 [12,15] + Split 32/35 [32,35] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 34 [34]
+HUERF [6,27,13,14,31,9,22,18]: Cost 6 => Split 6/9 [6,9] + Split 13/14 [13,14] + Straight 18 [18] + Straight 22 [22] + Straight 27 [27] + Straight 31 [31]
+TERCIOS [36,11,30,8,23,10,5,24,16,33,1,20]: Cost 8 => Split 5/8 [5,8] + Split 20/23 [20,23] + Split 30/33 [30,33] + Split 10/11 [10,11] + Straight 1 [1] + Straight 16 [16] + Straight 24 [24] + Straight 36 [36]
+
+--- SYSTEM 33 ---
+NUCLEO [5,24,16,33,1,20,14]: Cost 7 => Straight 1 [1] + Straight 5 [5] + Straight 14 [14] + Straight 16 [16] + Straight 20 [20] + Straight 24 [24] + Straight 33 [33]
+VECINOS [11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29]: Cost 12 => Street 22-24 [22,23,24] + Split 5/8 [5,8] + Split 11/14 [11,14] + Split 30/33 [30,33] + Straight 1 [1] + Straight 9 [9] + Straight 10 [10] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 29 [29] + Straight 31 [31]
+HUERF [7,28,12,34,6,27,13,36]: Cost 8 => Straight 6 [6] + Straight 7 [7] + Straight 12 [12] + Straight 13 [13] + Straight 27 [27] + Straight 28 [28] + Straight 34 [34] + Straight 36 [36]
+TERCIOS [35,3,26,0,32,15,19,4,21,2,25,17]: Cost 8 => Trio 0/2/3 [0,2,3] + Split 32/35 [32,35] + Split 25/26 [25,26] + Straight 4 [4] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21]
+
+--- SYSTEM 34 ---
+NUCLEO [2,25,17,34,6,27,13]: Cost 7 => Straight 2 [2] + Straight 6 [6] + Straight 13 [13] + Straight 17 [17] + Straight 25 [25] + Straight 27 [27] + Straight 34 [34]
+VECINOS [32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23]: Cost 15 => Split 8/11 [8,11] + Split 27/30 [27,30] + Straight 2 [2] + Straight 4 [4] + Straight 6 [6] + Straight 13 [13] + Straight 15 [15] + Straight 17 [17] + Straight 19 [19] + Straight 21 [21] + Straight 23 [23] + Straight 25 [25] + Straight 32 [32] + Straight 34 [34] + Straight 36 [36]
+HUERF [10,5,24,12,35,3,26,0]: Cost 7 => Split 0/3 [0,3] + Straight 5 [5] + Straight 10 [10] + Straight 12 [12] + Straight 24 [24] + Straight 26 [26] + Straight 35 [35]
+TERCIOS [16,33,1,20,14,31,9,22,18,29,7,28]: Cost 11 => Split 28/31 [28,31] + Straight 1 [1] + Straight 7 [7] + Straight 9 [9] + Straight 14 [14] + Straight 16 [16] + Straight 18 [18] + Straight 20 [20] + Straight 22 [22] + Straight 29 [29] + Straight 33 [33]
+
+--- SYSTEM 35 ---
+NUCLEO [7,28,12,35,3,26,0]: Cost 6 => Split 0/3 [0,3] + Straight 7 [7] + Straight 12 [12] + Straight 26 [26] + Straight 28 [28] + Straight 35 [35]
+VECINOS [31,9,22,18,29,7,28,12,35,3,26,0,32,15,19,4,21]: Cost 9 => Corner 28-32 [28,29,31,32] + Split 4/7 [4,7] + Split 9/12 [9,12] + Split 15/18 [15,18] + Split 19/22 [19,22] + Split 0/3 [0,3] + Straight 21 [21] + Straight 26 [26] + Straight 35 [35]
+HUERF [2,25,17,16,33,1,20,14]: Cost 6 => Split 14/17 [14,17] + Split 1/2 [1,2] + Straight 16 [16] + Straight 20 [20] + Straight 25 [25] + Straight 33 [33]
+TERCIOS [34,6,27,13,36,11,30,8,23,10,5,24]: Cost 9 => Split 5/8 [5,8] + Split 10/13 [10,13] + Split 24/27 [24,27] + Straight 6 [6] + Straight 11 [11] + Straight 23 [23] + Straight 30 [30] + Straight 34 [34] + Straight 36 [36]
+
+--- SYSTEM 36 ---
+NUCLEO [6,27,13,36,11,30,8]: Cost 5 => Split 8/11 [8,11] + Split 27/30 [27,30] + Straight 6 [6] + Straight 13 [13] + Straight 36 [36]
+VECINOS [21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16]: Cost 11 => Split 2/5 [2,5] + Split 8/11 [8,11] + Split 10/13 [10,13] + Split 21/24 [21,24] + Split 27/30 [27,30] + Split 16/17 [16,17] + Straight 6 [6] + Straight 23 [23] + Straight 25 [25] + Straight 34 [34] + Straight 36 [36]
+HUERF [33,1,20,0,32,15,19,4]: Cost 5 => Split 1/4 [1,4] + Split 19/20 [19,20] + Split 32/33 [32,33] + Straight 0 [0] + Straight 15 [15]
+TERCIOS [14,31,9,22,18,29,7,28,12,35,3,26]: Cost 9 => Split 9/12 [9,12] + Split 26/29 [26,29] + Split 28/31 [28,31] + Straight 3 [3] + Straight 7 [7] + Straight 14 [14] + Straight 18 [18] + Straight 22 [22] + Straight 35 [35]

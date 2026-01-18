@@ -1,0 +1,465 @@
+.board-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.betting-grid {
+    display: grid;
+    grid-template-columns: 50px repeat(12, 60px) 60px;
+    grid-template-rows: repeat(3, 64px) 48px 48px;
+    gap: 1px;
+}
+
+/* ... (Existing code) ... */
+
+/* EXTRA ROW 3 (Row 9) */
+.extra-row-3 {
+    grid-column: 2 / 14;
+    grid-row: 9;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* EXTRA ROW 4 (Row 10) */
+.extra-row-4 {
+    grid-column: 2 / 14;
+    grid-row: 10;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* ... (Existing code) ... */
+
+/* EXTRA ROW 2 (Row 8) */
+.extra-row-2 {
+    grid-column: 2 / 14;
+    grid-row: 8;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* EXTRA ROW 3 (Row 9) */
+.extra-row-3 {
+    grid-column: 2 / 14;
+    grid-row: 9;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* --- CELLS GENERAL --- */
+/* --- CELLS GENERAL --- */
+.grid-cell {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Subtle Bevel */
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.2), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    user-select: none;
+    font-size: 1.2rem;
+    font-family: 'Cinzel', serif;
+    /* Premium Font */
+}
+
+/* COLORS - NOW WITH GRADIENTS */
+.red {
+    background: linear-gradient(135deg, #d32f2f, #8b0000);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.black {
+    background: linear-gradient(135deg, #2c2c2c, #000000);
+    border: 1px solid #444;
+}
+
+.green {
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+}
+
+/* SYSTEM BUTTONS (RECT-CELL) - GLASS/GOLD STYLE */
+.rect-cell {
+    background: linear-gradient(to bottom, rgba(40, 40, 40, 0.9), rgba(10, 10, 10, 0.95));
+    border: 1px solid #d4af37;
+    /* Gold Rim */
+    border-radius: 4px;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.4),
+        /* Drop */
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Top Highlight */
+    color: #ffd700;
+    font-size: 0.9rem !important;
+    /* Fit text better */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 1px;
+    /* Gap for physical separation */
+}
+
+.rect-cell:hover {
+    background: linear-gradient(to bottom, #d4af37, #b8860b);
+    color: #000;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+    transform: translateY(-1px);
+}
+
+/* --- RESTORED CLASSES --- */
+
+.board-chip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+    border: 2px dashed #fff;
+    border-radius: 50%;
+    color: #000;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+/* HOVER HIGHLIGHTS */
+.highlight-preview {
+    position: relative;
+    z-index: 15;
+}
+
+.highlight-preview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    pointer-events: none;
+}
+
+.highlight-win {
+    position: relative;
+    z-index: 20;
+    animation: pulse-win 1s infinite alternate;
+}
+
+.highlight-win::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 255, 0, 0.3);
+    border: 2px solid #0f0;
+    box-shadow: 0 0 15px #0f0;
+    pointer-events: none;
+}
+
+@keyframes pulse-win {
+    from {
+        box-shadow: 0 0 5px #0f0;
+    }
+
+    to {
+        box-shadow: 0 0 20px #0f0, inset 0 0 10px #0f0;
+    }
+}
+
+/* HOTSPOTS */
+.hotspot {
+    position: absolute;
+    background: transparent;
+    border: none;
+    z-index: 20;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hotspot:hover {
+    background: rgba(255, 215, 0, 0.4);
+    border: 1px solid #d4af37;
+    box-shadow: 0 0 5px #d4af37;
+    border-radius: 4px;
+}
+
+.v-split {
+    width: 20px;
+    height: 100%;
+}
+
+.h-split {
+    width: 100%;
+    height: 20px;
+}
+
+.corner {
+    width: 20px;
+    height: 20px;
+}
+
+/* DIAMOND SHAPES (NEW) */
+.diamond-shape {
+    width: 20px;
+    height: 20px;
+    transform: rotate(45deg);
+    display: inline-block;
+}
+
+.diamond-shape.red {
+    background-color: #ff0000;
+    border: 1px solid #ffaaaa;
+    /* Lighter border for visibility */
+    box-shadow: 0 0 4px #ff0000;
+}
+
+.diamond-shape.black {
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    /* White border for contrast on black bg */
+    box-shadow: 0 0 4px #ffffff;
+}
+
+/* --- SECTIONS --- */
+
+/* 1. ZERO */
+.zero-cell {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+}
+
+/* CALL BETS ROW */
+.call-bets-row {
+    grid-column: 2 / 14;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+.call-bets-row .grid-cell {
+    font-size: 0.7rem;
+    /* Reduced to fit text */
+    line-height: 1.1;
+    padding: 2px;
+    text-align: center;
+}
+
+/* NUMBERS BLOCK */
+.numbers-block {
+    grid-column: 2 / 14;
+    grid-row: 1 / 4;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+}
+
+/* COLUMNS (2 to 1) */
+.columns-block {
+    grid-column: 14;
+    grid-row: 1 / 4;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+}
+
+.column-cell {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding: 2px;
+}
+
+.payout-text {
+    font-weight: bold;
+    display: block;
+}
+
+.col-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* DOZENS (Row 5) */
+.dozens-row {
+    grid-column: 2 / 14;
+    grid-row: 4;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* SIMPLE CHANCES (Row 6) */
+.simple-row {
+    grid-column: 2 / 14;
+    grid-row: 5;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+}
+
+/* EXTRA ROW 1 (Row 7) */
+.extra-row-1 {
+    grid-column: 2 / 14;
+    grid-row: 7;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+.extra-row-1 .grid-cell {
+    font-size: 0.95rem;
+    line-height: 1.1;
+    text-align: center;
+    padding: 2px;
+}
+
+/* EXTRA ROW 2 (Row 8) */
+.extra-row-2 {
+    grid-column: 2 / 14;
+    grid-row: 8;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* CHIP STACK OVERRIDES */
+.chip-stack {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-chip-visual {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    box-shadow: 0 3px 2px rgba(0, 0, 0, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.stack-total {
+    position: absolute;
+    top: -15px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffd700;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    border: 1px solid #ffd700;
+    z-index: 100;
+    white-space: nowrap;
+    text-shadow: none;
+    font-weight: bold;
+}
+
+/* DYNAMIC HIGHLIGHTS */
+.highlight-preview {
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 0 10px white !important;
+}
+
+.highlight-preview-gold {
+    background-color: rgba(255, 215, 0, 0.4) !important;
+    box-shadow: 0 0 10px #ffd700 !important;
+    border: 1px solid #ffd700 !important;
+}
+
+.highlight-preview-orange {
+    background-color: rgba(255, 140, 0, 0.4) !important;
+    box-shadow: 0 0 10px #ff9900 !important;
+    border: 1px solid #ff9900 !important;
+}
+
+.highlight-preview-red {
+    background-color: rgba(255, 0, 68, 0.4) !important;
+    box-shadow: 0 0 15px #ff0044 !important;
+    border: 1px solid #ff0044 !important;
+}
+
+.highlight-win {
+    background-color: rgba(50, 255, 50, 0.6) !important;
+    box-shadow: 0 0 20px #00ff00 !important;
+    animation: flashWin 1s infinite alternate;
+}
+
+.highlight-efficient {
+    background-color: rgba(0, 255, 0, 0.5) !important;
+    /* Strong Green Bg */
+    box-shadow: 0 0 20px #0f0, inset 0 0 10px #0f0 !important;
+    /* Double Glow */
+    animation: blinkGreen 0.6s infinite alternate;
+    /* Fast Pulse */
+    border: 2px solid #0f0 !important;
+    z-index: 50 !important;
+}
+
+@keyframes blinkGreen {
+    from {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes flashWin {
+    from {
+        opacity: 0.7;
+    }
+
+    to {
+        opacity: 1;
+        box-shadow: 0 0 30px #00ff00;
+    }
+}
