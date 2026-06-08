@@ -22,3 +22,45 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Build outputs and packaged apps
+release/
+out/
+build/
+*.exe
+*.msi
+*.dmg
+*.AppImage
+*.blockmap
+*.asar
+
+# Local previews, archives, and generated backups
+preview_*/
+_backups/
+backups/
+temp_archive/
+*.zip
+*.7z
+*.rar
+
+# Local agents, vaults, and private runtime state
+.agent/
+.agents/
+SECURITY_VAULT/
+*.local.json
+
+# Python/local tooling
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Capacitor/Android generated artifacts
+android/app/build/
+android/build/
+android/.gradle/
+android/app/src/main/assets/public/
+
+# Office/editor lock files
+~$*
+desktop.ini
+
