@@ -17,6 +17,19 @@ const NUMBERS = [
 ]
 
 const REDS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
+const MATURITY_COLORS = ['#ffd700', '#ff8c00', '#ff4500', '#ff6b6b']
+
+const DOZEN_GROUPS = [
+    { id: 'DOZ1', label: '1st 12', numbers: NUMBERS.filter(n => n >= 1 && n <= 12) },
+    { id: 'DOZ2', label: '2nd 12', numbers: NUMBERS.filter(n => n >= 13 && n <= 24) },
+    { id: 'DOZ3', label: '3rd 12', numbers: NUMBERS.filter(n => n >= 25 && n <= 36) }
+]
+
+const COLUMN_GROUPS = [
+    { id: 'COL3', label: '3rd Col', numbers: NUMBERS.filter(n => n % 3 === 0) },
+    { id: 'COL2', label: '2nd Col', numbers: NUMBERS.filter(n => n % 3 === 2) },
+    { id: 'COL1', label: '1st Col', numbers: NUMBERS.filter(n => n % 3 === 1) }
+]
 
 // --- STANDARD CALL BET CONSTANTS (Restored) ---
 const VOISINS_NUMBERS = [22, 18, 29, 7, 28, 12, 35, 3, 26, 0, 32, 15, 19, 4, 21, 2, 25]
@@ -313,6 +326,39 @@ export const BettingBoard = ({
         })
         const sorted = linesData.sort((a, b) => b.misses - a.misses)
         return sorted.slice(0, 4)
+    }, [history])
+
+    // Calculate mature outside bets using the same coldness ratio model.
+    const matureDozens = React.useMemo(() => {
+        const list = history || []
+        const tDozen = 37 / 12 // True stochastical cycle: 3.083
+        const dozensData = DOZEN_GROUPS.map(dozen => {
+            let misses = 0
+            for (let i = list.length - 1; i >= 0; i--) {
+                if (dozen.numbers.includes(list[i])) break
+                misses++
+            }
+            const ratio = misses / tDozen
+            const percentage = Math.round(ratio * 100)
+            return { ...dozen, misses, percentage }
+        })
+        return dozensData.sort((a, b) => b.misses - a.misses).slice(0, 3)
+    }, [history])
+
+    const matureColumns = React.useMemo(() => {
+        const list = history || []
+        const tColumn = 37 / 12 // True stochastical cycle: 3.083
+        const columnsData = COLUMN_GROUPS.map(column => {
+            let misses = 0
+            for (let i = list.length - 1; i >= 0; i--) {
+                if (column.numbers.includes(list[i])) break
+                misses++
+            }
+            const ratio = misses / tColumn
+            const percentage = Math.round(ratio * 100)
+            return { ...column, misses, percentage }
+        })
+        return columnsData.sort((a, b) => b.misses - a.misses).slice(0, 3)
     }, [history])
 
 
@@ -1045,6 +1091,48 @@ export const BettingBoard = ({
         return spots
     }
 
+    const getMaturityCellStyle = (rank) => {
+        if (rank === -1) return {}
+        const color = MATURITY_COLORS[rank]
+        return {
+            background: `linear-gradient(135deg, ${color}, rgba(20, 20, 20, 0.95))`,
+            border: '2px solid #ffffff',
+            boxShadow: `inset 0 0 12px ${color}, 0 0 14px ${color}`,
+            color: rank === 2 ? '#ffffff' : '#000000',
+            fontWeight: '900'
+        }
+    }
+
+    const renderMaturityBadge = (entry, rank, compact = false) => {
+        if (!entry || rank === -1 || entry.misses <= 0) return null
+        const color = MATURITY_COLORS[rank]
+        return (
+            <div style={{
+                position: 'absolute',
+                right: compact ? '4px' : '8px',
+                bottom: compact ? '4px' : '5px',
+                zIndex: 8,
+                pointerEvents: 'none',
+                backgroundColor: color,
+                color: '#000',
+                border: '1.5px solid rgba(0,0,0,0.25)',
+                borderRadius: '5px',
+                boxShadow: '0 3px 6px rgba(0,0,0,0.5)',
+                padding: compact ? '2px 4px' : '3px 6px',
+                minWidth: compact ? '34px' : '42px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: '1.05',
+                fontWeight: '900'
+            }}>
+                <span style={{ fontSize: compact ? '8px' : '9px', opacity: 0.85 }}>M{rank + 1}</span>
+                <span style={{ fontSize: compact ? '11px' : '13px' }}>{entry.percentage}%</span>
+            </div>
+        )
+    }
+
     return (
         <div
             className="board-container"
@@ -1191,64 +1279,51 @@ export const BettingBoard = ({
 
                 {/* 3. COLUMNS */}
                 <div className="columns-block">
-                    <div className={getClass('COL3', "grid-cell rect-cell column-cell")}
-                        onClick={() => handleBet('COL3')} onMouseEnter={() => setHoveredBet('COL3')} onMouseLeave={() => setHoveredBet(null)}
-                        style={{ position: 'relative' }}
-                        id="bet-btn-COL3"
-                    >
-                        <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', right: '6px', opacity: 0.7, color: '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
-                        <span className="payout-text">2 to 1</span>
-                        <span className="col-label">3rd Col</span>
-                        {renderChip('COL3')}
-                    </div>
-                    <div className={getClass('COL2', "grid-cell rect-cell column-cell")}
-                        onClick={() => handleBet('COL2')} onMouseEnter={() => setHoveredBet('COL2')} onMouseLeave={() => setHoveredBet(null)}
-                        style={{ position: 'relative' }}
-                        id="bet-btn-COL2"
-                    >
-                        <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', right: '6px', opacity: 0.7, color: '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
-                        <span className="payout-text">2 to 1</span>
-                        <span className="col-label">2nd Col</span>
-                        {renderChip('COL2')}
-                    </div>
-                    <div className={getClass('COL1', "grid-cell rect-cell column-cell")}
-                        onClick={() => handleBet('COL1')} onMouseEnter={() => setHoveredBet('COL1')} onMouseLeave={() => setHoveredBet(null)}
-                        style={{ position: 'relative' }}
-                        id="bet-btn-COL1"
-                    >
-                        <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', right: '6px', opacity: 0.7, color: '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
-                        <span className="payout-text">2 to 1</span>
-                        <span className="col-label">1st Col</span>
-                        {renderChip('COL1')}
-                    </div>
+                    {COLUMN_GROUPS.map(column => {
+                        const matureRank = matureColumns.findIndex(entry => entry.id === column.id && entry.misses > 0)
+                        const matureEntry = matureRank !== -1 ? matureColumns[matureRank] : null
+                        return (
+                            <div key={column.id}
+                                className={getClass(column.id, "grid-cell rect-cell column-cell")}
+                                onClick={() => handleBet(column.id)}
+                                onMouseEnter={() => setHoveredBet(column.id)}
+                                onMouseLeave={() => setHoveredBet(null)}
+                                style={{ position: 'relative', ...getMaturityCellStyle(matureRank) }}
+                                title={`${column.label} (${matureEntry ? matureEntry.percentage : 0}%)`}
+                                id={`bet-btn-${column.id}`}
+                            >
+                                <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', right: '6px', opacity: 0.7, color: matureRank !== -1 ? '#111' : '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
+                                <span className="payout-text" style={{ position: 'relative', zIndex: 5 }}>2 to 1</span>
+                                <span className="col-label" style={{ position: 'relative', zIndex: 5 }}>{column.label}</span>
+                                {renderChip(column.id)}
+                                {!bets[column.id] && renderMaturityBadge(matureEntry, matureRank, true)}
+                            </div>
+                        )
+                    })}
                 </div>
 
                 {/* 4. DOZENS */}
                 <div className="outside-row dozens-row">
-                    <div className={getClass('DOZ1', "grid-cell rect-cell")}
-                        onClick={() => handleBet('DOZ1')} onMouseEnter={() => setHoveredBet('DOZ1')} onMouseLeave={() => setHoveredBet(null)}
-                        style={{ position: 'relative' }}
-                        id="bet-btn-DOZ1"
-                    >
-                        <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', left: '6px', opacity: 0.7, color: '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
-                        <span style={{ position: 'relative', zIndex: 5 }}>1st 12</span> {renderChip('DOZ1')}
-                    </div>
-                    <div className={getClass('DOZ2', "grid-cell rect-cell")}
-                        onClick={() => handleBet('DOZ2')} onMouseEnter={() => setHoveredBet('DOZ2')} onMouseLeave={() => setHoveredBet(null)}
-                        style={{ position: 'relative' }}
-                        id="bet-btn-DOZ2"
-                    >
-                        <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', left: '6px', opacity: 0.7, color: '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
-                        <span style={{ position: 'relative', zIndex: 5 }}>2nd 12</span> {renderChip('DOZ2')}
-                    </div>
-                    <div className={getClass('DOZ3', "grid-cell rect-cell")}
-                        onClick={() => handleBet('DOZ3')} onMouseEnter={() => setHoveredBet('DOZ3')} onMouseLeave={() => setHoveredBet(null)}
-                        style={{ position: 'relative' }}
-                        id="bet-btn-DOZ3"
-                    >
-                        <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', left: '6px', opacity: 0.7, color: '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
-                        <span style={{ position: 'relative', zIndex: 5 }}>3rd 12</span> {renderChip('DOZ3')}
-                    </div>
+                    {DOZEN_GROUPS.map(dozen => {
+                        const matureRank = matureDozens.findIndex(entry => entry.id === dozen.id && entry.misses > 0)
+                        const matureEntry = matureRank !== -1 ? matureDozens[matureRank] : null
+                        return (
+                            <div key={dozen.id}
+                                className={getClass(dozen.id, "grid-cell rect-cell")}
+                                onClick={() => handleBet(dozen.id)}
+                                onMouseEnter={() => setHoveredBet(dozen.id)}
+                                onMouseLeave={() => setHoveredBet(null)}
+                                style={{ position: 'relative', ...getMaturityCellStyle(matureRank) }}
+                                title={`${dozen.label} (${matureEntry ? matureEntry.percentage : 0}%)`}
+                                id={`bet-btn-${dozen.id}`}
+                            >
+                                <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', left: '6px', opacity: 0.7, color: matureRank !== -1 ? '#111' : '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
+                                <span style={{ position: 'relative', zIndex: 5 }}>{dozen.label}</span>
+                                {renderChip(dozen.id)}
+                                {!bets[dozen.id] && renderMaturityBadge(matureEntry, matureRank)}
+                            </div>
+                        )
+                    })}
                 </div>
 
                 {/* 5. EVEN CHANCES (Justo Debajo de Docenas) */}
