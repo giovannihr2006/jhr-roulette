@@ -53,8 +53,9 @@ describe('Constantes de Ruleta', () => {
         expect(basket.numbers).toEqual([0, 1, 2, 3])
     })
 
-    it('ALL_LINES debe tener 11 seisenas', () => {
+    it('ALL_LINES debe tener 11 Lineas', () => {
         expect(ALL_LINES.length).toBe(11)
+        expect(ALL_LINES[0].name).toBe('Linea 1-6')
     })
 })
 
@@ -472,6 +473,7 @@ describe('Sistemas dinamicos y riesgo', () => {
         })
     })
 })
+
 // ============================================
 // EDGE CASES
 // ============================================

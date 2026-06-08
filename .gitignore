@@ -64,6 +64,8 @@ android/app/src/main/assets/public/
 
 # Generated analysis/runtime data
 data/logs/
+optimized_offsets.json
+src/utils/optimized_offsets.json
 
 # Superseded local Electron entrypoint; use electron/main.cjs
 electron/main.js
@@ -71,4 +73,3 @@ electron/main.js
 # Office/editor lock files
 ~$*
 desktop.ini
-
