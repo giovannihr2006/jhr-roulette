@@ -1,61 +1,57 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Z_LAYERS } from '../config/Theme'
 
-export const Draggable = ({ children, id, initialPos = { x: 0, y: 0 }, isEnabled = false, onDragEnd, style = {}, className = '', index = 0, totalCount = 0 }) => {
-    // Force auto sizing for board and controls elements (they should always fit their content)
-    const forceAutoSize = id === 'board' || id === 'controls';
-
+export const Draggable = ({ children, id, initialPos = { x: 0, y: 0 }, isEnabled = false, onDragEnd, onDrag, style = {}, className = '', overflow = 'hidden' }) => {
     // Determine initial state with fallbacks
     const [pos, setPos] = useState({
         x: initialPos.x || 0,
         y: initialPos.y || 0,
-        w: forceAutoSize ? 'auto' : (initialPos.w || 'auto'),
-        h: forceAutoSize ? 'auto' : (initialPos.h || 'auto'),
-        scale: initialPos.scale || 1 // ZOOM/SCALE value
+        w: initialPos.w || 'auto',
+        h: initialPos.h || 'auto',
+        scale: initialPos.scale || 1
     })
 
     const [isDragging, setIsDragging] = useState(false)
     const [isResizing, setIsResizing] = useState(false)
-    const [rel, setRel] = useState(null) // Relative position cursor-to-element
+    const [rel, setRel] = useState(null)
     const nodeRef = useRef(null)
 
-    // Sync props
+    // FORENSIC FIX: Prevent "Snap Back" / Vertical Lock
+    // Only update position from props if NOT dragging.
+    // This prevents parent re-renders (triggered by clock, state, etc.) from resetting the drag progress.
     useEffect(() => {
+        if (isDragging) return;
+
         setPos(prev => ({
             ...prev,
-            x: initialPos.x || prev.x || 0,
-            y: initialPos.y || prev.y || 0,
+            x: initialPos.x !== undefined ? initialPos.x : prev.x,
+            y: initialPos.y !== undefined ? initialPos.y : prev.y,
             w: initialPos.w || prev.w || 'auto',
             h: initialPos.h || prev.h || 'auto',
             scale: initialPos.scale || prev.scale || 1
         }))
-    }, [initialPos])
+    }, [initialPos, isDragging])
 
     useEffect(() => {
         if (!isEnabled) return
 
         const onMouseMove = (e) => {
             if (isDragging) {
-                let newX = e.clientX - rel.x
-                let newY = e.clientY - rel.y
-
-                // BOUNDARY CHECKS
-                const el = nodeRef.current
-                if (el) {
-                    const maxX = window.innerWidth - el.offsetWidth
-                    const maxY = window.innerHeight - el.offsetHeight
-                    newX = Math.max(0, Math.min(newX, maxX))
-                    newY = Math.max(0, Math.min(newY, maxY))
-                }
-
-                setPos(prev => ({ ...prev, x: newX, y: newY }))
+                const newX = e.clientX - rel.x
+                const newY = e.clientY - rel.y
+                setPos(prev => {
+                    const nextPos = { ...prev, x: newX, y: newY }
+                    if (onDrag) onDrag(id, nextPos) // EMIT REAL-TIME POSITION
+                    return nextPos
+                })
                 e.preventDefault()
+                e.stopPropagation()
             } else if (isResizing) {
-                // Calculate new size based on mouse position relative to element top-left
-                // Top-left is pos.x, pos.y
                 const newW = Math.max(50, e.clientX - pos.x)
                 const newH = Math.max(50, e.clientY - pos.y)
                 setPos(prev => ({ ...prev, w: newW, h: newH }))
                 e.preventDefault()
+                e.stopPropagation()
             }
         }
 
@@ -78,9 +74,8 @@ export const Draggable = ({ children, id, initialPos = { x: 0, y: 0 }, isEnabled
 
     const onMouseDown = (e) => {
         if (!isEnabled || e.button !== 0) return
-
-        // Interactive check
         const target = e.target
+        // Prevent drag on interactive elements
         if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.closest('button')) {
             return
         }
@@ -91,143 +86,69 @@ export const Draggable = ({ children, id, initialPos = { x: 0, y: 0 }, isEnabled
             y: e.clientY - rect.top
         })
 
-        // Better initial drag offset logic
-        setRel({
-            x: e.clientX - pos.x,
-            y: e.clientY - pos.y
-        })
-
         setIsDragging(true)
         e.stopPropagation()
     }
 
     const onResizeStart = (e) => {
         if (!isEnabled) return
-        e.stopPropagation() // Prevent drag start
+        e.stopPropagation()
         setIsResizing(true)
-    }
-
-    // ZOOM HANDLERS
-    const handleZoomIn = (e) => {
-        e.stopPropagation()
-        const newScale = Math.min(3, pos.scale + 0.01) // +1%
-        setPos(prev => ({ ...prev, scale: newScale }))
-        if (onDragEnd) onDragEnd(id, { ...pos, scale: newScale })
-    }
-
-    const handleZoomOut = (e) => {
-        e.stopPropagation()
-        const newScale = Math.max(0.1, pos.scale - 0.01) // -1%
-        setPos(prev => ({ ...prev, scale: newScale }))
-        if (onDragEnd) onDragEnd(id, { ...pos, scale: newScale })
-    }
-
-    const handleZoomInput = (e) => {
-        e.stopPropagation()
-        let val = parseInt(e.target.value, 10)
-        if (isNaN(val)) val = 100
-        val = Math.max(10, Math.min(300, val)) // 10% to 300%
-        const newScale = val / 100
-        setPos(prev => ({ ...prev, scale: newScale }))
-        if (onDragEnd) onDragEnd(id, { ...pos, scale: newScale })
     }
 
     return (
         <div
+            id={id}
             ref={nodeRef}
             onMouseDown={onMouseDown}
             className={className}
             style={{
                 position: 'absolute',
-                left: pos.x,
-                top: pos.y,
-                width: pos.w === 'auto' ? 'fit-content' : pos.w,
-                height: pos.h === 'auto' ? 'fit-content' : pos.h,
-                display: 'inline-block',
+                left: `${pos.x}px`,
+                top: `${pos.y}px`,
+                width: typeof pos.w === 'number' ? `${pos.w}px` : pos.w,
+                height: typeof pos.h === 'number' ? `${pos.h}px` : pos.h,
                 cursor: isEnabled ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                zIndex: (isDragging || isResizing) ? 2000 : 100,
+                zIndex: (isDragging || isResizing) ? 2000000 : Z_LAYERS?.DRAGGABLE || 100,
                 border: isEnabled ? '2px dashed #d4af37' : 'none',
-                backgroundColor: (pos.w !== 'auto' || pos.h !== 'auto') ? '#000' : (isEnabled ? 'rgba(0,0,0,0.2)' : 'transparent'),
-                ...style
+                backgroundColor: 'transparent',
+                touchAction: 'none',
+                userSelect: 'none', // NEW: Prevent text selection causing drag fail
+                transition: isDragging ? 'none' : 'all 0.1s ease-out',
+                transform: `scale(${pos.scale || 1})`,
+                transformOrigin: 'top left',
+                ...style // Allow style overrides
             }}
         >
-            {/* ID LABEL + ZOOM CONTROLS */}
-            {isEnabled && (
+            {/* DRAG SHIELD - Prevents child interaction during drag */}
+            {isDragging && (
                 <div style={{
-                    position: 'absolute', top: -30, left: 0,
-                    display: 'flex', alignItems: 'center', gap: '3px',
-                    background: 'rgba(0,0,0,0.9)', padding: '3px 8px',
-                    borderRadius: '4px', zIndex: 6000
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    zIndex: 1000000,
+                    cursor: 'grabbing',
+                    backgroundColor: 'transparent'
+                }} />
+            )}
+
+            {/* ID LABEL (Visible only in Edit Mode) */}
+            {isEnabled && id !== 'board' && (
+                <div style={{
+                    position: 'absolute', top: 3, left: 3,
+                    background: '#d4af37', color: 'black', padding: '2px 5px',
+                    fontSize: '10px', fontWeight: 'bold', borderRadius: '4px',
+                    whiteSpace: 'nowrap', pointerEvents: 'none',
+                    zIndex: 999999 // Ensure visibility
                 }}>
-                    {/* ID Label */}
-                    <span style={{
-                        background: '#d4af37', color: 'black', padding: '2px 5px',
-                        fontSize: '10px', fontWeight: 'bold', borderRadius: '4px',
-                        whiteSpace: 'nowrap', marginRight: '5px'
-                    }}>
-                        <span style={{ color: '#000', marginRight: '3px', fontSize: '11px' }}>{index}/{totalCount}</span>
-                        {id}
-                    </span>
-
-                    {/* Zoom Out (-1%) */}
-                    <button
-                        onClick={handleZoomOut}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        style={{
-                            width: '20px', height: '20px',
-                            background: '#333', border: '1px solid #d4af37',
-                            color: '#d4af37', fontSize: '12px', fontWeight: 'bold',
-                            borderRadius: '3px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                        title="Reducir zoom (-1%)"
-                    >−</button>
-
-                    {/* Editable Zoom Input */}
-                    <input
-                        type="number"
-                        value={Math.round(pos.scale * 100)}
-                        onChange={handleZoomInput}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            width: '45px', height: '20px',
-                            background: '#222', border: '1px solid #d4af37',
-                            color: '#d4af37', fontSize: '11px', fontWeight: 'bold',
-                            borderRadius: '3px', textAlign: 'center',
-                            outline: 'none'
-                        }}
-                        title="Ingresa el porcentaje de zoom (10-300)"
-                        min="10"
-                        max="300"
-                    />
-                    <span style={{ fontSize: '10px', color: '#d4af37' }}>%</span>
-
-                    {/* Zoom In (+1%) */}
-                    <button
-                        onClick={handleZoomIn}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        style={{
-                            width: '20px', height: '20px',
-                            background: '#333', border: '1px solid #d4af37',
-                            color: '#d4af37', fontSize: '12px', fontWeight: 'bold',
-                            borderRadius: '3px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                        title="Aumentar zoom (+1%)"
-                    >+</button>
+                    {id}
                 </div>
             )}
 
-            {/* CONTENT with SCALE TRANSFORM */}
-            <div style={{
-                width: '100%',
-                height: '100%',
-                overflow: 'visible',
-                position: 'relative',
-                transform: `scale(${pos.scale})`,
-                transformOrigin: 'top left'
-            }}>
+            {/* CONTENT */}
+            <div style={{ width: '100%', height: '100%', overflow: overflow }}>
                 {children}
             </div>
 

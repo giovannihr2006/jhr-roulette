@@ -19,6 +19,8 @@ const MODAL_CONTENT_STYLE = {
     fontFamily: 'Roboto Mono, monospace'
 };
 
+// Add Global Style for Animation (Cleaned)
+
 const InternalScannerModal = ({ isOpen, onClose, numberHistory, onBatchBet, selectedChip }) => {
     // 1. Data Analysis
     // Analyze ALL history (or last 300 for meaningful stats? User implied "analyzed cylinder/simples", implies full history)
@@ -39,12 +41,15 @@ const InternalScannerModal = ({ isOpen, onClose, numberHistory, onBatchBet, sele
 
     if (!isOpen) return null;
 
+    // Verificar que el DOM esté disponible para el portal
+    if (typeof document === 'undefined' || !document.body) return null;
+
     // Helper for betting
     const handleBet = (pattern) => {
         if (onBatchBet && selectedChip) {
-            // Pattern has a unique 'betId' field (e.g. SPLIT_1_2) 
+            // Pattern has a unique 'betId' field (e.g. SPLIT_1_2)
             // OR we can pass the explicit numbers (better for complex patterns if IDs aren't standard in board)
-            // The BettingBoard logic supports batch definitions? 
+            // The BettingBoard logic supports batch definitions?
             // useRouletteLogic -> handleBatchBets takes IDs.
             // internalPatterns.js assigns betIds compatible with BettingBoard logic (hopefully).
             // Let's pass the single ID as a batch of 1 to reuse the batch logic which handles arrays.
@@ -78,7 +83,7 @@ const InternalScannerModal = ({ isOpen, onClose, numberHistory, onBatchBet, sele
                             <option value="SPLIT">Caballos</option>
                             <option value="STREET">Calles</option>
                             <option value="CORNER">Cuadros</option>
-                            <option value="LINE">Seisenas</option>
+                            <option value="LINE">Líneas</option>
                         </select>
                         <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
                     </div>
@@ -111,9 +116,9 @@ const InternalScannerModal = ({ isOpen, onClose, numberHistory, onBatchBet, sele
                                             style={{ padding: '4px 10px', cursor: 'pointer', fontWeight: 'bold', color: isHot ? '#fff' : '#aaa', textDecoration: 'underline' }}
                                             title="Click para apostar"
                                         >
-                                            {row.name}
+                                            {row.name} (#{row.numbers.length})
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>{row.type}</td>
+                                        <td style={{ textAlign: 'center' }}>{row.type === 'LINE' ? 'LÍNEA' : row.type} (#{row.numbers.length})</td>
                                         <td style={{ textAlign: 'center', fontSize: '0.8rem', color: '#666' }}>
                                             {row.numbers.length > 6 ? row.numbers.length + ' nums' : row.numbers.join(', ')}
                                         </td>
@@ -145,7 +150,8 @@ const InternalScannerModal = ({ isOpen, onClose, numberHistory, onBatchBet, sele
                     </table>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

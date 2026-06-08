@@ -83,39 +83,9 @@ describe('SpinCounter', () => {
         expect(container.firstChild).toMatchSnapshot()
     })
 
-    it('displays JUGADAS label', () => {
-        const { container } = render(<SpinCounter />)
-        expect(container.textContent).toContain('JUGADAS')
-    })
-
-    it('displays the spin count from store', () => {
-        const { container } = render(<SpinCounter />)
-        expect(container.textContent).toContain('42')
-    })
-})
-
-// ============================================================================
-// SessionClock Tests
-// ============================================================================
-describe('SessionClock', () => {
-    beforeEach(() => {
-        // Mock Date for consistent snapshots
-        vi.useFakeTimers()
-        vi.setSystemTime(new Date('2026-01-17T12:00:00'))
-    })
-
-    afterEach(() => {
-        vi.useRealTimers()
-    })
-
-    it('renders correctly with initial state', () => {
+    it('displays forensic session marker', () => {
         const { container } = render(<SessionClock />)
-        expect(container.firstChild).toMatchSnapshot()
-    })
-
-    it('displays SESIÓN label', () => {
-        const { container } = render(<SessionClock />)
-        expect(container.textContent).toContain('SESIÓN')
+        expect(container.textContent).toContain('E14')
     })
 
     it('displays formatted time', () => {

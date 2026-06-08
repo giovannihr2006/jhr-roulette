@@ -1,17 +1,17 @@
-import React, { useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import React, { useMemo, useRef, useEffect } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 
 // --- CONSTANTS & PALETTE (From User Spec) ---
 const COLORS = {
-    mahogany: '#7B3F32', // Deep Reddish Brown
-    maple: '#E5C29B', // Cream/Light Wood
-    gold: '#D4AF37', // Polished Brass
-    silver: '#F0F0F0', // Chrome
-    red: '#D32F2F',
-    black: '#1A1A1A',
-    green: '#008f39',
+    mahogany: '#5D4037', // Deep wood
+    maple: '#E5C29B', // Light maple wood
+    gold: '#FFD700', // Rich Gold
+    silver: '#E0E0E0', // Chrome/Silver
+    red: '#B31B1B', // Casino Red
+    black: '#111111', // Casino Black
+    green: '#008F39', // European Green
     felt: '#053010'
 }
 
@@ -22,8 +22,8 @@ const NUMBERS = [
 ]
 const REDS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
 
-function ScientificWheel({ rotation }) {
-    // --- HIGH RES TEXTURE ---
+function ScientificWheel({ rotation, highlightedNumbers = [], placedNumbers = [], bestPayoutNumbers = [], isTurboMode = false }) {
+    // --- HIGH RES SECTORS & NUMBERS CANVAS TEXTURE GENERATOR (Tramo 2) ---
     const texture = useMemo(() => {
         const canvas = document.createElement('canvas')
         const size = 2048
@@ -33,212 +33,383 @@ function ScientificWheel({ rotation }) {
         const cx = size / 2
         const cy = size / 2
 
+        // Clear canvas
         ctx.clearRect(0, 0, size, size)
 
-        const outerR = size / 2
-        const innerR = size * 0.6 // Hole for dome
         const angleStep = (Math.PI * 2) / 37
 
-        // 1. POCKET SECTORS (Background Colors)
-        NUMBERS.forEach((num, i) => {
-            const startAngle = (i * angleStep) - (Math.PI / 2) - (angleStep / 2)
-            const endAngle = startAngle + angleStep
+        // 1. Draw the 37 colored sectors
+        for (let i = 0; i < 37; i++) {
+            const num = NUMBERS[i]
+            // Center angle of sector
+            const centerAngle = (i * angleStep) - (Math.PI / 2)
+            // Sector boundaries
+            const startAngle = centerAngle - (angleStep / 2)
+            const endAngle = centerAngle + (angleStep / 2)
 
+            // Determine standard color
+            let sectorColor = COLORS.black
+            if (num === 0) {
+                sectorColor = COLORS.green
+            } else if (REDS.includes(num)) {
+                sectorColor = COLORS.red
+            }
+
+            // Draw solid sector
             ctx.beginPath()
             ctx.moveTo(cx, cy)
-            ctx.arc(cx, cy, outerR, startAngle, endAngle)
-            ctx.lineTo(cx, cy)
-
-            if (num === 0) ctx.fillStyle = COLORS.green
-            else if (REDS.includes(num)) ctx.fillStyle = COLORS.red
-            else ctx.fillStyle = COLORS.black
-
+            ctx.arc(cx, cy, size / 2, startAngle, endAngle)
+            ctx.closePath()
+            ctx.fillStyle = sectorColor
             ctx.fill()
-        })
 
-        // 2. INNER MASK (Clean cut for dome)
+            // Draw highlight overlay if active
+            const isHovered = highlightedNumbers.includes(num)
+            const isBestPayout = bestPayoutNumbers.includes(num)
+            const isPlaced = placedNumbers.includes(num)
+
+            if (isHovered) {
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.45)' // Glowing Gold
+                ctx.fill()
+            } else if (isBestPayout) {
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.45)' // Vibrant Cyan
+                ctx.fill()
+            } else if (isPlaced) {
+                ctx.fillStyle = 'rgba(64, 224, 208, 0.35)' // Turquoise
+                ctx.fill()
+            }
+
+            // Draw premium gold sector dividers (brass separators)
+            ctx.beginPath()
+            ctx.moveTo(cx + Math.cos(startAngle) * (size / 2 * 0.583), cy + Math.sin(startAngle) * (size / 2 * 0.583))
+            ctx.lineTo(cx + Math.cos(startAngle) * (size / 2), cy + Math.sin(startAngle) * (size / 2))
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.85)' // Warm Brass Gold
+            ctx.lineWidth = 4
+            ctx.stroke()
+
+            // 2. Draw Number Text
+            ctx.save()
+            // Place text near the outer border/edge of the pockets (at 88% of outer radius)
+            const textRadius = (size / 2) * 0.88
+            const tx = cx + Math.cos(centerAngle) * textRadius
+            const ty = cy + Math.sin(centerAngle) * textRadius
+
+            ctx.translate(tx, ty)
+            // Rotate radially so numbers face center
+            ctx.rotate(centerAngle + Math.PI / 2)
+
+            // Setup elegant bold font
+            ctx.font = 'bold 72px "Roboto Condensed", "Arial Black", sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+
+            // Draw high-contrast black outline
+            ctx.strokeStyle = '#000000'
+            ctx.lineWidth = 10
+            ctx.strokeText(num.toString(), 0, 0)
+
+            // Choose text color based on highlight state
+            if (isHovered) {
+                ctx.fillStyle = '#FFD700' // Gold text
+            } else if (isBestPayout) {
+                ctx.fillStyle = '#00FFFF' // Cyan text
+            } else if (isPlaced) {
+                ctx.fillStyle = '#40E0D0' // Turquoise text
+            } else {
+                ctx.fillStyle = '#FFFFFF' // Standard white text
+            }
+            ctx.fillText(num.toString(), 0, 0)
+            ctx.restore()
+        }
+
+        // 3. Clear/Mask center circle to keep the inner slope transparent
         ctx.globalCompositeOperation = 'destination-out'
         ctx.beginPath()
-        ctx.arc(cx, cy, innerR, 0, Math.PI * 2)
+        ctx.arc(cx, cy, (size / 2) * 0.583, 0, Math.PI * 2)
         ctx.fill()
         ctx.globalCompositeOperation = 'source-over'
 
-        // 3. NUMBERS (White Sans-Serif, Medium Stroke)
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.font = 'bold 130px Arial'
-        ctx.fillStyle = '#FFFFFF'
+        // 4. Draw inner gold molding at pocket boundary
+        ctx.beginPath()
+        ctx.arc(cx, cy, (size / 2) * 0.583, 0, Math.PI * 2)
+        ctx.strokeStyle = '#D4AF37'
+        ctx.lineWidth = 8
+        ctx.stroke()
 
-        const textR = size * 0.85 // Near outer edge
-        NUMBERS.forEach((num, i) => {
-            const angle = (i * angleStep) - (Math.PI / 2)
-            const tx = cx + Math.cos(angle) * textR
-            const ty = cy + Math.sin(angle) * textR
-
-            ctx.save()
-            ctx.translate(tx, ty)
-            ctx.rotate(angle + Math.PI / 2)
-            ctx.fillText(num.toString(), 0, 0)
-            ctx.restore()
-        })
-
+        // Convert canvas to WebGL texture
         const tex = new THREE.CanvasTexture(canvas)
         tex.colorSpace = THREE.SRGBColorSpace
         return tex
-    }, [])
+    }, [highlightedNumbers, placedNumbers, bestPayoutNumbers])
+
+    // Trigger texture GPU upload on change
+    useEffect(() => {
+        if (texture) {
+            texture.needsUpdate = true
+        }
+    }, [texture])
+
+    // Animation refs
+    const startRotation = useRef(0)
+    const targetRotation = useRef(0)
+    const currentAnimRotation = useRef(0)
+    const spinStartTime = useRef(0)
+    const duration = useRef(12000)
+
+    // Detect target rotation changes
+    useEffect(() => {
+        startRotation.current = currentAnimRotation.current
+        targetRotation.current = rotation
+        spinStartTime.current = performance.now()
+        duration.current = isTurboMode ? 1000 : 12000
+    }, [rotation, isTurboMode])
+
+    // Local ref for the rotating group
+    const rotorGroupRef = useRef()
+
+    useFrame(() => {
+        if (rotorGroupRef.current) {
+            const now = performance.now()
+            const elapsed = now - spinStartTime.current
+            const progress = Math.min(elapsed / duration.current, 1)
+
+            // Quintic ease-out curve matching CSS bezier transition
+            const ease = 1 - Math.pow(1 - progress, 5)
+            const current = startRotation.current + (targetRotation.current - startRotation.current) * ease
+
+            currentAnimRotation.current = current
+            rotorGroupRef.current.rotation.y = -current * (Math.PI / 180)
+        }
+    })
 
     return (
-        <group rotation={[0, -rotation * (Math.PI / 180), 0]}>
-
-            {/* === ZONE 1: OUTER ARMOR (Mahogany Bowl) === */}
-            {/* Toroid-like profile */}
+        <group>
+            {/* === STATOR (Static Parts) === */}
+            {/* Mahogany Bowl (Now openEnded=true to prevent burying the plane!) */}
             <mesh position={[0, -0.4, 0]}>
-                <cylinderGeometry args={[5.8, 5.6, 1.2, 80]} />
-                <meshStandardMaterial color={COLORS.mahogany} roughness={0.05} metalness={0.1} /> {/* High gloss */}
+                <cylinderGeometry args={[5.8, 5.6, 1.2, 80, 1, true]} />
+                <meshStandardMaterial color={COLORS.mahogany} roughness={0.06} metalness={0.15} />
             </mesh>
             {/* Top Rounded Lip */}
             <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
                 <torusGeometry args={[5.65, 0.15, 16, 80]} />
-                <meshStandardMaterial color={COLORS.mahogany} roughness={0.05} />
+                <meshStandardMaterial color={COLORS.mahogany} roughness={0.06} metalness={0.12} />
             </mesh>
             {/* Base Gold Molding */}
             <mesh position={[0, -0.95, 0]}>
                 <cylinderGeometry args={[5.62, 5.62, 0.1, 80]} />
-                <meshStandardMaterial color={COLORS.gold} metalness={1} roughness={0.2} />
+                <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.15} />
             </mesh>
-
-
-            {/* === ZONE 2: APRON (Maple Track) - 15-20 Deg Slope === */}
-            {/* Cone from R=5.5 down to R=4.0 */}
+            {/* Apron (Maple Track) */}
             <mesh position={[0, 0.1, 0]}>
-                {/* Height 0.6 to create steep slope */}
-                <cylinderGeometry args={[5.5, 4.0, 0.6, 80, 1, true]} />
-                <meshStandardMaterial color={COLORS.maple} roughness={0.3} side={THREE.DoubleSide} />
+                <cylinderGeometry args={[5.5, 4.8, 0.6, 80, 1, true]} />
+                <meshStandardMaterial color={COLORS.maple} roughness={0.25} metalness={0.0} side={THREE.DoubleSide} />
             </mesh>
-
-            {/* DEFLECTORS (8 Prismatic Diamonds) */}
+            {/* Deflectors */}
             {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
-                const isRadial = i % 2 === 0 // 4 Radial, 4 Tangential
+                const isRadial = i % 2 === 0
                 return (
                     <mesh
                         key={i}
                         position={[Math.cos(angle * Math.PI / 180) * 4.8, 0.3, Math.sin(angle * Math.PI / 180) * 4.8]}
-                        rotation={[0.3, (angle + (isRadial ? 0 : 90)) * Math.PI / 180, 0]} // Tilted on slope
+                        rotation={[0.3, (angle + (isRadial ? 0 : 90)) * Math.PI / 180, 0]}
                     >
-                        {/* Prismatic shape using simple box for now, scaled sharply */}
                         <boxGeometry args={[0.2, 0.08, 0.4]} />
-                        <meshStandardMaterial color={COLORS.silver} metalness={1} roughness={0} />
+                        <meshStandardMaterial color={COLORS.silver} metalness={0.8} roughness={0.1} />
                     </mesh>
                 )
             })}
 
-
-            {/* === ZONE 3: POCKETS (The Rotor) - 5-8 Deg Slope (Shallow) === */}
-            {/* Sits below apron. Transition R=4.0 down to R=2.5. Gentle slope. */}
-            <group position={[0, -0.3, 0]}>
-
-                {/* The Step/gap is simulated by position Y drop */}
-
-                {/* Number Ring (Shallow Cone) */}
-                <mesh position={[0, -0.1, 0]}>
-                    <cylinderGeometry args={[4.0, 2.8, 0.4, 80, 1, true]} />
-                    {/* BasicMaterial for Texture Visibility as requested before */}
-                    <meshBasicMaterial map={texture} side={THREE.DoubleSide} />
+            {/* === ROTOR (Rotating Parts) === */}
+            <group ref={rotorGroupRef}>
+                {/* Number Ring - Flat Plane projected perfectly at Y -0.18, above mahogany bottom (resized to 9.6 x 9.6 for radius 4.8) */}
+                <mesh position={[0, -0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <planeGeometry args={[9.6, 9.6]} />
+                    <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
                 </mesh>
 
-                {/* PHYSICAL SEPARATORS (Wedge Shape) */}
+                {/* 3D Gold molding ring (Inner pocket boundary at radius 2.8) */}
+                <mesh position={[0, -0.17, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[2.8, 0.03, 16, 80]} />
+                    <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.15} />
+                </mesh>
+
+                {/* 3D Gold molding ring (Outer pocket boundary at radius 4.8) */}
+                <mesh position={[0, -0.16, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[4.82, 0.02, 16, 80]} />
+                    <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.15} />
+                </mesh>
+
+                {/* Central Rotor Cone (Realistic multi-stage gold/brass cone) */}
+                <mesh position={[0, -0.4, 0]}>
+                    <cylinderGeometry args={[1.0, 2.8, 0.8, 64, 1, true]} />
+                    <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.2} />
+                </mesh>
+                <mesh position={[0, 0.1, 0]}>
+                    <cylinderGeometry args={[0.4, 1.0, 0.4, 64, 1, true]} />
+                    <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.2} />
+                </mesh>
+                <mesh position={[0, 0.0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[1.0, 0.08, 16, 64]} />
+                    <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.2} />
+                </mesh>
+
+                {/* 3D Gold collar ring at cone opening */}
+                <mesh position={[0, 0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[0.34, 0.06, 16, 64]} />
+                    <meshStandardMaterial color={COLORS.gold} metalness={0.85} roughness={0.15} />
+                </mesh>
+
+                {/* Turret Spindle (Majestic Ornate Centerpiece) */}
+                <group position={[0, 0.3, 0]}>
+                    {/* Fluted chrome pillar */}
+                    <mesh position={[0, 0.25, 0]}>
+                        <cylinderGeometry args={[0.15, 0.28, 0.5, 32]} />
+                        <meshStandardMaterial color={COLORS.silver} metalness={0.9} roughness={0.08} />
+                    </mesh>
+                    {/* Top gold crown/dome */}
+                    <mesh position={[0, 0.52, 0]}>
+                        <sphereGeometry args={[0.18, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                        <meshStandardMaterial color={COLORS.gold} metalness={0.85} roughness={0.15} />
+                    </mesh>
+                    <mesh position={[0, 0.5, 0]}>
+                        <cylinderGeometry args={[0.2, 0.2, 0.04, 32]} />
+                        <meshStandardMaterial color={COLORS.gold} metalness={0.85} roughness={0.15} />
+                    </mesh>
+                    {/* Majestic curved arms and handles */}
+                    {[0, 90, 180, 270].map((angle, i) => (
+                        <group key={i} rotation={[0, angle * Math.PI / 180, 0]}>
+                            {/* Sloping arm */}
+                            <mesh position={[0, 0.22, 0.6]} rotation={[0.15, 0, 0]}>
+                                <cylinderGeometry args={[0.04, 0.02, 1.2, 16]} />
+                                <meshStandardMaterial color={COLORS.silver} metalness={0.9} roughness={0.08} />
+                            </mesh>
+                            {/* Ornate gold sphere accents */}
+                            <mesh position={[0, 0.31, 0.25]}>
+                                <sphereGeometry args={[0.08, 16, 16]} />
+                                <meshStandardMaterial color={COLORS.gold} metalness={0.8} roughness={0.15} />
+                            </mesh>
+                            {/* Handle tips */}
+                            <mesh position={[0, 0.13, 1.2]}>
+                                <sphereGeometry args={[0.13, 32, 32]} />
+                                <meshStandardMaterial color={COLORS.gold} metalness={0.85} roughness={0.1} />
+                            </mesh>
+                        </group>
+                    ))}
+                </group>
+
+                {/* Physical Separators (Thicker, Longer 3D Chrome Compartments centered at 3.8, length 2.0) */}
                 {NUMBERS.map((_, i) => {
                     const angle = (i * ((Math.PI * 2) / 37)) - (Math.PI / 2) - (((Math.PI * 2) / 37) / 2)
                     return (
-                        <mesh key={i} position={[Math.cos(angle) * 3.4, -0.05, Math.sin(angle) * 3.4]} rotation={[0.1, -angle, 0]}>
-                            {/* Tapered wedge effect */}
-                            <boxGeometry args={[1.2, 0.08, 0.05]} />
-                            <meshStandardMaterial color={COLORS.silver} metalness={0.9} roughness={0.2} />
+                        <mesh key={i} position={[Math.cos(angle) * 3.8, -0.14, Math.sin(angle) * 3.8]} rotation={[0, -angle, 0]}>
+                            <boxGeometry args={[2.0, 0.08, 0.06]} />
+                            <meshStandardMaterial color={COLORS.silver} metalness={0.9} roughness={0.1} />
                         </mesh>
                     )
                 })}
-
-
-                {/* === ZONE 4: CENTRAL DOME (Convex Parabolic) === */}
-                <group position={[0, -0.4, 0]}>
-
-                    {/* The Dome Geometry */}
-                    <mesh position={[0, 0.3, 0]}>
-                        <sphereGeometry args={[2.8, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
-                        <meshStandardMaterial color={COLORS.gold} metalness={1} roughness={0.05} />
-                    </mesh>
-
-                    {/* TURRET (Spindle) - Silver Arms on Gold Dome */}
-                    <group position={[0, 1.2, 0]}>
-                        {/* Central Button */}
-                        <mesh position={[0, 0.3, 0]}>
-                            <cylinderGeometry args={[0.3, 0.3, 0.5, 32]} />
-                            <meshStandardMaterial color={COLORS.silver} metalness={1} />
-                        </mesh>
-
-                        {/* 4 Arms */}
-                        {[0, 90, 180, 270].map((angle, i) => (
-                            <group key={i} rotation={[0, angle * Math.PI / 180, 0]}>
-                                {/* Arm Bar */}
-                                <mesh position={[0, 0.1, 1.0]} rotation={[Math.PI / 2, 0, 0]}>
-                                    <cylinderGeometry args={[0.12, 0.08, 1.6, 16]} />
-                                    <meshStandardMaterial color={COLORS.silver} metalness={1} roughness={0.1} />
-                                </mesh>
-                                {/* Sphere Knob */}
-                                <mesh position={[0, 0.1, 1.9]}>
-                                    <sphereGeometry args={[0.25, 32, 32]} />
-                                    <meshStandardMaterial color={COLORS.silver} metalness={1} roughness={0.05} />
-                                </mesh>
-                            </group>
-                        ))}
-                    </group>
-                </group>
-
             </group>
-
         </group>
     )
 }
 
-function Ball({ rotation, show }) {
+function Ball({ rotation, show, isTurboMode = false }) {
     if (!show) return null
 
-    // TARGET: NUMBER 32 (Red)
-    // 32 is roughly at angle -90 + step (it's the second number in sequence 0, 32...)
-    // But rotation prop handles animation. We render it static if needed or animated.
-    // User asked for static ball in description but this is a game. We maintain game logic.
-    // We position it on the "Pockets" slope.
+    // Animation refs
+    const startRotation = useRef(0)
+    const targetRotation = useRef(0)
+    const currentAnimRotation = useRef(0)
+    const spinStartTime = useRef(0)
+    const duration = useRef(12000)
 
-    const radius = 3.4
-    const angleRad = (rotation - 90) * (Math.PI / 180)
-    const x = Math.cos(angleRad) * radius
-    const z = Math.sin(angleRad) * radius
+    // Detect target rotation changes
+    useEffect(() => {
+        startRotation.current = currentAnimRotation.current
+        targetRotation.current = rotation
+        spinStartTime.current = performance.now()
+        duration.current = isTurboMode ? 1000 : 12000
+    }, [rotation, isTurboMode])
+
+    // Local refs for the ball and shadow
+    const ballRef = useRef()
+    const shadowRef = useRef()
+
+    useFrame(() => {
+        const now = performance.now()
+        const elapsed = now - spinStartTime.current
+        const progress = Math.min(elapsed / duration.current, 1)
+
+        // Quintic ease-out curve matching CSS bezier transition
+        const ease = 1 - Math.pow(1 - progress, 5)
+        const current = startRotation.current + (targetRotation.current - startRotation.current) * ease
+
+        currentAnimRotation.current = current
+
+        const radius = 3.8
+        const angleRad = (current - 90) * (Math.PI / 180)
+        const x = Math.cos(angleRad) * radius
+        const z = Math.sin(angleRad) * radius
+
+        if (ballRef.current) {
+            ballRef.current.position.set(x, -0.1, z)
+        }
+        if (shadowRef.current) {
+            shadowRef.current.position.set(x, -0.18, z)
+        }
+    })
 
     return (
-        <mesh position={[x, -0.45, z]}>
-            <sphereGeometry args={[0.11, 32, 32]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.1} />
-        </mesh>
+        <group>
+            {/* The Ball */}
+            <mesh ref={ballRef} position={[0, -0.1, 0]}>
+                <sphereGeometry args={[0.18, 32, 32]} />
+                <meshStandardMaterial color="#FFFFFF" roughness={0.1} metalness={0.1} />
+            </mesh>
+            {/* Soft Shadow under the ball */}
+            <mesh ref={shadowRef} position={[0, -0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[0, 0.22, 16]} />
+                <meshBasicMaterial color="#000" transparent opacity={0.7} side={THREE.DoubleSide} />
+            </mesh>
+        </group>
     )
 }
 
-export const Roulette3D = (props) => {
+export const Roulette3D = ({
+    wheelRotation = 0,
+    ballRotation = 0,
+    showBall = false,
+    highlightedNumbers = [],
+    placedNumbers = [],
+    bestPayoutNumbers = [],
+    size = 600,
+    lastWin = null,
+    isTurboMode = false
+}) => {
     return (
-        <div style={{ width: props.size || 600, height: props.size || 600, background: 'transparent' }}>
+        <div style={{ width: size || 600, height: size || 600, background: 'transparent', position: 'relative' }}>
             {/* ISOMETRIC-LIKE CAMERA (45 degrees) */}
-            <Canvas camera={{ position: [0, 18, 18], fov: 30 }} gl={{ alpha: true }} shadows>
+            <Canvas camera={{ position: [0, 11, 11], fov: 40 }} gl={{ alpha: true, antialias: true }} shadows>
+                {/* STUDIO LIGHTING SETUP */}
+                <ambientLight intensity={1.1} />
 
-                {/* STUDIO LIGHTING SETUP (Softbox Top-Left) */}
-                <ambientLight intensity={0.8} />
+                {/* Key Light */}
+                <spotLight position={[-10, 25, 10]} angle={0.5} penumbra={1} intensity={1800} castShadow />
 
-                {/* Key Light (Softbox approx) */}
-                <spotLight position={[-10, 20, 10]} angle={0.5} penumbra={1} intensity={1200} castShadow />
+                {/* Fill Light */}
+                <pointLight position={[10, 6, -10]} intensity={600} color="#ffd700" />
 
-                {/* Fill Light (Warmth) */}
-                <pointLight position={[10, 5, -10]} intensity={300} color="#ffd700" />
+                {/* Extra Point Light for Dome Gloss */}
+                <pointLight position={[-5, 8, 5]} intensity={450} color="#ffffff" />
 
-                <ScientificWheel rotation={props.wheelRotation} />
-                <Ball rotation={props.ballRotation} show={props.showBall} />
+                <ScientificWheel
+                    rotation={wheelRotation}
+                    highlightedNumbers={highlightedNumbers}
+                    placedNumbers={placedNumbers}
+                    bestPayoutNumbers={bestPayoutNumbers}
+                    isTurboMode={isTurboMode}
+                />
+                <Ball rotation={ballRotation} show={showBall} isTurboMode={isTurboMode} />
 
                 {/* TABLE BASE */}
                 <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, 0]} receiveShadow>
@@ -248,11 +419,64 @@ export const Roulette3D = (props) => {
 
                 <OrbitControls enableZoom={false} maxPolarAngle={Math.PI / 2.1} minPolarAngle={0.1} />
             </Canvas>
+
+            {/* FLOATING WINNER HUD */}
+            {lastWin !== null && !showBall && (
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'rgba(10, 10, 10, 0.9)',
+                    border: '2px solid #d4af37',
+                    borderRadius: '50%',
+                    width: '90px',
+                    height: '90px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 25px rgba(212, 175, 55, 0.4), inset 0 0 15px rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(5px)',
+                    zIndex: 20,
+                    pointerEvents: 'none',
+                    animation: 'zoomInWinner 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}>
+                    <style>{`
+                        @keyframes zoomInWinner {
+                            from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                        }
+                    `}</style>
+                    <div style={{
+                        fontSize: '2.5rem',
+                        fontWeight: '900',
+                        fontFamily: "'Roboto Condensed', sans-serif",
+                        color: lastWin === 0 ? '#4f4' : (REDS.includes(lastWin) ? '#ff4444' : '#fff'),
+                        textShadow: '0 0 10px rgba(0,0,0,0.8)',
+                        lineHeight: '1'
+                    }}>
+                        {lastWin}
+                    </div>
+                    <div style={{
+                        fontSize: '0.55rem',
+                        color: '#d4af37',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px',
+                        marginTop: '2px'
+                    }}>
+                        GANADOR
+                    </div>
+                </div>
+            )}
+
             <div style={{
                 position: 'absolute', bottom: 10, right: 10,
-                color: '#d4af37', fontFamily: 'Arial', fontSize: '10px', opacity: 0.5
+                color: '#d4af37', fontFamily: 'Arial', fontSize: '10px', opacity: 0.5,
+                pointerEvents: 'none'
             }}>
-                3D PHASE I: SCIENTIFIC REBUILD
+                3D ENGINE V2: COMPLETO
             </div>
         </div>
     )

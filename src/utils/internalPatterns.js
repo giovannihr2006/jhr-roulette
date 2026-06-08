@@ -46,7 +46,7 @@ export const generateInternalPatterns = () => {
             patterns.push(getBetObject(
                 'SPLIT',
                 `Caballo ${n1}/${n2}`,
-                `SPLIT_${n1}_${n2}`,
+                `SPLIT_${[n1, n2].sort((a, b) => a - b).join('_')}`,
                 [n1, n2]
             ));
         }
@@ -59,7 +59,7 @@ export const generateInternalPatterns = () => {
             patterns.push(getBetObject(
                 'SPLIT',
                 `Caballo ${n1}/${n2}`,
-                `SPLIT_${n1}_${n2}`,
+                `SPLIT_${[n1, n2].sort((a, b) => a - b).join('_')}`,
                 [n1, n2]
             ));
         }
@@ -102,7 +102,7 @@ export const generateInternalPatterns = () => {
             patterns.push(getBetObject(
                 'CORNER',
                 `Cuadro ${n1}-${n4}`,
-                `CORNER_${n1}_${n2}_${n3}_${n4}`,
+                `CORNER_${[n1, n2, n3, n4].sort((a, b) => a - b).join('_')}`,
                 [n1, n2, n3, n4]
             ));
         }
@@ -111,18 +111,23 @@ export const generateInternalPatterns = () => {
     patterns.push(getBetObject('BASKET', 'Canasta 0-3', 'BASKET_0_1_2_3', [0, 1, 2, 3]));
 
 
-    // 5. SIX LINES (Seisenas)
+    // 5. SIX LINES (Lineas)
     // Two adjacent streets. e.g., 1-6. Col i and Col i+1
     for (let col = 0; col < 11; col++) {
         const start = GRID[0][col]; // 1
+        const nextStart = GRID[0][col + 1]; // 4 (The start of the next street)
+
         const numbers = [
             GRID[0][col], GRID[1][col], GRID[2][col],
             GRID[0][col + 1], GRID[1][col + 1], GRID[2][col + 1]
         ];
+
+        // FIX: Match BettingBoard format LINE_1_4 (Start_NextStart)
+        // Previously was LINE_1, which caused the render mismatch.
         patterns.push(getBetObject(
             'LINE',
-            `Seisena ${start}-${start + 5}`,
-            `LINE_${start}`,
+            `Linea ${start}-${start + 5}`,
+            `LINE_${start}_${nextStart}`,
             numbers
         ));
     }

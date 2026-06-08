@@ -45,6 +45,11 @@ export const useSmartAutoPlay = ({
         }
     })
 
+    const configRef = React.useRef(smartAutoConfig)
+    useEffect(() => {
+        configRef.current = smartAutoConfig
+    }, [smartAutoConfig])
+
     // Persist bot state
     useEffect(() => {
         localStorage.setItem('smartAutoConfig', JSON.stringify(smartAutoConfig))
@@ -53,19 +58,21 @@ export const useSmartAutoPlay = ({
     // Main autoplay effect - stop condition
     useEffect(() => {
         if (!smartAutoActive) return
-        if (smartAutoConfig.spinsRemaining <= 0 && !isSpinning) {
+        const activeConfig = configRef.current
+        if (activeConfig.spinsRemaining <= 0 && !isSpinning) {
             setSmartAutoActive(false)
             setOverlayMessage?.({ type: 'success', text: 'AUTOPLAY FINALIZADO', subtext: 'Ciclo completado' })
             return
         }
-    }, [smartAutoActive, isSpinning, smartAutoConfig.spinsRemaining, setOverlayMessage])
+    }, [smartAutoActive, isSpinning, setOverlayMessage])
 
     // Round completion trigger for next spin
     useEffect(() => {
         if (!smartAutoActive || isSpinning) return
-        if (smartAutoConfig.spinsRemaining <= 0) return
+        const activeConfig = configRef.current
+        if (activeConfig.spinsRemaining <= 0) return
 
-        const { multiplier, maxBalance: trackMax, strategyKey, spinsRemaining, chipValue, baseBets } = smartAutoConfig
+        const { multiplier, maxBalance: trackMax, strategyKey, spinsRemaining, chipValue, baseBets } = activeConfig
         let nextMult = multiplier
         let nextMax = trackMax
         let overlayData = null
@@ -110,7 +117,7 @@ export const useSmartAutoPlay = ({
 
         // Update config
         const nextConfig = {
-            ...smartAutoConfig,
+            ...activeConfig,
             multiplier: nextMult,
             maxBalance: nextMax,
             spinsRemaining: spinsRemaining - 1
@@ -132,7 +139,7 @@ export const useSmartAutoPlay = ({
             setTimeout(() => handleSpin(), 500)
         }
 
-    }, [smartAutoActive, isSpinning, balance, lastWinAmount, smartAutoConfig, handleSpin, applyStrategy, formatValue, setOverlayMessage])
+    }, [smartAutoActive, isSpinning, balance, lastWinAmount, handleSpin, applyStrategy, formatValue, setOverlayMessage])
 
     const startAutoPlay = (strategyKey, spinCount, baseBets, chipValue) => {
         setSmartAutoConfig({

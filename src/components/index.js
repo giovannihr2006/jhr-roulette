@@ -34,6 +34,11 @@ export { CurrencySelector } from './CurrencySelector'
 
 // Widgets
 export { TopOpportunityWidget } from './TopOpportunityWidget'
+export { AlphaWidget } from './AlphaWidget'
+export { InternalScannerWidget } from './InternalScannerWidget'
+export { MethodsWidget } from './MethodsWidget'
+export { SystemsWidget } from './SystemsWidget'
+export { AuditTowerWidget } from './AuditTowerWidget'
 export { DetailedHistoryWidget } from './DetailedHistoryWidget'
 export { UnifiedTelemetry } from './UnifiedTelemetry'
 export { WinEffects } from './WinEffects'

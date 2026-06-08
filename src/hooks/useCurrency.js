@@ -3,7 +3,9 @@ import { CurrencyService } from '../utils/CurrencyService'
 
 export const useCurrency = () => {
     const [exchangeRates, setExchangeRates] = useState(null)
-    const [viewCurrency, setViewCurrency] = useState('COL')
+    const [viewCurrency, setViewCurrency] = useState(() => {
+        return localStorage.getItem('viewCurrency') || 'COL'
+    })
 
     useEffect(() => {
         let mounted = true
@@ -15,14 +17,14 @@ export const useCurrency = () => {
         return () => { mounted = false }
     }, [])
 
-    const formatCurrency = (amount, currencyIdx = viewCurrency) => {
-        // ... logic if needed, or just expose raw rates
-        // For now, the table handles formatting, this just provides data.
+    const handleSetViewCurrency = (curr) => {
+        setViewCurrency(curr)
+        localStorage.setItem('viewCurrency', curr)
     }
 
     return {
         exchangeRates,
         viewCurrency,
-        setViewCurrency
+        setViewCurrency: handleSetViewCurrency
     }
 }

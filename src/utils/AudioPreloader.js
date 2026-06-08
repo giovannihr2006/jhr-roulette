@@ -85,7 +85,7 @@ class AudioPreloader {
             this.preloadWinNotes()
 
             this.isReady = true
-            console.log('[AudioPreloader] All sounds preloaded')
+            // console.log('[AudioPreloader] All sounds preloaded')
             return true
         } catch (error) {
             console.error('[AudioPreloader] Preload error:', error)

@@ -3,7 +3,7 @@ import { generateInternalPatterns } from '../utils/internalPatterns';
 
 const PATTERNS = generateInternalPatterns();
 
-export const useInternalScanner = (numberHistory, minSpins = 10) => {
+export const useInternalScanner = (numberHistory, minSpins = 1) => {
 
     const results = useMemo(() => {
         if (!numberHistory || numberHistory.length < minSpins) return [];
@@ -51,7 +51,18 @@ export const useInternalScanner = (numberHistory, minSpins = 10) => {
                 rating,
                 coverage
             };
-        }).sort((a, b) => b.efficiency - a.efficiency); // Sort by best efficiency
+        }).sort((a, b) => {
+            // 1. Prioridad: Eficiencia (Descendente)
+            if (b.efficiency !== a.efficiency) {
+                return b.efficiency - a.efficiency;
+            }
+            // 2. Desempate: Hits Reales (Descendente) - Premia la consistencia
+            if (b.hits !== a.hits) {
+                return b.hits - a.hits;
+            }
+            // 3. Desempate: Cobertura (Descendente) - Prefiere patrones más amplios/seguros
+            return b.coverage - a.coverage;
+        });
 
     }, [numberHistory, minSpins]);
 

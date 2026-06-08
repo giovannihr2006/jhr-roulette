@@ -1,14 +1,11 @@
 import React, { useState, useMemo } from 'react'
 import { CHIP_RATES } from '../config/GameLimits'
-import { calculateWinnings } from '../logic/RouletteUtils'
+import { calculateWinnings, getCoveredNumbers } from '../logic/RouletteUtils'
+import { ForensicBadge } from './ForensicBadge'
 
-export const ActiveBetsPanel = ({ currentBets = {}, onClose, viewCurrency = 'USD' }) => {
+export const ActiveBetsPanel = ({ currentBets = {}, onClose, onHoverNumbers, onShowTutorial, viewCurrency = 'USD' }) => {
     const [sortField, setSortField] = useState('amount') // 'amount' | 'potential'
     const [sortDir, setSortDir] = useState('desc') // 'asc' | 'desc'
-
-    // NEW: Toggle between views or just show all? 
-    // User asked "in addition to", implying a unified view or appended list.
-    // I will append it with a separator.
 
     // Helper: Calculate Potential Payout Multiplier based on Bet Key
     const getMultiplier = (key) => {
@@ -66,47 +63,14 @@ export const ActiveBetsPanel = ({ currentBets = {}, onClose, viewCurrency = 'USD
         })
     }, [currentBets])
 
-    // NEW: Calculate Number Breakdown
-    const numberBreakdown = useMemo(() => {
-        if (Object.keys(currentBets).length === 0) return []
-        const data = []
-
-        // Check all 37 numbers
-        for (let i = 0; i <= 36; i++) {
-            const potentialWin = calculateWinnings(i, currentBets)
-            if (potentialWin > 0) {
-                data.push({
-                    key: `NUM_COVER_${i}`,
-                    label: `Si sale el ${i}`,
-                    amount: 0, // No direct bet amount to show here, it's a result
-                    potential: potentialWin,
-                    type: 'coverage'
-                })
-            }
-        }
-        return data
-    }, [currentBets])
-
     const sortedBets = useMemo(() => {
-        const directBets = [...processedBets].sort((a, b) => {
+        return [...processedBets].sort((a, b) => {
             const valA = a[sortField]
             const valB = b[sortField]
             if (sortDir === 'asc') return valA - valB
             return valB - valA
         })
-
-        const coverageBets = [...numberBreakdown].sort((a, b) => {
-            // For coverage, usually we just want to sort by payout (potential)
-            // But if user selected 'amount', coverage has 0 amount.
-            if (sortField === 'amount') return 0 // Keep natural order?
-            const valA = a.potential
-            const valB = b.potential
-            if (sortDir === 'asc') return valA - valB
-            return valB - valA
-        })
-
-        return { directBets, coverageBets }
-    }, [processedBets, numberBreakdown, sortField, sortDir])
+    }, [processedBets, sortField, sortDir])
 
     const handleSort = (field) => {
         if (sortField === field) {
@@ -125,106 +89,143 @@ export const ActiveBetsPanel = ({ currentBets = {}, onClose, viewCurrency = 'USD
         return '$' + val.toLocaleString()
     }
 
-    // if (Object.keys(currentBets).length === 0) return null
-
     return (
         <div className="active-bets-panel" style={{
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #0e0e0e 100%)',
-            border: '2px solid #d4af37',
-            borderTop: '2px solid #fecb00',
-            borderBottom: '2px solid #8a6e20',
-            borderRadius: '8px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.2)',
-            color: '#e0e0e0',
-            fontFamily: 'Roboto, sans-serif',
-            width: '300px',
-            maxHeight: '400px', // Smaller unified height
+            background: 'rgba(0, 0, 0, 0.95)',
+            backdropFilter: 'blur(15px)',
+            border: '2px solid #555',
+            borderRadius: '12px',
+            padding: '20px',
+            width: '100%',
+            height: '100%',
             overflowY: 'auto',
+            overflowX: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            zIndex: 1000
-        }}>
-            {/* HEADER */}
+            boxShadow: '0 20px 50px rgba(0,0,0,0.9)',
+            zIndex: 1000,
+            gap: '10px'
+        }}
+            onMouseLeave={() => onHoverNumbers && onHoverNumbers([])}
+        >
+            {/* HEADER GOLD STANDARD */}
             <div style={{
-                background: 'linear-gradient(to bottom, #2a2a2a, #151515)',
-                borderBottom: '1px solid #443a22',
-                padding: '8px 12px',
-                borderRadius: '6px 6px 0 0',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                color: '#d4af37', fontFamily: 'Cinzel, serif', fontWeight: '700',
-                textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.85rem',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                display: 'flex',
+                flexWrap: 'wrap', // Responsive Header
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '10px',
+                borderBottom: '1px solid #444',
+                paddingBottom: '10px'
             }}>
-                <span>Resumen de Apuestas</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <ForensicBadge id="activeBets" />
+                    <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.2rem', letterSpacing: '1px' }}>
+                        RESUMEN DE APUESTAS
+                    </span>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onShowTutorial && onShowTutorial(); }}
+                        style={{
+                            background: 'transparent', border: 'none', color: '#666',
+                            fontSize: '1.2rem', cursor: 'pointer', transition: 'color 0.2s', padding: '0 5px'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#ffd700'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#666'}
+                        title="Ver Tutorial Forense (E8)"
+                    >
+                        ⚖
+                    </button>
+                </div>
                 <button onClick={onClose} style={{
-                    background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.2rem', padding: '0 5px', lineHeight: '1'
+                    background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '1.8rem', padding: '0 5px'
                 }}>×</button>
             </div>
 
-            {/* TABLE HEADER */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '8px', fontSize: '0.75rem', color: '#aaa', fontWeight: 'bold', borderBottom: '1px solid #333', background: '#111' }}>
-                <div>APUESTA</div>
-                <div onClick={() => handleSort('amount')} style={{ cursor: 'pointer', textAlign: 'right', color: sortField === 'amount' ? '#ffd700' : '#aaa' }}>
+            {/* TABLE HEADER - RESPONSIVE */}
+            <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '5px 10px',
+                padding: '10px',
+                fontSize: '0.8rem',
+                color: '#aaa',
+                fontWeight: 'bold',
+                borderBottom: '1px solid #333',
+                justifyContent: 'center'
+            }}>
+                <div style={{ flex: '1 1 120px' }}>APUESTA</div>
+                <div onClick={() => handleSort('amount')} style={{ flex: '1 1 60px', cursor: 'pointer', textAlign: 'center', color: sortField === 'amount' ? '#ffd700' : '#aaa' }}>
                     MONTO {sortField === 'amount' && (sortDir === 'asc' ? '↑' : '↓')}
                 </div>
-                <div onClick={() => handleSort('potential')} style={{ cursor: 'pointer', textAlign: 'right', color: sortField === 'potential' ? '#4caf50' : '#aaa' }}>
+                <div onClick={() => handleSort('potential')} style={{ flex: '1 1 60px', cursor: 'pointer', textAlign: 'center', color: sortField === 'potential' ? '#4caf50' : '#aaa' }}>
                     PAGO {sortField === 'potential' && (sortDir === 'asc' ? '↑' : '↓')}
                 </div>
             </div>
 
             {/* SCROLLABLE LIST */}
-            <div style={{ overflowY: 'auto', flex: 1 }}>
-
-                {/* DIRECT BETS */}
-                {sortedBets.directBets.map((bet) => (
-                    <div key={bet.key} style={{
-                        display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
-                        padding: '6px 8px', fontSize: '0.8rem', borderBottom: '1px solid #222',
-                        color: '#eee', alignItems: 'center'
-                    }}>
-                        <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: '500', color: '#fff' }}>{bet.label}</div>
-                        <div style={{ textAlign: 'right', color: '#ffd700', fontWeight: 'bold' }}>{formatMoney(bet.amount)}</div>
-                        <div style={{ textAlign: 'right', color: '#4caf50', fontWeight: 'bold' }}>{formatMoney(bet.potential)}</div>
-                    </div>
-                ))}
-
-                {/* SEPARATOR */}
-                {sortedBets.coverageBets.length > 0 && (
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: '5px' }}>
+                {sortedBets.length === 0 ? (
                     <div style={{
-                        marginTop: '10px', marginBottom: '5px',
-                        borderBottom: '1px solid #443a22',
-                        color: '#aaa', fontSize: '0.7rem', padding: '2px 8px', background: '#1a1a1a', fontStyle: 'italic'
+                        padding: '40px 20px', textAlign: 'center', color: '#666',
+                        fontSize: '1.2rem', fontStyle: 'italic', border: '1px dashed #333',
+                        borderRadius: '8px', marginTop: '20px'
                     }}>
-                        DESGLOSE POR NÚMERO
+                        No hay apuestas activas
                     </div>
+                ) : (
+                    <>
+                        {/* DIRECT BETS */}
+                        {sortedBets.map((bet) => (
+                            <div
+                                key={bet.key}
+                                style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap', // Responsive Row
+                                    gap: '8px 10px',
+                                    padding: '12px 10px',
+                                    fontSize: '1.0rem',
+                                    borderBottom: '1px solid #222',
+                                    color: '#eee',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'default',
+                                    transition: 'background 0.2s',
+                                    background: 'rgba(255,255,255,0.02)'
+                                }}
+                                onMouseEnter={() => {
+                                    if (onHoverNumbers) {
+                                        onHoverNumbers(getCoveredNumbers({ [bet.key]: bet.amount }))
+                                    }
+                                }}
+                                onMouseLeave={() => {
+                                    if (onHoverNumbers) onHoverNumbers([])
+                                }}
+                            >
+                                <div style={{ flex: '1 1 120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 'bold', color: '#d4af37' }}>{bet.label}</div>
+                                <div style={{ flex: '1 1 70px', textAlign: 'center', color: '#fff', fontWeight: 'bold', background: 'rgba(255,215,0,0.1)', padding: '2px 8px', borderRadius: '4px' }}>{formatMoney(bet.amount)}</div>
+                                <div style={{ flex: '1 1 70px', textAlign: 'center', color: '#4caf50', fontWeight: 'bold', background: 'rgba(76,175,80,0.1)', padding: '2px 8px', borderRadius: '4px' }}>{formatMoney(bet.potential)}</div>
+                            </div>
+                        ))}
+                    </>
                 )}
-
-                {/* COVERAGE BETS */}
-                {sortedBets.coverageBets.map((bet) => (
-                    <div key={bet.key} style={{
-                        display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
-                        padding: '4px 8px', fontSize: '0.75rem', borderBottom: '1px solid #1a1a1a',
-                        color: '#aad', alignItems: 'center'
-                    }}>
-                        <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bet.label}</div>
-                        <div style={{ textAlign: 'right', color: '#444' }}>-</div>
-                        <div style={{ textAlign: 'right', color: '#00ced1' }}>{formatMoney(bet.potential)}</div>
-                    </div>
-                ))}
-
             </div>
 
             {/* FOOTER TOTAL */}
             <div style={{
-                borderTop: '1px solid #443a22',
-                padding: '10px',
-                background: '#151515',
-                display: 'flex', justifyContent: 'space-between',
-                fontSize: '0.9rem', fontWeight: 'bold',
-                borderRadius: '0 0 6px 6px'
+                marginTop: 'auto',
+                paddingTop: '15px',
+                borderTop: '2px solid #444',
+                display: 'flex',
+                flexWrap: 'wrap', // Responsive Footer
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                fontSize: '1.2rem',
+                fontWeight: 'bold'
             }}>
                 <span style={{ color: '#aaa' }}>TOTAL:</span>
-                <span style={{ color: '#ffd700' }}>
+                <span style={{ color: '#ffd700', fontSize: '1.4rem', textShadow: '0 0 10px rgba(255,215,0,0.4)' }}>
                     {formatMoney(processedBets.reduce((sum, b) => sum + b.amount, 0))}
                 </span>
             </div>

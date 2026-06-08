@@ -29,29 +29,24 @@ export const TimeBar = ({
         setLocalDuration(val);
     };
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            e.target.blur(); // Triggers handleDurationBlur
-        }
-    };
-
     // Calculate percentage for bar width
     const percentage = timerMode ? (timeLeft / duration) * 100 : 100;
 
     return (
         <div className="time-bar-container" style={{
             width: '100%',
-            maxWidth: '500px', // Reduced to fit controls container
+            maxWidth: '480px', // Shorter & perfectly symmetrical
+            margin: '10px auto 0', // Centered
             background: '#111',
             border: '1px solid #333',
             borderRadius: '8px',
-            padding: '10px 15px',
+            padding: '8px 15px',
             display: 'flex',
             alignItems: 'center',
             gap: '15px',
-            marginTop: '10px',
             boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
-            pointerEvents: 'auto' // Ensure clicks work inside draggable area
+            pointerEvents: 'auto', // Ensure clicks work inside draggable area
+            boxSizing: 'border-box'
         }}>
 
             {/* 1. TOGGLE SWITCH */}
@@ -139,7 +134,6 @@ export const TimeBar = ({
                     value={localDuration}
                     onChange={handleDurationChange}
                     onBlur={handleDurationBlur}
-                    onKeyDown={handleKeyDown}
                     style={{
                         background: '#222',
                         border: '1px solid #444',

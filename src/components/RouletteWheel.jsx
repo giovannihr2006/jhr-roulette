@@ -1,91 +1,58 @@
-import React, { useMemo } from 'react'
-import PropTypes from 'prop-types'
+import React, { useMemo, useState } from 'react'
 import './RouletteWheel.css'
-import { WHEEL_ORDER as NUMBERS, REDS } from '../utils/rouletteUtils'
+import { useFinancialStore } from '../logic/FinancialSimulator'
+
+// European Sequence (Clockwise from 0)
+const NUMBERS = [
+    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23,
+    10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+]
+
+const REDS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
 
 import { LiveInputControl } from './LiveInputControl'
+import { ForensicBadge } from './ForensicBadge'
 
-// Memoized RouletteWheel component for performance optimization
-const RouletteWheelComponent = ({
-    wheelRotation = 0,
-    ballRotation = 0,
-    showBall = false,
-    highlightedNumbers = [],
-    placedNumbers = [],
-    size = 600,
-    lastWin = null,
-    isLiveMode = false,
-    onManualWin,
-    animState // NEW: Animation State Object
-}) => {
+export const RouletteWheel = ({ wheelRotation = 0, ballRotation = 0, showBall = false, highlightedNumbers = [], placedNumbers = [], bestPayoutNumbers = [], size = 600, lastWin = null, isLiveMode = false, onManualWin, isTurboMode = false, isSpinning = false }) => {
+    const [showJustification, setShowJustification] = useState(false)
+    const history = useFinancialStore(state => state.numberHistory || [])
 
-    // Internal Animation Refs
-    const wheelRef = React.useRef(null)
-    const ballRef = React.useRef(null)
-    const requestIdRef = React.useRef(null)
-    const lastFrameTimeRef = React.useRef(0)
+    // Compute recency for all 37 numbers
+    const recencyMap = useMemo(() => {
+        const map = {}
+        for (let i = 0; i <= 36; i++) {
+            map[i] = -1
+        }
+        for (let idx = 0; idx <= 36; idx++) {
+            let foundIdx = -1
+            for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i] === idx) {
+                    foundIdx = history.length - 1 - i
+                    break
+                }
+            }
+            map[idx] = foundIdx === -1 ? history.length : foundIdx
+        }
+        return map
+    }, [history])
 
-    // Ease-Out Quart Function (Matches CSS cubic-bezier(0.1, 0.8, 0.3, 1))
-    // t is progress 0-1
-    const easeOutQuart = (t) => {
-        return 1 - Math.pow(1 - t, 4)
+    const getRecencyColor = (misses) => {
+        if (misses === 0) return '#4caf50' // Just hit
+        if (misses > 100) return '#ff3d00' // Very cold
+        if (misses > 50) return '#ffc107' // Cold
+        return 'rgba(255, 255, 255, 0.4)'
     }
 
-    // ANIMATION LOOP
-    React.useLayoutEffect(() => {
-        const animate = () => {
-            let currentWheelRot = wheelRotation
-            let currentBallRot = ballRotation
-
-            if (animState && animState.isSpinning) {
-                const now = Date.now()
-                const elapsed = now - animState.startTime
-                const progress = Math.min(elapsed / animState.duration, 1)
-
-                // If duration exceeded, we stick to target (safety)
-                if (progress >= 1) {
-                    currentWheelRot = animState.targetWheelRotation
-                    currentBallRot = animState.targetBallRotation
-                } else {
-                    const eased = easeOutQuart(progress)
-
-                    // Interpolate
-                    currentWheelRot = animState.startWheelRotation + (animState.targetWheelRotation - animState.startWheelRotation) * eased
-                    currentBallRot = animState.startBallRotation + (animState.targetBallRotation - animState.startBallRotation) * eased
-                }
-
-                requestIdRef.current = requestAnimationFrame(animate)
-            } else {
-                // Static State
-                currentWheelRot = wheelRotation
-                currentBallRot = ballRotation
-            }
-
-            // DIRECT DOM UPDATE (No React Render)
-            if (wheelRef.current) {
-                wheelRef.current.style.transform = `rotate(${currentWheelRot}deg)`
-            }
-            if (ballRef.current && showBall) {
-                ballRef.current.style.transform = `rotate(${currentBallRot}deg)`
-            }
-        }
-
-        requestIdRef.current = requestAnimationFrame(animate)
-
-        return () => {
-            if (requestIdRef.current) cancelAnimationFrame(requestIdRef.current)
-        }
-    }, [animState, wheelRotation, ballRotation, showBall]) // Re-bind if core props change
-
-
     // SVG CONFIG
-    const center = size / 2
-    // Scale internal dimensions relative to base 600
-    const scale = size / 600
+    // SVG CONFIG - INTERNAL RESOLUTION FIXED TO 600
+    const baseSize = 600
+    const center = baseSize / 2
+    const scale = 1 // Fixed scale for internal logic
     const radius = 280 * scale
     const innerRadius = 180 * scale
     const textRadius = 240 * scale
-    const ballRadius = 220 * scale
+    const currentBallTrackRadius = isSpinning ? 280 * scale : 235 * scale
+    const currentBallSize = isSpinning ? 16 * scale : 12 * scale
 
     // GEOMETRY GENERATOR
     const sectors = useMemo(() => {
@@ -93,6 +60,7 @@ const RouletteWheelComponent = ({
 
         return NUMBERS.map((num, i) => {
             // Calculate start and end angles for the arc
+            // Correcting orientation: -90deg so 0 is at top
             const startAngleDeg = (i * angleStep) - 90 - (angleStep / 2)
             const endAngleDeg = startAngleDeg + angleStep
 
@@ -109,19 +77,25 @@ const RouletteWheelComponent = ({
 
             // Highlight Logic
             const isHovered = highlightedNumbers.includes(num)
+            const isBestPayout = bestPayoutNumbers.includes(num)
             const isPlaced = placedNumbers.includes(num)
 
             if (isHovered) {
-                color = '#ffd700' // Gold (Hover takes precedence)
+                color = '#ffd700'
+            } else if (isBestPayout) {
+                color = "url(#cyan-best-enamel)"
             } else if (isPlaced) {
-                // ILLUMINATE ACTIVE BETS: Bright Cyan
-                color = '#00CED1'
+                color = "url(#cyan-placed-enamel)"
             }
 
-            // Text Position
+            // Text Position (Outer radius)
             const textAngleDeg = (i * angleStep) - 90
             const tx = center + textRadius * Math.cos(Math.PI * textAngleDeg / 180)
             const ty = center + textRadius * Math.sin(Math.PI * textAngleDeg / 180)
+
+            // Recency position (Inner radius pocket)
+            const rxText = center + 205 * Math.cos(Math.PI * textAngleDeg / 180)
+            const ryText = center + 205 * Math.sin(Math.PI * textAngleDeg / 180)
 
             return {
                 num,
@@ -129,201 +103,253 @@ const RouletteWheelComponent = ({
                 path: `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z`,
                 textX: tx,
                 textY: ty,
-                rotation: textAngleDeg + 90,
-                isPlaced
+                recencyX: rxText,
+                recencyY: ryText,
+                rotation: textAngleDeg + 90, // Rotate text to readable orientation
+                isPlaced, // Keep track for maybe extra stroke?
+                isBestPayout // NEW
             }
         })
-    }, [highlightedNumbers, placedNumbers, center, radius, textRadius])
+    }, [highlightedNumbers, placedNumbers, bestPayoutNumbers, center, radius, textRadius])
 
     return (
-        <div className="wheel-container">
+        <div className="wheel-container" style={{ width: 'calc(100% - 70px)', height: 'calc(100% - 70px)', margin: '35px', position: 'relative' }}>
+            {/* Header Removed - Moved to Parent */}
             {/* 1. THE WHEEL SVG */}
             <svg
-                ref={wheelRef} // ATTACH REF
-                width={size}
-                height={size}
-                viewBox={`0 0 ${size} ${size}`}
-                // REMOVED INLINE TRANSFORM HERE - Handled by RAF
+                width="100%"
+                height="100%"
+                viewBox="0 0 600 600"
+                style={{
+                    transform: `rotate(${wheelRotation}deg)`,
+                    transition: `transform ${isTurboMode ? '1s' : '12s'} cubic-bezier(0.1, 0.8, 0.3, 1)`,
+                    willChange: 'transform'
+                }}
                 className="wheel-svg"
             >
                 <defs>
-                    {/* RED SECTOR GRADIENT (Glossy Enamel) */}
+                    {/* RED SECTOR GRADIENT (Deep Velvet) */}
                     <radialGradient id="red-enamel" cx="0.5" cy="0.5" r="0.8">
-                        <stop offset="60%" stopColor="#b31b1b" />
-                        <stop offset="100%" stopColor="#660000" />
+                        <stop offset="40%" stopColor="#d32f2f" />
+                        <stop offset="90%" stopColor="#8b0000" />
+                        <stop offset="100%" stopColor="#500" />
                     </radialGradient>
-                    {/* BLACK SECTOR GRADIENT (Glossy Enamel) */}
+                    {/* BLACK SECTOR GRADIENT (Deep Onyx) */}
                     <radialGradient id="black-enamel" cx="0.5" cy="0.5" r="0.8">
-                        <stop offset="60%" stopColor="#222" />
+                        <stop offset="40%" stopColor="#2c2c2c" />
+                        <stop offset="90%" stopColor="#111" />
                         <stop offset="100%" stopColor="#000" />
                     </radialGradient>
                     {/* GREEN ZERO GRADIENT */}
                     <radialGradient id="green-enamel" cx="0.5" cy="0.5" r="0.8">
-                        <stop offset="60%" stopColor="#008f39" />
-                        <stop offset="100%" stopColor="#004d1f" />
+                        <stop offset="40%" stopColor="#2e7d32" />
+                        <stop offset="90%" stopColor="#1b5e20" />
                     </radialGradient>
-                    {/* GOLD METAL */}
+                    {/* RICH GOLD METAL (Polished) */}
                     <linearGradient id="gold-metal" x1="0" y1="0" x2="1" y2="1">
                         <stop offset="0%" stopColor="#bf953f" />
-                        <stop offset="25%" stopColor="#fcf6ba" />
-                        <stop offset="50%" stopColor="#b38728" />
-                        <stop offset="75%" stopColor="#fbf5b7" />
-                        <stop offset="100%" stopColor="#aa771c" />
+                        <stop offset="20%" stopColor="#fcf6ba" />
+                        <stop offset="40%" stopColor="#b38728" />
+                        <stop offset="60%" stopColor="#fbf5b7" />
+                        <stop offset="80%" stopColor="#aa771c" />
+                        <stop offset="100%" stopColor="#bf953f" />
                     </linearGradient>
-                    {/* CHROME TURRET */}
-                    <linearGradient id="chrome-turret" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#888" />
-                        <stop offset="50%" stopColor="#eee" />
-                        <stop offset="50.1%" stopColor="#666" />
-                        <stop offset="100%" stopColor="#ccc" />
-                    </linearGradient>
+                    {/* DARK MAHOGANY WOOD */}
+                    <radialGradient id="mahogany-wood" cx="0.5" cy="0.5" r="0.7" fx="0.4" fy="0.4">
+                        <stop offset="0%" stopColor="#5d4037" />
+                        <stop offset="60%" stopColor="#3e2723" />
+                        <stop offset="100%" stopColor="#1b100d" />
+                    </radialGradient>
+                    {/* TURRET SHADOW */}
+                    <radialGradient id="turret-shadow">
+                        <stop offset="0%" stopColor="transparent" />
+                        <stop offset="80%" stopColor="rgba(0,0,0,0.5)" />
+                        <stop offset="100%" stopColor="rgba(0,0,0,0.8)" />
+                    </radialGradient>
+
+                    {/* CYAN PLACED ENAMEL */}
+                    <radialGradient id="cyan-placed-enamel" cx="0.5" cy="0.5" r="0.8">
+                        <stop offset="0%" stopColor="rgba(0, 206, 209, 0.9)" />
+                        <stop offset="70%" stopColor="rgba(0, 139, 139, 0.8)" />
+                        <stop offset="100%" stopColor="rgba(0, 70, 70, 0.9)" />
+                    </radialGradient>
+                    {/* CYAN BEST ENAMEL */}
+                    <radialGradient id="cyan-best-enamel" cx="0.5" cy="0.5" r="0.8">
+                        <stop offset="0%" stopColor="rgba(0, 255, 255, 1)" />
+                        <stop offset="50%" stopColor="rgba(0, 200, 200, 0.9)" />
+                        <stop offset="100%" stopColor="rgba(0, 100, 100, 1)" />
+                    </radialGradient>
+
+                    {/* PREMIUM 3D IVORINE BALL GRADIENT */}
+                    <radialGradient id="ball-3d" cx="35%" cy="35%" r="65%">
+                        <stop offset="0%" stopColor="#ffffff" />
+                        <stop offset="40%" stopColor="#fffff0" />
+                        <stop offset="85%" stopColor="#e5e5d5" />
+                        <stop offset="100%" stopColor="#b5b5a5" />
+                    </radialGradient>
+
+                    {/* SHADOW FOR 3D BALL */}
+                    <filter id="ball-shadow-svg" x="-30%" y="-30%" width="160%" height="160%">
+                        <feDropShadow dx="3" dy="4" stdDeviation="3" floodColor="#000000" floodOpacity="0.6"/>
+                    </filter>
                 </defs>
 
-                {/* OUTER RIM (Wood/Metal) */}
-                <circle cx={center} cy={center} r={center - (5 * scale)} fill="#3e1e12" stroke="url(#gold-metal)" strokeWidth={12 * scale} />
-                <circle cx={center} cy={center} r={radius + (5 * scale)} fill="#050505" />
+                {/* 1. OUTER CHASSIS (Dark Base) */}
+                <circle cx={center} cy={center} r={center - 2} fill="#1a1a1a" stroke="url(#gold-metal)" strokeWidth={4} />
 
-                {/* NUMBER SECTORS */}
-                {sectors.map((sector, i) => {
-                    let fill = sector.color
-                    // Use Gradients for standard colors
-                    if (sector.num === 0 && sector.color !== '#00CED1' && sector.color !== '#ffd700') fill = "url(#green-enamel)"
-                    if (REDS.includes(sector.num) && sector.color !== '#00CED1' && sector.color !== '#ffd700') fill = "url(#red-enamel)"
-                    if (!REDS.includes(sector.num) && sector.num !== 0 && sector.color !== '#00CED1' && sector.color !== '#ffd700') fill = "url(#black-enamel)"
+                {/* 2. GOLD BEZEL & BALL TRACK */}
+                <circle cx={center} cy={center} r={center - 15} fill="url(#mahogany-wood)" /> {/* Wood Track Background */}
+                <circle cx={center} cy={center} r={radius + 10} fill="none" stroke="url(#gold-metal)" strokeWidth={6} /> {/* Outer Ring Separator */}
 
-                    return (
-                        <g key={i}>
-                            <path d={sector.path} fill={fill} stroke="rgba(212, 175, 55, 0.4)" strokeWidth={1 * scale} />
-                            <text
-                                x={sector.textX}
-                                y={sector.textY}
-                                fill="white"
-                                fontSize={24 * scale}
-                                fontWeight="bold"
-                                fontFamily="Times New Roman, serif"
-                                textAnchor="middle"
-                                alignmentBaseline="middle"
-                                style={{ transformBox: 'fill-box', transformOrigin: 'center', transform: `rotate(${sector.rotation}deg)` }}
-                            >
-                                {sector.num}
-                            </text>
-                        </g>
-                    )
-                })}
+                {/* 3. NUMBER RING BACKGROUND */}
+                <circle cx={center} cy={center} r={radius} fill="#000" />
 
-                {/* CENTER DOME (Turret) - MULTI-LAYERED */}
-                <circle cx={center} cy={center} r={innerRadius} fill="url(#chrome-turret)" stroke="#111" strokeWidth={1} />
-                <circle cx={center} cy={center} r={innerRadius * 0.7} fill="#3e1e12" stroke="url(#gold-metal)" strokeWidth={4 * scale} />
-                <circle cx={center} cy={center} r={20 * scale} fill="url(#gold-metal)" />
+                {/* 4. NUMBER SECTORS */}
+                <g>
+                    {sectors.map((sector, i) => {
+                        let fill = sector.color
+                        if (sector.num === 0 && !sector.isPlaced && !sector.isBestPayout && sector.color !== '#ffd700') fill = "url(#green-enamel)"
+                        if (REDS.includes(sector.num) && !sector.isPlaced && !sector.isBestPayout && sector.color !== '#ffd700') fill = "url(#red-enamel)"
+                        if (!REDS.includes(sector.num) && sector.num !== 0 && !sector.isPlaced && !sector.isBestPayout && sector.color !== '#ffd700') fill = "url(#black-enamel)"
 
-                {/* WINNER DISPLAY (In Center) */}
+                        return (
+                            <g key={i}>
+                                <path
+                                    d={sector.path}
+                                    fill={fill}
+                                    stroke="url(#gold-metal)"
+                                    strokeWidth={1} // Gold separators
+                                    className={sector.isBestPayout ? 'best-payout-sector' : ''}
+                                />
+                                <text
+                                    x={sector.textX}
+                                    y={sector.textY}
+                                    fill={sector.color === '#ffd700' ? '#000' : '#fff'} // Contrast text
+                                    fontSize={22 * scale}
+                                    fontWeight="bold"
+                                    fontFamily="'Cinzel', 'Times New Roman', serif" // More classic font
+                                    textAnchor="middle"
+                                    alignmentBaseline="middle"
+                                    style={{
+                                        transformBox: 'fill-box',
+                                        transformOrigin: 'center',
+                                        transform: `rotate(${sector.rotation}deg)`,
+                                        textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                                    }}
+                                >
+                                    {sector.num}
+                                </text>
+
+                                {/* Pocket Dormancy Indicator */}
+                                <text
+                                    x={sector.recencyX}
+                                    y={sector.recencyY}
+                                    fill={getRecencyColor(recencyMap[sector.num])}
+                                    fontSize={10 * scale}
+                                    fontWeight="bold"
+                                    fontFamily="monospace"
+                                    textAnchor="middle"
+                                    alignmentBaseline="middle"
+                                    style={{
+                                        transformBox: 'fill-box',
+                                        transformOrigin: 'center',
+                                        transform: `rotate(${sector.rotation}deg)`,
+                                        textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                                        opacity: 0.85
+                                    }}
+                                >
+                                    {recencyMap[sector.num]}
+                                </text>
+                            </g>
+                        )
+                    })}
+                </g>
+
+                {/* 5. CENTER BOWL (The "Wood" look) */}
+                {/* Inner Bezel Separator */}
+                <circle cx={center} cy={center} r={innerRadius} fill="none" stroke="url(#gold-metal)" strokeWidth={8} />
+
+                {/* The Concave Bowl */}
+                <circle cx={center} cy={center} r={innerRadius - 4} fill="url(#mahogany-wood)" />
+                <circle cx={center} cy={center} r={innerRadius - 4} fill="url(#turret-shadow)" opacity="0.6" /> {/* Inner Shadow for depth */}
+
+                {/* 6. CENTRAL TURRET (Gold) */}
+                <g>
+                    {/* Turret Base Ring */}
+                    <circle cx={center} cy={center} r={80 * scale} fill="none" stroke="url(#gold-metal)" strokeWidth={2} opacity="0.5" />
+                    <circle cx={center} cy={center} r={70 * scale} fill="none" stroke="url(#gold-metal)" strokeWidth={2} opacity="0.3" />
+
+                    {/* Turret Hub */}
+                    <circle cx={center} cy={center} r={45 * scale} fill="url(#gold-metal)" style={{ filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.8))' }} />
+                    <circle cx={center} cy={center} r={15 * scale} fill="#3e2723" /> {/* Top screw */}
+                </g>
+
+                {/* 7. WINNER DISPLAY (Floating Overlay - Maintaining Logic) */}
                 {isLiveMode ? (
                     <g transform={`rotate(${-wheelRotation}, ${center}, ${center})`}>
                         <foreignObject x={center - 60} y={center - 60} width={120} height={120}>
                             <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: '100%', height: '100%' }}>
-                                <LiveInputControl onSubmit={onManualWin} lastWin={lastWin} />
+                                <foreignObject x={0} y={0} width={120} height={120} style={{ pointerEvents: 'auto' }}>
+                                    <LiveInputControl onSubmit={onManualWin} lastWin={lastWin} />
+                                </foreignObject>
                             </div>
                         </foreignObject>
                     </g>
                 ) : (
-                    lastWin !== null ? (
-                        <g transform={`rotate(${-wheelRotation}, ${center}, ${center})`}>
-                            <circle cx={center} cy={center} r={70 * scale} fill="rgba(0,0,0,0.9)" stroke={
-                                lastWin === 0 ? '#0f0' : (REDS.includes(lastWin) ? '#f00' : '#fff')
-                            } strokeWidth={4 * scale} />
+                    lastWin !== null && (
+                        <g transform={`rotate(${-wheelRotation}, ${center}, ${center})`} style={{ transition: 'all 0.5s ease-out' }}>
+                            {/* Glassy Background for numbers */}
+                            <circle cx={center} cy={center} r={65 * scale} fill="rgba(0,0,0,0.85)" stroke="url(#gold-metal)" strokeWidth={4 * scale}
+                                style={{ boxShadow: '0 0 20px rgba(0,0,0,1)' }} />
+
+                            {/* The Number */}
                             <text
                                 x={center}
                                 y={center}
-                                dy={25 * scale}
+                                dy={22 * scale}
                                 textAnchor="middle"
-                                fill={lastWin === 0 ? '#0f0' : (REDS.includes(lastWin) ? '#f44' : '#fff')}
-                                fontSize={90 * scale}
+                                fill={lastWin === 0 ? '#4f4' : (REDS.includes(lastWin) ? '#ff4444' : '#fff')}
+                                fontSize={80 * scale}
                                 fontWeight="bold"
-                                style={{ textShadow: '0 0 15px rgba(0,0,0,1)' }}
+                                fontFamily="'Roboto Condensed', sans-serif"
+                                style={{ textShadow: '0 0 10px rgba(0,0,0,0.5)' }}
                             >
                                 {lastWin}
                             </text>
+
+                            {/* Color Indicator Ring (Thin) */}
+                            <circle cx={center} cy={center} r={68 * scale} fill="none" stroke={
+                                lastWin === 0 ? '#4f4' : (REDS.includes(lastWin) ? '#f00' : '#fff')
+                            } strokeWidth={2} opacity="0.5" />
                         </g>
-                    ) : (
-                        <>
-                            <circle cx={center} cy={center} r={40 * scale} fill="#d4af37" />
-                            <circle cx={center} cy={center} r={15 * scale} fill="#5c3a1e" />
-                        </>
                     )
                 )}
 
-                {/* Shine Effect Overlay */}
-                <defs>
-                    <radialGradient id="shine">
-                        <stop offset="0%" stopColor="white" stopOpacity="0.5" />
-                        <stop offset="100%" stopColor="white" stopOpacity="0" />
-                    </radialGradient>
-                </defs>
-                <circle cx={center} cy={center} r={radius} fill="url(#shine)" opacity="0.1" pointerEvents="none" />
-            </svg>
+                {/* 8. REFLECTIONS / GLOSS OVERLAY */}
+                <circle cx={center} cy={center} r={radius} fill="url(#turret-shadow)" opacity="0.1" pointerEvents="none" />
 
-            {/* 2. THE BALL LAYER */}
-            {showBall && (
-                <div
-                    ref={ballRef} // ATTACH REF
-                    className="ball-layer"
-                    style={{
-                        // transform: `rotate(${ballRotation}deg)`, // REMOVED INLINE
-                        width: '100%',
-                        height: '100%',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        pointerEvents: 'none',
-                        zIndex: 10
-                    }}
-                >
-                    <div
-                        className="ivorine-ball"
+                {/* 9. PREMIUM SVG 3D BALL */}
+                {showBall && (
+                    <g
+                        transform={`rotate(${ballRotation - wheelRotation}, ${center}, ${center})`}
                         style={{
-                            width: `${24 * scale}px`,
-                            height: `${24 * scale}px`,
-                            background: 'radial-gradient(circle at 30% 30%, #fffff0, #e0e0d0)',
-                            borderRadius: '50%',
-                            boxShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                            position: 'absolute',
-                            left: '50%',
-                            top: '50%',
-                            transform: `translate(-50%, -50%) translateY(-${ballRadius}px)`
+                            transition: `transform ${isTurboMode ? '1s' : '12s'} cubic-bezier(0.1, 0.8, 0.3, 1)`,
+                            willChange: 'transform'
                         }}
-                    />
-                </div>
-            )}
+                    >
+                        <circle
+                            cx={center}
+                            cy={center - currentBallTrackRadius}
+                            r={currentBallSize}
+                            fill="url(#ball-3d)"
+                            filter="url(#ball-shadow-svg)"
+                            style={{
+                                transition: 'cy 2s cubic-bezier(0.1, 0.8, 0.3, 1), r 2s ease-out'
+                            }}
+                        />
+                    </g>
+                )}
+            </svg>
         </div>
     )
 }
-
-// PropTypes for type safety
-RouletteWheelComponent.propTypes = {
-    wheelRotation: PropTypes.number,
-    ballRotation: PropTypes.number,
-    showBall: PropTypes.bool,
-    highlightedNumbers: PropTypes.arrayOf(PropTypes.number),
-    placedNumbers: PropTypes.arrayOf(PropTypes.number),
-    size: PropTypes.number,
-    lastWin: PropTypes.number,
-    isLiveMode: PropTypes.bool,
-    onManualWin: PropTypes.func,
-    animState: PropTypes.object
-}
-
-RouletteWheelComponent.defaultProps = {
-    wheelRotation: 0,
-    ballRotation: 0,
-    showBall: false,
-    highlightedNumbers: [],
-    placedNumbers: [],
-    size: 600,
-    lastWin: null,
-    isLiveMode: false,
-    onManualWin: null,
-    animState: null
-}
-
-// Export with React.memo for performance - prevents unnecessary re-renders
-export const RouletteWheel = React.memo(RouletteWheelComponent)

@@ -1,3 +1,8 @@
+html {
+  font-size: 12px;
+  /* BALANCED SCALING: 12px */
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -75,84 +80,5 @@ body {
     transform: scale(1.02);
     background-color: #1565c0;
     border-color: #2196f3;
-  }
-}
-
-/* =========================================================================
-   ACCESSIBILITY STYLES
-   ========================================================================= */
-
-/* Focus visible styles for keyboard navigation */
-:focus-visible {
-  outline: 3px solid #d4af37 !important;
-  outline-offset: 2px;
-}
-
-/* Skip link - hidden until focused */
-.skip-link:focus {
-  top: 0 !important;
-}
-
-/* Spin animation for loading spinner */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* =========================================================================
-   HIGH CONTRAST MODE
-   ========================================================================= */
-
-:root.high-contrast {
-  --bg-primary: #000;
-  --bg-secondary: #111;
-  --text-primary: #fff;
-  --text-secondary: #ffd700;
-  --border-color: #fff;
-  --accent-color: #ffd700;
-}
-
-:root.high-contrast body {
-  background: #000 !important;
-  color: #fff !important;
-}
-
-:root.high-contrast * {
-  border-color: #fff !important;
-}
-
-:root.high-contrast button,
-:root.high-contrast [role="button"] {
-  background: #000 !important;
-  color: #fff !important;
-  border: 2px solid #fff !important;
-}
-
-:root.high-contrast button:hover,
-:root.high-contrast [role="button"]:hover {
-  background: #ffd700 !important;
-  color: #000 !important;
-}
-
-:root.high-contrast .number-cell {
-  border: 2px solid #fff !important;
-}
-
-:root.high-contrast .win-glow {
-  box-shadow: 0 0 20px #fff, 0 0 40px #ffd700 !important;
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }

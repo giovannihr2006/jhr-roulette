@@ -138,11 +138,11 @@ export const HelpModal = ({ onClose }) => {
                             <h3 style={{ color: '#ff8888' }}>🔴 Apuestas Internas</h3>
                             <p>Alta volatilidad: Pagos grandes, aciertos menos frecuentes.</p>
                             {renderTable([
-                                { name: 'Pleno (Straight)', desc: '1 Número exacto', payout: '35 a 1', prob: '2.7%' },
-                                { name: 'Caballo (Split)', desc: '2 números adyacentes', payout: '17 a 1', prob: '5.4%' },
-                                { name: 'Calle (Street)', desc: '3 números en fila', payout: '11 a 1', prob: '8.1%' },
-                                { name: 'Cuadro (Corner)', desc: '4 números en esquina', payout: '8 a 1', prob: '10.8%' },
-                                { name: 'Seisena (Line)', desc: '6 números (2 calles)', payout: '5 a 1', prob: '16.2%' }
+                                { name: 'Pleno (#1)', desc: '1 Número exacto', payout: '35 a 1', prob: '2.7%' },
+                                { name: 'Medio (#2)', desc: '2 números adyacentes', payout: '17 a 1', prob: '5.4%' },
+                                { name: 'Calle (#3)', desc: '3 números en fila', payout: '11 a 1', prob: '8.1%' },
+                                { name: 'Cuadro (#4)', desc: '4 números en esquina', payout: '8 a 1', prob: '10.8%' },
+                                { name: 'Linea (#6)', desc: '6 números (2 calles)', payout: '5 a 1', prob: '16.2%' }
                             ])}
                         </div>
                     )}
@@ -152,11 +152,11 @@ export const HelpModal = ({ onClose }) => {
                             <h3 style={{ color: '#88aaff' }}>🔵 Apuestas Externas</h3>
                             <p>Baja volatilidad: Ideales para jugar más tiempo con menor riesgo.</p>
                             {renderTable([
-                                { name: 'Columna', desc: '12 números (1 de 3 columnas)', payout: '2 a 1', prob: '32.4%' },
-                                { name: 'Docena', desc: '12 números (1-12, 13-24, etc)', payout: '2 a 1', prob: '32.4%' },
-                                { name: 'Rojo / Negro', desc: 'Cubre 18 números por color', payout: '1 a 1', prob: '48.6%' },
-                                { name: 'Par / Impar', desc: 'Cubre 18 números según paridad', payout: '1 a 1', prob: '48.6%' },
-                                { name: 'Falta / Pasa', desc: 'Bajos (1-18) o Altos (19-36)', payout: '1 a 1', prob: '48.6%' }
+                                { name: 'Columna (#12)', desc: '1 de 3 columnas', payout: '2 a 1', prob: '32.4%' },
+                                { name: 'Docena (#12)', desc: '1-12, 13-24, etc', payout: '2 a 1', prob: '32.4%' },
+                                { name: 'Rojo / Negro (#18)', desc: '18 números por color', payout: '1 a 1', prob: '48.6%' },
+                                { name: 'Par / Impar (#18)', desc: '18 números según paridad', payout: '1 a 1', prob: '48.6%' },
+                                { name: 'Bajo / Alto (#18)', desc: '1-18 o 19-36', payout: '1 a 1', prob: '48.6%' }
                             ])}
                         </div>
                     )}
@@ -168,16 +168,16 @@ export const HelpModal = ({ onClose }) => {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <div style={{ background: '#222', padding: '10px', borderRadius: '4px', borderTop: '2px solid #fff' }}>
-                                    <strong style={{ color: '#fff' }}>Voisins du Zéro (Vecinos)</strong>
-                                    <p style={{ fontSize: '0.85rem' }}>9 fichas cubren 17 números (45.9% de la rueda) alrededor del 0.</p>
+                                    <strong style={{ color: '#fff' }}>Voisins (#17)</strong>
+                                    <p style={{ fontSize: '0.85rem' }}>17 números alrededor del 0.</p>
                                 </div>
                                 <div style={{ background: '#222', padding: '10px', borderRadius: '4px', borderTop: '2px solid #55a' }}>
-                                    <strong style={{ color: '#fff' }}>Tiers du Cylindre (Tercios)</strong>
-                                    <p style={{ fontSize: '0.85rem' }}>6 fichas cubren 12 números (32.4%) en el sector opuesto al 0.</p>
+                                    <strong style={{ color: '#fff' }}>Tier (#12)</strong>
+                                    <p style={{ fontSize: '0.85rem' }}>Sector opuesto al 0.</p>
                                 </div>
                                 <div style={{ background: '#222', padding: '10px', borderRadius: '4px', borderTop: '2px solid #5a5' }}>
-                                    <strong style={{ color: '#fff' }}>Orphelins (Huérfanos)</strong>
-                                    <p style={{ fontSize: '0.85rem' }}>5 fichas cubren los 8 números restantes (21.6%).</p>
+                                    <strong style={{ color: '#fff' }}>Orphelins (#8)</strong>
+                                    <p style={{ fontSize: '0.85rem' }}>8 números restantes.</p>
                                 </div>
                             </div>
                         </div>

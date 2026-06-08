@@ -34,7 +34,7 @@ export const Z_LAYERS = {
     STATUS_OVERLAY: 3000,
 
     // Critical Modals (Reset, Withdraw, Bankruptcy) - Must block everything
-    CRITICAL_MODAL: 5000,
+    CRITICAL_MODAL: 20000,
 
     // Toast Notifications (Usually defined in Toast container, but for reference)
     TOAST: 9999

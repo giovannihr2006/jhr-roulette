@@ -8,6 +8,7 @@ export const TopBar = ({
     setShowHistory,
     setShowHelp,
     setShowManual, // Códice GHR
+    setShowForensicManual, // NEW
     isEditMode, setIsEditMode,
     onResetLayout // New Prop
 }) => {
@@ -90,6 +91,8 @@ export const TopBar = ({
                 <div style={{ width: '1px', height: '30px', background: '#333' }}></div> {/* Separator */}
 
                 {/* MANUAL / HELP */}
+                <button onClick={() => setShowForensicManual(true)} title="Tutorial Forense (Certificación)" className="icon-btn" style={{ fontSize: '1.8rem', color: '#d4af37' }}>🎓</button>
+                <div style={{ width: '1px', height: '20px', background: '#333' }}></div>
                 <button onClick={() => setShowManual(true)} title="Códice GHR" className="icon-btn">📖</button>
                 <button onClick={() => setShowHelp(true)} title="Ayuda" className="icon-btn">?</button>
 

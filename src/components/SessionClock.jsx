@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useFinancialStore } from '../logic/FinancialSimulator';
+import { ForensicBadge } from './ForensicBadge';
 
-export const SessionClock = () => {
+export const SessionClock = ({ onShowTutorial }) => {
     // Access store directly
     const sessionStart = useFinancialStore(state => state.sessionStart);
 
@@ -51,23 +52,43 @@ export const SessionClock = () => {
             boxShadow: '0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.2)',
             color: '#e0e0e0',
             fontFamily: 'Roboto Mono, monospace',
-            display: 'flex', flexDirection: 'column',
-            padding: '15px 20px',
-            minWidth: '220px',
-            textAlign: 'right',
+            display: 'flex',
+            flexWrap: 'wrap', // Allow wrapping
+            alignItems: 'center',
+            justifyContent: 'center', // Center content
+            gap: '10px 20px', // Gap between items
+            padding: '10px',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden', // Prevent spill
             pointerEvents: 'auto',
             position: 'relative',
-            zIndex: 10
+            zIndex: 10,
+            boxSizing: 'border-box' // Fix wrapping border issue
         }}>
-            <div style={{ color: '#d4af37', fontWeight: 'bold', fontSize: '2.2rem', marginBottom: '5px', lineHeight: '1' }}>
+            {/* TIME */}
+            <div style={{ color: '#d4af37', fontWeight: 'bold', fontSize: '2.2rem', lineHeight: '1', whiteSpace: 'nowrap' }}>
                 {formatTime(currentTime)}
             </div>
-            <div style={{ fontSize: '1rem', color: '#aaa', textTransform: 'capitalize', marginBottom: '10px' }}>
+
+            {/* DATE */}
+            <div style={{ fontSize: '1rem', color: '#aaa', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
                 {formatDate(currentTime)}
             </div>
 
-            <div style={{ borderTop: '1px solid #444', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                <span>SESIÓN:</span>
+            {/* SESSION TIMER */}
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                color: '#888', fontSize: '0.9rem', fontWeight: 'bold',
+                padding: '5px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ForensicBadge id="clock" />
+                    <button onClick={(e) => { e.stopPropagation(); onShowTutorial(); }}
+                        style={{ background: 'transparent', border: 'none', color: '#d4af37', cursor: 'pointer', padding: 0, fontSize: '1rem' }}
+                        title="Manual Forense E14: Reloj de Sesión"
+                    >⚖</button>
+                </div>
                 <span style={{ color: '#fff', fontSize: '1.2rem' }}>{duration}</span>
             </div>
         </div>

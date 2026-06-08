@@ -1,346 +1,416 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useFinancialStore } from '../logic/FinancialSimulator'
 import { calculateWinnings } from '../logic/RouletteUtils'
+import { ForensicBadge } from './ForensicBadge'
+import { ProfitGraph } from './ProfitGraph'
 import './CasinoTable.css'
 
-const ProjectionsPanel = ({ viewCurrency = 'COL', currentBets = {} }) => {
+// --- CONSTANTS & CONFIG ---
+const RATES = { COL: 100, USA: 0.0266666, EUR: 0.0245333 }
+
+const JUSTIFICATION_TEXT = `
+ANALISIS CRITICO (ELEMENTO 9: PROYECCIONES INTELIGENTES):
+
+1. LA FALACIA DEL RÉCORD (VANIDAD vs REALIDAD operativa):
+   Proyectar ganancias basándose en el "Saldo Máximo Histórico" es un error de novato que ignora el "Drawdown" (caída) actual.
+   • El Récord es una métrica de Vanidad.
+   • El Saldo Real es una métrica Operativa.
+   Este panel fuerza la realidad al calcular proyecciones solo sobre el dinero que TIENES AHORA, no el que tuviste.
+
+2. EL COSTO DEL TIEMPO MUERTO (EFICIENCIA REAL):
+   Si pasas 3 horas frente a la mesa pero solo apuestas 15 minutos, tu "Promedio por Hora" real es desastroso.
+   • La mayoría de calculadoras mienten porque no filtran el tiempo pasivo.
+   • Este sistema usa 'Tiempo Activo' (Smart Time) para decirte cuánto ganas REALMENTE por cada minuto de trabajo efectivo.
+
+3. TENDENCIA DINÁMICA (MOMENTUM vs PROMEDIO):
+   El "Promedio Histórico" es lento y miente sobre el presente.
+   • Puedes tener un promedio positivo histórico pero estar perdiendo dinero en la última hora.
+   • La metrica "TENDENCIA (50)" analiza el Momentum de corto plazo. Si tu Tendencia es negativa aunque tu Promedio sea positivo, DETENTE. El mercado ha cambiado.
+
+4. ESTRATEGIA DE USO TÁCTICO:
+   No uses este panel para soñar con "cuánto ganaré en un año". Úsalo como un VELOCÍMETRO de eficiencia inmediata.
+   Si tu "Proyección Hora" cae por debajo de tu objetivo, tu estrategia actual está perdiendo fuerza (Alpha Decay). Re-calibra o retírate.
+`.trim();
+
+// --- SUB-COMPONENT: Justification Modal (PORTAL) ---
+const JustificationModal = ({ onClose }) => {
+    return createPortal(
+        <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(5, 5, 5, 0.96)', // Almost solid black for focus
+            zIndex: 2147483647,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            backdropFilter: 'blur(15px)'
+        }} onClick={onClose}>
+            <div style={{
+                width: '95%', maxWidth: '1000px', // IMPACT SIZE: Much wider
+                background: 'linear-gradient(145deg, #121212, #0a0a0a)',
+                border: '1px solid #d4af37',
+                borderRadius: '8px', // Sharper corners for forensic look
+                padding: '50px', // More breathing room
+                boxShadow: '0 0 150px rgba(212, 175, 55, 0.15)',
+                display: 'flex', flexDirection: 'column', gap: '30px',
+                animation: 'fadeIn 0.3s ease-out',
+                position: 'relative'
+            }} onClick={e => e.stopPropagation()}>
+
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #333', paddingBottom: '25px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <span style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 0 10px gold)' }}>⚖</span>
+                        <div>
+                            <h2 style={{ margin: 0, color: '#d4af37', fontFamily: 'Cinzel, serif', fontSize: '2.2rem', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                                Justificación Técnica
+                            </h2>
+                            <span style={{ color: '#aaa', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '4px', fontWeight: 'bold' }}>
+                                Elemento 9: Auditoría de Proyecciones
+                            </span>
+                        </div>
+                    </div>
+                    <button onClick={onClose} style={{
+                        background: 'none', border: '1px solid #555', color: '#888',
+                        width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
+                        fontSize: '1.2rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#555'; e.currentTarget.style.color = '#888' }}
+                    >✕</button>
+                </div>
+
+                {/* Body */}
+                <div style={{
+                    color: '#e0e0e0', fontSize: '1.15rem', lineHeight: '1.8',
+                    whiteSpace: 'pre-line', fontFamily: 'Roboto, sans-serif', padding: '10px'
+                }}>
+                    {JUSTIFICATION_TEXT}
+                </div>
+            </div>
+            <style>{`
+                @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+            `}</style>
+        </div>,
+        document.body // Target Container
+    )
+}
+
+// --- MAIN COMPONENT ---
+const ProjectionsPanel = ({ viewCurrency = 'COL', currentBets = {}, onExpand }) => {
+    // Store Hooks
     const sessionStart = useFinancialStore(state => state.sessionStart)
     const initialCapital = useFinancialStore(state => state.initialCapital) || 0
     const balance = useFinancialStore(state => state.balance)
     const peakCapital = useFinancialStore(state => state.peakCapital) || 0
+    const roundHistory = useFinancialStore(state => state.roundHistory) || []
+    const totalIdleTime = useFinancialStore(state => state.totalIdleTime) || 0
 
-
-    // Currency Exchange Rates (Base: 1 Logic Unit = 1 USD)
-    const RATES = {
-        COL: 100,
-        USA: 0.0266666, // Real USD Conversion
-        EUR: 0.0245333  // Real EUR Conversion
-    }
-
-    // --- MONTE CARLO SIMULATION ---
+    // Local State
+    const [useRealBalance, setUseRealBalance] = useState(false) // Default to Historical (MÁXIMO)
+    const [workHours, setWorkHours] = useState(8)
+    const [now, setNow] = useState(() => Date.now())
+    const [showJustification, setShowJustification] = useState(false)
     const [simStats, setSimStats] = useState(null)
     const [isSimulating, setIsSimulating] = useState(false)
 
-    // --- WORK HOURS STATE ---
-    const [workHours, setWorkHours] = useState(8)
-
-    // Local ticker to update time
-    const [now, setNow] = useState(() => Date.now())
+    // Ticker
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 1000)
         return () => clearInterval(interval)
     }, [])
 
-    // Reset stats when bets change
-    useEffect(() => {
-        setSimStats(null) // eslint-disable-line react-hooks/exhaustive-deps
-    }, [currentBets])
+    // --- CALCULATIONS ---
+    const rawDurationMs = now - sessionStart
+    const activeDurationMs = Math.max(0, rawDurationMs - totalIdleTime) // Smart Time
+    const activeMins = Math.max(roundHistory.length, activeDurationMs / 60000, 0.1) // Stabilized floor based on spins
+
+    const currentProfit = balance - initialCapital
+    const peakProfit = peakCapital - initialCapital
+    const baseProfit = useRealBalance ? currentProfit : peakProfit
+
+    const profitPerMin = baseProfit / activeMins
+    const profitPerHour = profitPerMin * 60
+    const profitPerDay = profitPerHour * workHours
+    const profitPerWeek = profitPerDay * 7
+    const profitPerMonth = profitPerDay * 30
+    const profitPerYear = profitPerDay * 360
+
+    // Trend (Last 50)
+    const trendProfit = (() => {
+        if (!roundHistory || roundHistory.length < 2) return 0;
+        const recent = roundHistory.slice(0, 50);
+        const latest = recent[0];
+        const oldest = recent[recent.length - 1];
+        return latest.balanceAfter - oldest.balanceAfter;
+    })();
+    const isTrendPositive = trendProfit > 0;
+
+    // --- UTILS ---
+    const formatValueExact = (creditValue, showDecimals = false) => {
+        const val = creditValue * (RATES[viewCurrency] || 1)
+        const digits = showDecimals ? 2 : 0
+        if (viewCurrency === 'COL') return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val)
+        return val.toLocaleString('en-US', { style: 'currency', currency: viewCurrency === 'USA' ? 'USD' : 'EUR', minimumFractionDigits: digits, maximumFractionDigits: digits })
+    }
 
     const runSimulation = () => {
         if (!currentBets || Object.keys(currentBets).length === 0) return
-
         setIsSimulating(true)
-        // Set timeout to allow UI to show loading state
         setTimeout(() => {
             let totalProfit = 0
             let wins = 0
             const iterations = 1000
-
             for (let i = 0; i < iterations; i++) {
                 const winningNumber = Math.floor(Math.random() * 37)
                 const winnings = calculateWinnings(winningNumber, currentBets)
                 const betCost = Object.values(currentBets).reduce((a, b) => a + b, 0)
-
                 if (winnings > 0) wins++
                 totalProfit += (winnings - betCost)
             }
-
-            setSimStats({
-                ev: totalProfit / iterations,
-                winRate: (wins / iterations) * 100
-            })
+            setSimStats({ ev: totalProfit / iterations, winRate: (wins / iterations) * 100 })
             setIsSimulating(false)
-        }, 100)
-    }
-
-    // Safety check - MUST BE AFTER HOOKS
-    // Safety check - MUST BE AFTER HOOKS
-    // if (initialCapital === 0 && balance === 0) return null // REMOVED: User wants to see it always
-
-    // STRICT FORMULA COPY FROM BANKING HUD
-    // Profit = Record - Initial
-    const profit = peakCapital - initialCapital
-
-    // Time calculation
-    const durationMs = now - sessionStart
-    const durationMins = Math.max(0.1, durationMs / 60000)
-
-    const profitPerMin = profit / durationMins
-    const profitPerHour = profitPerMin * 60
-    const profitPerDay = profitPerHour * workHours // User customized hours
-    const profitPerMonth = profitPerDay * 30 // User asked for "Month of 30 Days"
-    const profitPerYear = profitPerDay * 360 // User asked for "Year of 360 Days"
-
-    // REVISING FORMATTER TO MATCH CASINO TABLE EXACTLY
-    const formatValueExact = (creditValue) => {
-        const val = creditValue * (RATES[viewCurrency] || 1)
-        if (viewCurrency === 'COL') return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val)
-        if (viewCurrency === 'USA') return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val)
-        if (viewCurrency === 'EUR') return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val)
-        return val.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+        }, 50)
     }
 
     const items = [
-        { label: 'Minuto', val: profitPerMin },
-        { label: 'Hora', val: profitPerHour },
+        { label: 'Minuto Activo', val: profitPerMin },
+        { label: 'Hora', val: profitPerHour, isHighlight: true },
         { label: `Día (${workHours}h)`, val: profitPerDay },
-        { label: 'Mes (30d)', val: profitPerMonth },
+        { label: 'Semana (7d)', val: profitPerWeek },
+        { label: 'Mes (30d)', val: profitPerMonth, isGold: true },
         { label: 'Año (360d)', val: profitPerYear },
     ]
 
     return (
         <div style={{
-            width: '320px',
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #0e0e0e 100%)',
-            border: '2px solid #d4af37',
-            borderTop: '2px solid #fecb00',
-            borderBottom: '2px solid #8a6e20',
+            width: '100%', height: '100%', overflowY: 'auto',
+            background: 'linear-gradient(135deg, #121212 0%, #050505 100%)',
+            border: useRealBalance ? '2px solid #00bcd4' : '2px solid #d4af37',
             borderRadius: '8px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.2)',
-            color: '#e0e0e0',
-            fontFamily: 'Roboto, sans-serif',
-            position: 'relative',
-            zIndex: 10,
-            padding: '0'
+            boxShadow: '0 0 20px rgba(0,0,0,0.8)',
+            color: '#e0e0e0', fontFamily: 'Roboto, sans-serif',
+            display: 'flex', flexDirection: 'column'
         }}>
-            <style>{`
-                @keyframes pulse-blue {
-                    0% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4); }
-                    70% { box-shadow: 0 0 0 10px rgba(0, 229, 255, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
-                }
-                @keyframes pulse-gold {
-                    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); transform: scale(1); }
-                    50% { transform: scale(1.02); }
-                    70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); transform: scale(1); }
-                }
-            `}</style>
+
+            {/* Header */}
+            {/* Header */}
             <div style={{
-                background: 'linear-gradient(to bottom, #2a2a2a, #151515)',
-                borderBottom: '1px solid #443a22',
-                padding: '8px 12px',
-                borderRadius: '6px 6px 0 0',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                color: '#d4af37', fontFamily: 'Cinzel, serif', fontWeight: '700',
-                textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.85rem',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                padding: '8px 10px', background: '#1a1a1a', borderBottom: '1px solid #333',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span>Proyecciones</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <ForensicBadge id="graphLauncher" />
+                            <span style={{ color: '#fff' }}>PROYECCIONES</span>
+                        </span>
+                        {/* FORENSIC ICON BUTTON */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setShowJustification(true); }}
+                            title="Ver Justificación Forense"
+                            style={{
+                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                color: '#666', fontSize: '1rem', transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#d4af37'}
+                            onMouseLeave={e => e.currentTarget.style.color = '#666'}
+                        >
+                            ⚖
+                        </button>
+                    </div>
+                    <span style={{ fontSize: '0.6rem', color: useRealBalance ? '#00bcd4' : '#d4af37' }}>
+                        {useRealBalance ? 'MODO: OPERATIVO (ACTUAL)' : 'MODO: HISTÓRICO (MÁXIMO)'}
+                    </span>
                 </div>
-                {/* Simulation Button */}
-                {currentBets && Object.keys(currentBets).length > 0 && (
-                    <button
-                        onClick={runSimulation}
-                        disabled={isSimulating}
-                        style={{
-                            background: isSimulating ? '#444' : '#222',
-                            border: '1px solid #d4af37',
-                            color: '#d4af37',
-                            fontSize: '0.65rem',
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            textTransform: 'uppercase'
-                        }}
-                    >
-                        {isSimulating ? '...' : 'Simular 1k'}
-                    </button>
-                )}
+
+                {/* RIGHT SIDE CONTROLS */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* EXPAND BUTTON (PROY) - VISUAL MATCH */}
+                    {onExpand && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onExpand(); }}
+                            title="Expandir Proyecciones (PROY)"
+                            style={{
+                                background: '#d4af37', color: '#000', border: 'none', borderRadius: '4px',
+                                fontSize: '0.7rem', cursor: 'pointer', padding: '2px 8px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontWeight: 'bold', textTransform: 'uppercase', gap: '4px'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                        >
+                            📈 PROY
+                        </button>
+                    )}
+
+                    {/* SEGMENTED CONTROL SWITCH */}
+                    <div style={{ display: 'flex', background: '#111', borderRadius: '12px', padding: '2px', border: '1px solid #333' }}>
+                        <button
+                            onClick={() => setUseRealBalance(true)}
+                            style={{
+                                background: useRealBalance ? '#00bcd4' : 'transparent',
+                                color: useRealBalance ? '#000' : '#666',
+                                borderRadius: '10px', border: 'none', padding: '4px 10px',
+                                fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            ACTUAL
+                        </button>
+                        <button
+                            onClick={() => setUseRealBalance(false)}
+                            style={{
+                                background: !useRealBalance ? '#d4af37' : 'transparent',
+                                color: !useRealBalance ? '#000' : '#666',
+                                borderRadius: '10px', border: 'none', padding: '4px 10px',
+                                fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            MÁXIMO
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '10px' }}>
 
-                {/* MONTE CARLO RESULTS */}
-                {simStats && (
-                    <div style={{
-                        marginBottom: '15px', padding: '10px', background: 'rgba(212, 175, 55, 0.1)',
-                        borderRadius: '5px', border: '1px solid #d4af37'
-                    }}>
-                        <div style={{ fontSize: '0.75rem', color: '#d4af37', marginBottom: '5px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                            Análisis Monte Carlo (1000 giros)
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <div>
-                                <div style={{ fontSize: '0.7rem', color: '#aaa' }}>Retorno Esp. (EV)</div>
-                                <div style={{
-                                    color: simStats.ev >= 0 ? '#4f4' : '#f44',
-                                    fontWeight: 'bold', fontFamily: 'monospace'
-                                }}>
-                                    {formatValueExact(simStats.ev)}
-                                </div>
-                            </div>
-                            <div>
-                                <div style={{ fontSize: '0.7rem', color: '#aaa' }}>Probabilidad</div>
-                                <div style={{ color: '#fff', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                                    {simStats.winRate.toFixed(1)}%
-                                </div>
-                            </div>
+            {/* Scrollable Content */}
+            < div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+
+                {/* Stats Bar */}
+                < div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginBottom: '10px' }}>
+                    <div style={{ background: '#222', padding: '5px', borderRadius: '4px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.6rem', color: '#888' }}>TIEMPO ACTIVO</div>
+                        <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' }}>
+                            {activeMins < 60 ? `${activeMins.toFixed(1)}m` : `${(activeMins / 60).toFixed(1)}h`}
                         </div>
                     </div>
-                )}
+                    <div style={{ background: '#222', padding: '5px', borderRadius: '4px', textAlign: 'center', border: isTrendPositive ? '1px solid #4f4' : '1px solid #f44' }}>
+                        <div style={{ fontSize: '0.6rem', color: '#888' }}>TENDENCIA (50)</div>
+                        <div style={{ fontSize: '0.9rem', color: isTrendPositive ? '#4f4' : '#f44', fontWeight: 'bold' }}>
+                            {trendProfit > 0 ? '+' : ''}{formatValueExact(trendProfit)}
+                        </div>
+                    </div>
+                </div >
 
-                {/* EXISTING PROJECTIONS HEADER */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1.2fr 1fr',
-                    gap: '10px',
-                    paddingBottom: '10px',
-                    borderBottom: '2px solid #555',
-                    marginBottom: '5px',
-                    fontSize: '0.75rem',
-                    color: '#888',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px'
-                }}>
-                    <div>Tiempo</div>
-                    <div style={{ textAlign: 'right' }}>Ganancia</div>
-                    <div style={{ textAlign: 'right' }}>Interés</div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {items.map((item) => {
-                        // Calculate Interest % relative to Initial Capital
-                        const interest = initialCapital > 0 ? (item.val / initialCapital) * 100 : 0
-                        const isDayRow = item.label.includes('Día')
-                        const isHourRow = item.label === 'Hora'
-                        const isMonthRow = item.label.includes('Mes')
-
-                        // DYNAMIC STYLING
-                        let bg = 'transparent'
-                        let border = 'none'
-                        let shadow = 'none'
-                        let anim = 'none'
-                        let radius = '0'
-                        let fontColor = '#aaa'
-                        let valueColor = item.val > 0 ? '#4f4' : (item.val < 0 ? '#f44' : '#888')
-                        let fontWeight = 'normal'
-                        let fontSize = '0.95rem'
-                        let textShadow = 'none'
-
-                        if (isHourRow) {
-                            bg = 'rgba(0, 229, 255, 0.15)'
-                            border = '1px solid #00e5ff'
-                            shadow = '0 0 10px rgba(0, 229, 255, 0.3)'
-                            anim = 'pulse-blue 1s infinite'
-                            radius = '6px'
-                            fontColor = '#fff'
-                            valueColor = '#fff'
-                            fontWeight = 'bold'
-                            fontSize = '1.2rem'
-                            textShadow = '0 0 8px #fff'
-                        }
-
-                        if (isMonthRow) {
-                            bg = 'rgba(255, 215, 0, 0.15)' // Gold tint
-                            border = '1px solid #ffd700'
-                            shadow = '0 0 15px rgba(255, 215, 0, 0.4)'
-                            anim = 'pulse-gold 1.5s infinite' // Slower, heavier pulse
-                            radius = '8px'
-                            fontColor = '#ffd700'
-                            valueColor = '#ffd700'
-                            fontWeight = 'bold'
-                            fontSize = '1.3rem' // Even bigger
-                            textShadow = '0 0 10px #ffd700'
-                        }
-
-                        return (
-                            <div key={item.label} style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1.2fr 1fr', // Match header
-                                gap: '10px',
-                                padding: '12px 0',
-                                borderBottom: '1px solid #333',
-                                alignItems: 'center',
-                                background: bg,
-                                boxShadow: shadow,
-                                border: border,
-                                animation: anim,
-                                borderRadius: radius,
-                                marginTop: (isHourRow || isMonthRow) ? '5px' : '0',
-                                marginBottom: (isHourRow || isMonthRow) ? '5px' : '0'
-                            }}>
+                {/* Main Table */}
+                < div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '8px' }}>
+                    {
+                        items.map((item, idx) => (
+                            <React.Fragment key={idx}>
                                 <div style={{
-                                    color: fontColor,
-                                    fontSize: isHourRow ? '1rem' : '0.85rem',
-                                    display: 'flex', alignItems: 'center', gap: '5px',
-                                    fontWeight: fontWeight,
-                                    textShadow: isHourRow ? '0 0 5px #00e5ff' : (isMonthRow ? '0 0 5px #ffd700' : 'none')
+                                    display: 'flex', alignItems: 'center', padding: '6px',
+                                    background: item.isGold ? 'rgba(255, 215, 0, 0.1)' : (item.isHighlight ? 'rgba(0, 188, 212, 0.1)' : 'transparent'),
+                                    borderLeft: item.isGold ? '2px solid gold' : (item.isHighlight ? '2px solid cyan' : '1px solid #333')
                                 }}>
-                                    {isDayRow ? (
-                                        <>
-                                            <span>Día</span>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                max="24"
-                                                value={workHours}
-                                                onChange={(e) => setWorkHours(Number(e.target.value))}
-                                                style={{
-                                                    width: '35px',
-                                                    background: '#222',
-                                                    border: '1px solid #555',
-                                                    color: '#fff',
-                                                    fontSize: '0.8rem',
-                                                    padding: '1px',
-                                                    textAlign: 'center',
-                                                    borderRadius: '3px'
-                                                }}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                            <span style={{ fontSize: '0.7rem' }}>h</span>
-                                        </>
-                                    ) : item.label}
+                                    <span style={{ fontSize: '0.75rem', color: '#ccc' }}>
+                                        {item.label === `Día (${workHours}h)` ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                Día
+                                                <input
+                                                    type="number" value={workHours} onChange={e => setWorkHours(Number(e.target.value))}
+                                                    style={{ width: '30px', background: '#333', border: 'none', color: '#fff', textAlign: 'center', fontSize: '0.7rem', borderRadius: '2px' }}
+                                                />h
+                                            </div>
+                                        ) : item.label}
+                                    </span>
                                 </div>
                                 <div style={{
-                                    color: valueColor,
-                                    fontWeight: 'bold',
-                                    textAlign: 'right',
-                                    fontFamily: 'monospace',
-                                    fontSize: fontSize,
-                                    textShadow: textShadow
+                                    textAlign: 'right', padding: '6px',
+                                    background: item.isGold ? 'rgba(255, 215, 0, 0.1)' : (item.isHighlight ? 'rgba(0, 188, 212, 0.1)' : 'transparent'),
+                                    color: item.val > 0 ? (item.isHighlight ? '#00e5ff' : '#4f4') : '#f44',
+                                    fontWeight: 'bold', fontFamily: 'monospace', fontSize: '0.95rem'
                                 }}>
                                     {formatValueExact(item.val)}
                                 </div>
-                                <div style={{
-                                    fontSize: '0.85rem',
-                                    color: (isHourRow || isMonthRow) ? fontColor : (interest >= 0 ? '#4f4' : '#f44'),
-                                    fontFamily: 'Roboto Mono, monospace',
-                                    textAlign: 'right',
-                                    fontWeight: fontWeight
-                                }}>
-                                    {Math.abs(interest).toFixed(2)}%
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
+                            </React.Fragment>
+                        ))
+                    }
+                </div >
 
+                {/* INLINE TENDENCIA FINANCIERA EN VIVO */}
                 <div style={{
-                    marginTop: '10px',
-                    fontSize: '0.7rem',
-                    color: '#555',
-                    textAlign: 'center',
-                    fontStyle: 'italic'
+                    marginTop: '15px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
                 }}>
-                    (Récord - Inicial) / Tiempo
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+                        paddingBottom: '4px'
+                    }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#ffd700', letterSpacing: '0.5px' }}>
+                            TENDENCIA FINANCIERA EN VIVO
+                        </span>
+                        <span style={{ fontSize: '0.6rem', color: '#888' }}>
+                            (1 Giro = 1 Min)
+                        </span>
+                    </div>
+                    <div style={{
+                        height: '180px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        border: '1px solid #222',
+                        borderRadius: '6px',
+                        padding: '6px',
+                        boxSizing: 'border-box'
+                    }}>
+                        <ProfitGraph
+                            history={roundHistory}
+                            balance={balance}
+                            startBalance={initialCapital}
+                            startTime={sessionStart}
+                            viewCurrency={viewCurrency}
+                            rates={RATES}
+                            isWidgetMode={true}
+                            workHours={workHours}
+                        />
+                    </div>
+                    <div style={{
+                        textAlign: 'center',
+                        fontSize: '0.6rem',
+                        color: '#666',
+                        fontStyle: 'italic',
+                        marginTop: '2px'
+                    }}>
+                        Tip: Presiona el botón dorado <strong style={{ color: '#d4af37' }}>📈 PROY</strong> arriba para expandir a pantalla completa.
+                    </div>
                 </div>
-            </div>
-        </div>
-    )
 
+                {/* Actions */}
+                < div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {currentBets && Object.keys(currentBets).length > 0 && (
+                        <div>
+                            <button
+                                onClick={runSimulation}
+                                disabled={isSimulating}
+                                style={{
+                                    width: '100%', background: '#252525', border: '1px solid #444', color: '#ccc',
+                                    fontSize: '0.7rem', padding: '6px', borderRadius: '4px', cursor: 'pointer', textTransform: 'uppercase'
+                                }}
+                            >
+                                {isSimulating ? 'Simulando...' : 'Simular Monte Carlo (1k)'}
+                            </button>
+                            {simStats && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.75rem', padding: '0 5px' }}>
+                                    <span>EV: <strong style={{ color: simStats.ev >= 0 ? '#4f4' : '#f44' }}>{formatValueExact(simStats.ev)}</strong></span>
+                                    <span>Win%: <strong style={{ color: '#fff' }}>{simStats.winRate.toFixed(1)}%</strong></span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Justification Trigger REMOVED */}
+                </div >
+            </div >
+
+            {/* Render Modal via Portal if active */}
+            {showJustification && <JustificationModal onClose={() => setShowJustification(false)} />}
+
+        </div >
+    )
 }
 
 export default ProjectionsPanel

@@ -9,6 +9,9 @@ import { ProjectionsModal } from '../ProjectionsModal'
 import { StrategyManualModal } from '../StrategyManualModal'
 import { AudioSettingsModal } from '../AudioSettingsModal'
 import { DetailedHistoryModal } from '../DetailedHistoryModal'
+import { VisualRubricModal } from '../VisualRubricModal' // NEW ELEMENT 31/32
+import { ValueRubricModal } from '../ValueRubricModal'
+import { ForensicManualModal } from '../ForensicManualModal'
 
 export const GameOverlayManager = ({
     showLayoutHelp, setShowLayoutHelp,
@@ -17,10 +20,16 @@ export const GameOverlayManager = ({
     showReloadModal, setShowReloadModal,
     showStrategiesModal, setShowStrategiesModal,
     showRubric, setShowRubric,
+    showAppliedRubric, setShowAppliedRubric,
     showProjectionsModal, setShowProjectionsModal,
     showManualModal, setShowManualModal,
     showAudioSettings, setShowAudioSettings,
     showDetailedHistory, setShowDetailedHistory,
+    showVisualRubric, setShowVisualRubric, // Element 31
+    showAppliedVisualRubric, setShowAppliedVisualRubric, // Element 32
+    showValueRubric, setShowValueRubric, // NEW
+    showAppliedValueRubric, setShowAppliedValueRubric, // NEW
+    showForensicManual, setShowForensicManual, // NEW TUTORIAL
 
     // Data Props
     roundHistory,
@@ -61,6 +70,40 @@ export const GameOverlayManager = ({
 
             {showRubric && <RubricModal onClose={() => setShowRubric(false)} />}
 
+            {showAppliedRubric && (
+                <RubricModal
+                    onClose={() => setShowAppliedRubric(false)}
+                    mode="applied"
+                    auditResult={{ score: 796, max: 800, percentage: 99.5 }}
+                />
+            )}
+
+            {showVisualRubric && <VisualRubricModal onClose={() => setShowVisualRubric(false)} />}
+
+            {showAppliedVisualRubric && (
+                <VisualRubricModal
+                    onClose={() => setShowAppliedVisualRubric(false)}
+                    mode="applied"
+                />
+            )}
+
+            {/* NEW: APP VALUE RUBRIC (Elements 33 & 34) */}
+            {showValueRubric && (
+                <ValueRubricModal
+                    onClose={() => setShowValueRubric(false)}
+                    mode="master"
+                />
+            )}
+
+            {showAppliedValueRubric && (
+                <ValueRubricModal
+                    onClose={() => setShowAppliedValueRubric(false)}
+                    mode="applied"
+                />
+            )}
+
+            {showForensicManual && <ForensicManualModal onClose={() => setShowForensicManual(false)} />}
+
             {showAudioSettings && <AudioSettingsModal onClose={() => setShowAudioSettings(false)} />}
 
             <ProjectionsModal
@@ -70,10 +113,13 @@ export const GameOverlayManager = ({
                 startBalance={initialCapital}
                 startTime={startTime}
                 history={roundHistory}
+                viewCurrency={viewCurrency}
+                rates={rates}
             />
 
-            {/* Detailed History is handled via widget usually, but if modal exists? */}
-            {/* The button in CasinoTable opens it? */}
+            {showDetailedHistory && (
+                <DetailedHistoryModal onClose={() => setShowDetailedHistory(false)} />
+            )}
         </>
     )
 }

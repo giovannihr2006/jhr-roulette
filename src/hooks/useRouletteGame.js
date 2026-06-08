@@ -3,7 +3,13 @@ import { useState, useRef, useEffect } from 'react'
 import { soundManager } from '../utils/SoundManager'
 import { dealer } from '../utils/DealerVoice'
 import { calculateWinnings } from '../logic/RouletteUtils'
-import { WHEEL_NUMBERS, REDS } from '../utils/rouletteUtils'
+
+// CONSTANTS (Moved from CasinoTable)
+const WHEEL_NUMBERS = [
+    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23,
+    10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+]
+const REDS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
 
 const BALL_TYPES = [
     { name: 'Ivorina (4.5g)', color: '#fffff0' },
@@ -37,7 +43,8 @@ export const useRouletteGame = ({
     setCurrentBets,
     setLastBets,
     setBetHistory,
-    resolveRound
+    resolveRound,
+    isTurboMode = false
 }) => {
     // Game State
     const [isSpinning, setIsSpinning] = useState(false)
@@ -75,7 +82,7 @@ export const useRouletteGame = ({
     useEffect(() => {
         // Enforce silence on load (Fixes HMR ghosts or prev session leaks)
         soundManager.stopAll()
-        setTimeout(() => dealer.welcome(), 1000)
+        // setTimeout(() => dealer.welcome(), 1000) // Replaced by user-gesture welcome in CasinoTable.jsx
         randomizePhysicsDisplay()
     }, [])
 
@@ -89,6 +96,9 @@ export const useRouletteGame = ({
         const dist = pWheel.laps * 2.5
         const mps = (dist / 12.5).toFixed(1)
 
+        // Forensic Permutation Calculation
+        const totalPermutations = BALL_TYPES.length * SPEEDS.length * WHEEL_SPEEDS.length * START_POINTS.length * 2
+
         setPhysicsState({
             ballType: pBall,
             ballSpeed: pSpeed,
@@ -96,39 +106,36 @@ export const useRouletteGame = ({
             wheelSpeedObject: pWheel,
             startPoint: pStart,
             wheelDirection: pDirVal === 1 ? 'Horario ↻' : 'Anti-Horario ↺',
-            ballDirection: pDirVal === 1 ? 'Anti-Horario ↺' : 'Horario ↻'
+            ballDirection: pDirVal === 1 ? 'Anti-Horario ↺' : 'Horario ↻',
+            permutations: totalPermutations
         })
     }
 
-    // --- SECURE RNG HELPER ---
+    // --- SECURE RNG HELPER (Forensic Grade: Rejection Sampling) ---
     const getSecureRandomInt = (max) => {
-        const array = new Uint32Array(1)
-        window.crypto.getRandomValues(array)
-        return array[0] % max
+        // Rejection sampling to avoid modulo bias
+        // We want a number between 0 and max-1.
+        // We generate a random number from 0 to 2^32 - 1.
+        // If the number falls in the "remainder" zone (where 2^32 % max would bias low numbers), we reject and retry.
+
+        const limit = 0xFFFFFFFF - (0xFFFFFFFF % max);
+        const array = new Uint32Array(1);
+
+        while (true) {
+            window.crypto.getRandomValues(array);
+            // If the random value is within the "fair" range
+            if (array[0] < limit) {
+                return array[0] % max;
+            }
+            // Otherwise, reject and loop (this happens extremely rarely for small max, e.g. 37)
+        }
     }
 
     const resolvePayouts = (winningNumber) => {
-        // Bug #6 Fix: Validar que hay apuestas antes de procesar
-        if (!currentBets || typeof currentBets !== 'object' || Object.keys(currentBets).length === 0) {
-            // No hay apuestas, solo resolver la ronda con 0 ganancias
-            resolveRound(0, winningNumber, {})
-            setCurrentBets({})
-            setLastWinAmount(0)
-            return
-        }
-
-        // Validar que todas las apuestas tienen montos válidos
-        const validBets = {}
-        Object.entries(currentBets).forEach(([betId, amount]) => {
-            if (typeof amount === 'number' && amount > 0 && !isNaN(amount)) {
-                validBets[betId] = amount
-            }
-        })
-
-        const totalWinnings = calculateWinnings(winningNumber, validBets)
+        const totalWinnings = calculateWinnings(winningNumber, currentBets)
         if (totalWinnings > 0) {
             soundManager.playWin(totalWinnings)
-            const totalBet = Object.values(validBets).reduce((a, b) => a + b, 0)
+            const totalBet = Object.values(currentBets).reduce((a, b) => a + b, 0)
             if (totalWinnings > totalBet) {
                 setTimeout(() => dealer.profitWin(), 2500)
             }
@@ -137,22 +144,10 @@ export const useRouletteGame = ({
             setLastWinAmount(0)
         }
 
-        // Bug #7 Fix: Copia profunda para evitar mutaciones
-        const roundBets = JSON.parse(JSON.stringify(validBets))
+        const roundBets = { ...currentBets }
         resolveRound(totalWinnings, winningNumber, roundBets)
         setCurrentBets({})
     }
-
-    // Animation State
-    const [animState, setAnimState] = useState({
-        isSpinning: false,
-        startTime: 0,
-        duration: 12000,
-        startWheelRotation: 0,
-        targetWheelRotation: 0,
-        startBallRotation: 0,
-        targetBallRotation: 0
-    })
 
     const handleSpin = () => {
         if (isSpinning) return
@@ -174,7 +169,8 @@ export const useRouletteGame = ({
             wheelSpeedObject: pWheelSpeed,
             startPoint: pStart,
             wheelDirection: pDirVal === 1 ? 'Horario' : 'Anti-Horario',
-            ballDirection: pDirVal === 1 ? 'Anti-Horario' : 'Horario'
+            ballDirection: pDirVal === 1 ? 'Anti-Horario' : 'Horario',
+            permutations: BALL_TYPES.length * SPEEDS.length * WHEEL_SPEEDS.length * START_POINTS.length * 2
         })
 
         try {
@@ -191,14 +187,7 @@ export const useRouletteGame = ({
             setLastWinAmount(0)
             setShowBall(true)
             setBallResetKey(prev => prev + 1)
-
-            // Initial Rotation (Snap to current)
-            // We use the last known rotation as start
-            const currentWheelRot = wheelRotation
-            const startBallRot = pStart.angle
-
-            setWheelRotation(currentWheelRot)
-            setBallRotation(startBallRot)
+            setBallRotation(pStart.angle)
 
             // Winner - CRYPTOGRAPHICALLY SECURE
             let winningNumber = WHEEL_NUMBERS[getSecureRandomInt(WHEEL_NUMBERS.length)]
@@ -209,69 +198,45 @@ export const useRouletteGame = ({
             }
             const winningIndex = WHEEL_NUMBERS.indexOf(winningNumber)
 
-            // Calculate Targets
-            const wheelDelta = pDirVal * ((pWheelSpeed.laps * 360) + Math.random() * 360)
-            const targetWheelRot = currentWheelRot + wheelDelta
+            // Deltas
+            const wheelDelta = pDirVal * ((pWheelSpeed.laps * 360) + Math.random() * 360) // Visual jitter can stay Math.random
+            const nextWheelRotation = wheelRotation + wheelDelta
 
             const ballDirVal = -pDirVal
             const ballTotalDegrees = pBallSpeed.laps * 360
             const wedgeAngle = winningIndex * (360 / 37)
-
-            // Ball End Logic
-            // The ball must land on 'wedgeAngle' relative to the wheel's final position
-            const finalWheelMod = ((targetWheelRot % 360) + 360) % 360
-            const targetWorldAngle = targetWheelRot + wedgeAngle
-
-            // We need ball to travel approx ballTotalDegrees
-            const idealEnd = startBallRot + (ballDirVal * ballTotalDegrees)
-
-            // Snap to nearest matching angle
-            // We need ballRotation % 360 == targetWorldAngle % 360
-            // But we also want closer to idealEnd
+            const targetWorldAngle = nextWheelRotation + wedgeAngle
+            const idealEnd = pStart.angle + (ballDirVal * ballTotalDegrees)
             const rounds = Math.round((idealEnd - targetWorldAngle) / 360)
-            const targetBallRot = targetWorldAngle + (rounds * 360)
+            const nextBallRotation = targetWorldAngle + (rounds * 360)
 
-            const now = Date.now()
-            const duration = 12000
+            const spinDuration = isTurboMode ? 1000 : 12500
+            const openBetsDuration = isTurboMode ? 1000 : 5000
 
-            // Set Animation State for UI
-            setAnimState({
-                isSpinning: true,
-                startTime: now,
-                duration: duration,
-                startWheelRotation: currentWheelRot,
-                targetWheelRotation: targetWheelRot,
-                startBallRotation: startBallRot,
-                targetBallRotation: targetBallRot
-            })
-
-            // Don't set immediate rotation state here as we animate it in UI
-            // But update final state at end
+            setTimeout(() => {
+                setWheelRotation(nextWheelRotation)
+                setBallRotation(nextBallRotation)
+            }, 50)
 
             setTimeout(() => {
                 try {
                     soundManager.stopBallLoop() // Stop audio loop
                     setIsSpinning(false)
-
-                    // Finalize positions
-                    setWheelRotation(targetWheelRot)
-                    setBallRotation(targetBallRot)
-
                     const color = winningNumber === 0 ? 'Verde' : (REDS.includes(winningNumber) ? 'Rojo' : 'Negro')
                     dealer.winner(winningNumber, color)
                     setLastWin(winningNumber)
                     resolvePayouts(winningNumber)
 
                     betsTimeoutRef.current = setTimeout(() => {
-                        setLastWin(null) // Clear Visual Highlights
+                        // setLastWin(null) -- DEPRECATED: Persist winning number and 3D diamond on mat until next spin
                         setBallResetKey(prev => prev + 1)
                         if (!isSpinningRef.current) dealer.betsOpen()
-                    }, 5000)
+                    }, openBetsDuration)
                 } catch (error) {
                     console.error("Error resolving spin:", error)
                     setIsSpinning(false)
                 }
-            }, duration + 500) // Small buffer
+            }, spinDuration)
 
         } catch (e) {
             console.error("Spin error", e)
@@ -289,8 +254,8 @@ export const useRouletteGame = ({
         lastWin,
         lastWinAmount,
         setLastWinAmount,
+        lastWin,
         setLastWin,
-        physicsState,
-        animState // New Animation State Export
+        physicsState
     }
 }

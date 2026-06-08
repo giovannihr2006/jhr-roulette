@@ -1,9 +1,9 @@
 export const PERSONALITIES = {
     FORMAL: {
         welcome: [
-            "Bienvenidos a GHR Ruleta Royale.",
-            "La mesa está abierta, señores.",
-            "Ronda iniciada. Hagan sus apuestas."
+            "Bienvenidos a GHR Ruleta Royale. Les invitamos a cargar sus fichas para comenzar la sesión.",
+            "La mesa está abierta, señores. Por favor, carguen sus fichas.",
+            "Bienvenidos. Carguen sus fichas y hagan sus apuestas."
         ],
         betsOpen: [
             "Hagan sus apuestas, por favor.",
@@ -35,9 +35,9 @@ export const PERSONALITIES = {
     },
     COACH: {
         welcome: [
-            "¡Vamos a romper la banca hoy! ¿Listos?",
-            "Nueva oportunidad de ganar. Concéntrate.",
-            "Analiza el tablero. Tienes esto controlado."
+            "¡Bienvenidos! Es hora de romper la banca. ¡Carguen sus fichas y vamos con todo!",
+            "Nueva oportunidad de ganar. ¡Carga tus fichas y prepárate!",
+            "¡No pierdas tiempo! Carga tus fichas y toma el control."
         ],
         betsOpen: [
             "¡Ataquemos! Haz tu jugada maestra.",
@@ -69,9 +69,9 @@ export const PERSONALITIES = {
     },
     FRIENDLY: { // "Mateo" style
         welcome: [
-            "Hola amigos, ¿qué tal la suerte hoy?",
-            "Mesa lista. Vamos a divertirnos.",
-            "¡Qué buen día para jugar ruleta!"
+            "¡Hola amigos! Qué alegría verlos. No olviden cargar sus fichas para jugar un rato.",
+            "Mesa lista. ¡Carguen sus fichas y que empiece la diversión!",
+            "¡Hola, hola! Qué buen día para jugar. Carga unas fichas y acompáñanos."
         ],
         betsOpen: [
             "¿Cuál es tu número de la suerte?",
@@ -162,26 +162,37 @@ export class DealerVoice {
     }
 
     speak(text, priority = false) {
-        if (!this.enabled) return
-        if (priority) this.synth.cancel()
+        if (!this.enabled || !this.synth) return
 
-        const utterance = new SpeechSynthesisUtterance(text)
-        if (this.voice) utterance.voice = this.voice
+        try {
+            // Critical Fix: Many browsers (Chrome/Edge/Safari) requires a resume() call
+            // and sometimes the synth "freezes" if not called regularly.
+            if (this.synth.paused) {
+                this.synth.resume()
+            }
 
-        // Tweaks based on personality?
-        if (this.personality === 'COACH') {
-            utterance.rate = 1.15 // Fast, energetic
-            utterance.pitch = 1.1
-        } else if (this.personality === 'FRIENDLY') {
-            utterance.rate = 1.05
-            utterance.pitch = 0.95 // Relaxed
-        } else {
-            utterance.rate = 1.0 // Formal
-            utterance.pitch = 1.0
+            if (priority) this.synth.cancel()
+
+            const utterance = new SpeechSynthesisUtterance(text)
+            if (this.voice) utterance.voice = this.voice
+
+            // Tweaks based on personality?
+            if (this.personality === 'COACH') {
+                utterance.rate = 1.15 // Fast, energetic
+                utterance.pitch = 1.1
+            } else if (this.personality === 'FRIENDLY') {
+                utterance.rate = 1.05
+                utterance.pitch = 0.95 // Relaxed
+            } else {
+                utterance.rate = 1.0 // Formal
+                utterance.pitch = 1.0
+            }
+
+            utterance.volume = 1.0
+            this.synth.speak(utterance)
+        } catch (e) {
+            console.error("DealerVoice SpeechSynthesis failed:", e)
         }
-
-        utterance.volume = 1.0
-        this.synth.speak(utterance)
     }
 
     // --- INTERFACE UTILS ---

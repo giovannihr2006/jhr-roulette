@@ -36,15 +36,76 @@ import { DetailedHistoryModal } from './DetailedHistoryModal'
 import { DetailedHistoryWidget } from './DetailedHistoryWidget'
 import { TimeBar } from './TimeBar' // NEW: TimeBar Import
 import { DollarIcon, MethodsIcon, ScannerIcon } from './ControlIcons' // NEW: Draggable Icons
-import { SystemEfficiencyModal } from './SystemEfficiencyModal'
+import SystemEfficiencyModal from './SystemEfficiencyModal'
 import MethodsTable from './MethodsTable'
 import InternalScannerModal from './InternalScannerModal'
+import { BayesianBiasEstimator } from '../logic/BayesianBiasEstimator'
+import { MarkovMatrixTracker } from '../logic/MarkovMatrixTracker'
+import { MultiBotSimulator } from '../logic/MultiBotSimulator'
+import { DealerSignatureTracker } from './DealerSignatureTracker'
+import { consolidateActiveBets } from '../logic/RouletteUtils'
+
+// --- CONSOLIDATED SIDEBAR WIDGETS ---
+import { UnifiedTelemetry } from './UnifiedTelemetry'
+import { AuditTowerWidget } from './AuditTowerWidget'
+import { StrategyMonitorWidget } from './StrategyMonitorWidget'
+import { AlphaWidget } from './AlphaWidget'
+import { InternalScannerWidget } from './InternalScannerWidget'
+import { OldestStreetsWidget } from './OldestStreetsWidget'
+import { OldestLinesWidget } from './OldestLinesWidget'
+import { MethodsWidget } from './MethodsWidget'
+import { SystemsWidget } from './SystemsWidget'
+import { TimeManagementWidget } from './TimeManagementWidget'
+import { VerticalBanking } from './VerticalBanking'
+import { EconomicValueModal } from './EconomicValueModal'
+import { AICopilotWidget } from './AICopilotWidget'
+
 
 import { getNeighbours, WHEEL_ORDER } from '../utils/rouletteUtils'
 
+// --- ELITE SYSTEM DEFINITIONS (18 NUMBERS, 48.65% COVERAGE, COST 4 CHIPS) ---
+const ELITE_SYSTEMS = [
+    {
+        id: 'BETA',
+        name: 'BETA (OPC. 1)',
+        bets: ['LINE_7_10', 'LINE_28_31', 'STREET_16', 'STREET_22'],
+        numbers: [7, 8, 9, 10, 11, 12, 16, 17, 18, 22, 23, 24, 28, 29, 30, 31, 32, 33],
+        icr: '1.600',
+        ibes: '0.6049',
+        badge: '🥇 #1'
+    },
+    {
+        id: 'GAMMA',
+        name: 'GAMMA',
+        bets: ['LINE_13_16', 'LINE_28_31', 'STREET_7', 'STREET_22'],
+        numbers: [7, 8, 9, 13, 14, 15, 16, 17, 18, 22, 23, 24, 28, 29, 30, 31, 32, 33],
+        icr: '1.333',
+        ibes: '0.6049',
+        badge: '🥈 #2'
+    },
+    {
+        id: 'ALFA',
+        name: 'ALFA',
+        bets: ['LINE_4_7', 'LINE_28_31', 'STREET_16', 'STREET_22'],
+        numbers: [4, 5, 6, 7, 8, 9, 16, 17, 18, 22, 23, 24, 28, 29, 30, 31, 32, 33],
+        icr: '1.000',
+        ibes: '0.6049',
+        badge: '🥉 #3'
+    },
+    {
+        id: 'DELTA',
+        name: 'DELTA',
+        bets: ['LINE_16_19', 'LINE_28_31', 'STREET_7', 'STREET_22'],
+        numbers: [7, 8, 9, 16, 17, 18, 19, 20, 21, 22, 23, 24, 28, 29, 30, 31, 32, 33],
+        icr: '0.875',
+        ibes: '0.6049',
+        badge: '🎗️ #4'
+    }
+]
 
 
-import { LIMITS, getBetType } from '../config/GameLimits'
+
+import { LIMITS } from '../config/GameLimits'
 import { Z_LAYERS } from '../config/Theme' // NEW
 import { calculateRisk } from '../utils/BetValidator'
 import { useToastStore } from '../logic/ToastStore'
@@ -90,6 +151,19 @@ export const CasinoTable = () => {
 
     // --- LIVE MODE STATE ---
     const [isLiveMode, setIsLiveMode] = useState(false)
+
+    // --- SIDEBAR TABS STATE ---
+    const [activeSidebarTab, setActiveSidebarTab] = useState('intelligence')
+
+    // --- CERTIFICATION MODALS STATE ---
+    const [showAppliedRubric, setShowAppliedRubric] = useState(false)
+    const [showVisualRubric, setShowVisualRubric] = useState(false)
+    const [showAppliedVisualRubric, setShowAppliedVisualRubric] = useState(false)
+    const [showValueRubric, setShowValueRubric] = useState(false)
+    const [showAppliedValueRubric, setShowAppliedValueRubric] = useState(false)
+    const [showForensicManual, setShowForensicManual] = useState(false)
+    const [showEconomicModal, setShowEconomicModal] = useState(false)
+
 
     const handleManualWin = (number) => {
         const totalWinnings = calculateWinnings(number, currentBets)
@@ -190,6 +264,15 @@ export const CasinoTable = () => {
     const currentRoundBet = useFinancialStore(state => state.currentRoundBet)
     const sessionStart = useFinancialStore(state => state.sessionStart)
     const roundHistory = useFinancialStore(state => state.roundHistory || []) // Fixed: Added missing selector
+    const totalIdleTime = useFinancialStore(state => state.totalIdleTime || 0)
+    const lastActionTime = useFinancialStore(state => state.lastActionTime)
+    const targetProfit = useFinancialStore(state => state.targetProfit || 0)
+    const stopLossLimit = useFinancialStore(state => state.stopLossLimit || 0)
+    const setTargetProfit = useFinancialStore(state => state.setTargetProfit)
+    const setStopLossLimit = useFinancialStore(state => state.setStopLossLimit)
+    const baseWaitThreshold = useFinancialStore(state => state.baseWaitThreshold) || 300
+    const riskCopilotEnabled = useFinancialStore(state => state.riskCopilotEnabled)
+    const setRiskCopilotEnabled = useFinancialStore(state => state.setRiskCopilotEnabled)
 
     // Local Ticker removed (performance optimization)
 
@@ -198,9 +281,10 @@ export const CasinoTable = () => {
     const balance = gameMode === 'REAL' ? realCapital : demoCapital
 
     // --- MAX BALANCE TRACKING ---
-    const [maxBalance, setMaxBalance] = useState(balance)
+    const [maxBalance, setMaxBalance] = useState(() => useFinancialStore.getState().peakCapital || balance)
     const [isNewRecord, setIsNewRecord] = useState(false)
     const [showRecordModal, setShowRecordModal] = useState(false)
+    const [bestPayout, setBestPayout] = useState({ amount: 0, numbers: [] })
 
     // Handle Enter/Escape key to close record modal
     useEffect(() => {
@@ -227,15 +311,15 @@ export const CasinoTable = () => {
                 setTimeout(() => dealer.tipMinBets(), 1500)
             } else {
                 // In auto mode, just small notification
-                // soundManager.playRecord() is already called in the AutoPlay effect logic? 
+                // soundManager.playRecord() is already called in the AutoPlay effect logic?
                 // Wait, it enters here FIRST because balance updates first.
                 // Let's keep sound here or there?
-                // AutoPlay logic also detects record and plays sound. 
+                // AutoPlay logic also detects record and plays sound.
                 // Let's rely on AutoPlay logic for sound to avoid double play.
                 // Actually, AutoPlay logic calls soundManager.playRecord().
             }
 
-            // Still play sound here if manual? 
+            // Still play sound here if manual?
             if (!smartAutoActive) soundManager.playRecord()
 
             setTimeout(() => setIsNewRecord(false), 3000)
@@ -248,6 +332,10 @@ export const CasinoTable = () => {
     const placeBet = useFinancialStore(state => state.placeBet)
     const refundBet = useFinancialStore(state => state.refundBet)
     const resolveRound = useFinancialStore(state => state.resolveRound)
+    const useVaRStopLoss = useFinancialStore(state => state.useVaRStopLoss)
+    const setUseVaRStopLoss = useFinancialStore(state => state.setUseVaRStopLoss)
+    const getVaRStopLoss = useFinancialStore(state => state.getVaRStopLoss)
+    const activeStopLoss = getVaRStopLoss()
     const transactionLog = useFinancialStore(state => state.transactionLog || [])
     const withdraw = useFinancialStore(state => state.withdraw)
     const [showWithdrawModal, setShowWithdrawModal] = useState(false)
@@ -327,7 +415,7 @@ export const CasinoTable = () => {
     const numberHistory = useFinancialStore(state => state.numberHistory || [])
 
 
-    const [selectedChip, setSelectedChip] = useState(100)
+    const [selectedChip, setSelectedChip] = useState(1)
     // Wheel Highlight Sync
     const [hoveredNumbers, setHoveredNumbers] = useState([])
 
@@ -342,6 +430,7 @@ export const CasinoTable = () => {
     const [showHistory, setShowHistory] = useState(false)
     const [showBankruptcy, setShowBankruptcy] = useState(false)
     const [statusOverlay, setStatusOverlay] = useState(null) // Giant Overlay State
+    const [isTurboMode, setIsTurboMode] = useState(false)
 
     // --- HOOK INTEGRATION ---
     const {
@@ -361,8 +450,50 @@ export const CasinoTable = () => {
         setCurrentBets,
         setLastBets,
         setBetHistory,
-        resolveRound
+        resolveRound,
+        isTurboMode
     })
+
+    // --- ADVANCED PROBABILISTIC TRACKERS ---
+    const bayesianEstimator = React.useRef(new BayesianBiasEstimator())
+    const markovTracker = React.useRef(new MarkovMatrixTracker())
+    const multiBot = React.useRef(new MultiBotSimulator(balance))
+
+    const [physPrediction, setPhysPrediction] = React.useState(null)
+    const [physPredictionSector, setPhysPredictionSector] = React.useState([])
+
+    // Update trackers when history changes
+    React.useEffect(() => {
+        if (numberHistory.length > 0) {
+            bayesianEstimator.current.update(numberHistory)
+            markovTracker.current.update(numberHistory)
+
+            const latestNumber = numberHistory[numberHistory.length - 1]
+            multiBot.current.processSpin(latestNumber)
+        }
+    }, [numberHistory])
+
+    // Adaptive neighbor arc based on hit dispersion
+    React.useEffect(() => {
+        if (numberHistory.length >= 5 && physPrediction !== null) {
+            let distances = []
+            for (let i = numberHistory.length - 5; i < numberHistory.length - 1; i++) {
+                const idx1 = WHEEL_ORDER.indexOf(numberHistory[i])
+                const idx2 = WHEEL_ORDER.indexOf(numberHistory[i+1])
+                if (idx1 !== -1 && idx2 !== -1) {
+                    let dist = Math.abs(idx2 - idx1)
+                    if (dist > 18) dist = 37 - dist
+                    distances.push(dist)
+                }
+            }
+            if (distances.length > 0) {
+                const meanDist = distances.reduce((a,b)=>a+b,0) / distances.length
+                if (meanDist < 4) setNeighborCount(1)
+                else if (meanDist < 9) setNeighborCount(2)
+                else setNeighborCount(4)
+            }
+        }
+    }, [numberHistory, physPrediction])
 
     const {
         handlePlaceBet,
@@ -386,7 +517,8 @@ export const CasinoTable = () => {
 
     // --- BETTING WRAPPERS (To Trigger Reload Modal) ---
     const onBatchBet = (ids, val) => {
-        const result = handleBatchBets(ids, val)
+        const chipValue = (val !== undefined && val !== null) ? val : selectedChip
+        const result = handleBatchBets(ids, chipValue)
         if (result && result.error === 'INSUFFICIENT_FUNDS') {
             setShowReloadModal(true)
         }
@@ -469,6 +601,149 @@ export const CasinoTable = () => {
     const [showScannerModal, setShowScannerModal] = useState(false) // NEW: Scanner
     const [showDetailedHistory, setShowDetailedHistory] = useState(false)
 
+    // --- 10 FRONTLINE IMPROVEMENTS STATES & EFFECTS ---
+    const [limitFlash, setLimitFlash] = useState(null)
+
+    // Recommended chip logic
+    const chipOptions = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+    const copilotBase = Math.max(1, balance / 1000);
+
+    // Evaluate maximum misses among the 4 Elite Systems
+    let maxMisses = 0;
+    ELITE_SYSTEMS.forEach(sys => {
+        let misses = 0;
+        for (let i = numberHistory.length - 1; i >= 0; i--) {
+            if (sys.numbers.includes(numberHistory[i])) break;
+            misses++;
+        }
+        if (misses > maxMisses) {
+            maxMisses = misses;
+        }
+    });
+
+    const copilotTSystem = Math.round(baseWaitThreshold / 18) || 17;
+    const copilotF = Math.min(5, Math.floor(maxMisses / copilotTSystem));
+    let copilotS = copilotBase * Math.max(1, copilotF);
+
+    // Upgrade: Fractional Kelly Criterion Sizing
+    if (riskCopilotEnabled) {
+        let p = 1 / 37;
+        let b = 35; // Net odds
+
+        if (physPrediction !== null) {
+            p = 0.054; // Physics signature edge estimate
+        } else if (bayesianEstimator.current) {
+            const stats = bayesianEstimator.current.getAllPocketStats();
+            const biased = stats.filter(s => s.confidence >= 0.90);
+            if (biased.length > 0) {
+                p = biased[0].mean;
+            }
+        }
+
+        if (p > 1 / 37) {
+            const q = 1 - p;
+            const fStar = (p * b - q) / b;
+            const fraction = 0.25; // Quarter-Kelly
+            const kellyS = balance * fStar * fraction;
+            if (kellyS > 0) {
+                copilotS = kellyS;
+            }
+        }
+    }
+
+    // Map to closest chip option
+    let suggestedChipVal = chipOptions[0];
+    let minDiff = Math.abs(copilotS - suggestedChipVal);
+    for (let i = 1; i < chipOptions.length; i++) {
+        const diff = Math.abs(copilotS - chipOptions[i]);
+        if (diff < minDiff) {
+            minDiff = diff;
+            suggestedChipVal = chipOptions[i];
+        }
+    }
+
+    const isGiovanniConditionMet = (bestPayout.amount + balance) > maxBalance
+    const shouldDoubleBetGiovanni = !isGiovanniConditionMet && bestPayout.amount > 0
+    const recommendedChipVal = smartAutoActive && smartAutoConfig && smartAutoConfig.chipValue
+        ? smartAutoConfig.multiplier * smartAutoConfig.chipValue
+        : (shouldDoubleBetGiovanni ? selectedChip * 2 : (riskCopilotEnabled ? suggestedChipVal : null))
+    const isRecommendedDueToGiovanni = !smartAutoActive && shouldDoubleBetGiovanni;
+
+    // Stop-Loss and Target Profit Monitor
+    useEffect(() => {
+        if (targetProfit > 0 && balance >= targetProfit) {
+            setSmartAutoActive(false)
+            setAutoPlayCount(0)
+            setLimitFlash('target-profit')
+            setTimeout(() => setLimitFlash(null), 6000)
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance("Meta de saldo alcanzada. Deteniendo juego para asegurar ganancias.")
+                utterance.lang = 'es-ES'
+                window.speechSynthesis.speak(utterance)
+            }
+            addToast(`¡Límite superior alcanzado! Meta de saldo: ${formatValue(targetProfit)}`, "success")
+        } else if (activeStopLoss > 0 && balance <= activeStopLoss) {
+            setSmartAutoActive(false)
+            setAutoPlayCount(0)
+            setLimitFlash('stop-loss')
+            setTimeout(() => setLimitFlash(null), 6000)
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance("Límite de pérdida alcanzado. Deteniendo juego para proteger su capital.")
+                utterance.lang = 'es-ES'
+                window.speechSynthesis.speak(utterance)
+            }
+            addToast(`¡Límite inferior alcanzado! Stop-Loss: ${formatValue(activeStopLoss)}`, "error")
+        }
+    }, [balance, targetProfit, activeStopLoss])
+
+    // Keyboard Hotkeys
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const activeEl = document.activeElement
+            const isInput = activeEl && (
+                activeEl.tagName === 'INPUT' ||
+                activeEl.tagName === 'TEXTAREA' ||
+                activeEl.isContentEditable
+            )
+            if (isInput) return
+
+            if (e.key === ' ') {
+                e.preventDefault()
+                if (!isSpinning && !timerMode) {
+                    handleSpin()
+                }
+            } else if (e.key === 'Backspace' || e.key === 'c' || e.key === 'C') {
+                e.preventDefault()
+                if (!isSpinning) handleClear()
+            } else if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault()
+                if (!isSpinning) handleRepeat()
+            } else if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault()
+                if (!isSpinning) handleDouble()
+            } else if (e.key === 'z' || e.key === 'Z') {
+                e.preventDefault()
+                if (!isSpinning) handleUndo()
+            } else if (['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
+                e.preventDefault()
+                const tabMap = {
+                    '1': 'intelligence',
+                    '2': 'forensic',
+                    '3': 'stats',
+                    '4': 'projections',
+                    '5': 'history',
+                    '6': 'session',
+                    '7': 'banking'
+                }
+                setActiveSidebarTab(tabMap[e.key])
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [isSpinning, timerMode, handleSpin, handleClear, handleRepeat, handleDouble, handleUndo])
 
     const addToast = useToastStore(state => state.addToast)
 
@@ -520,14 +795,13 @@ export const CasinoTable = () => {
 
 
     // --- POTENTIAL WIN LOGIC ---
-    const [bestPayout, setBestPayout] = useState({ amount: 0, numbers: [] })
 
     useEffect(() => {
         if (Object.keys(currentBets).length > 0) {
             const { maxWin, bestNumbers } = calculateMaxPotentialWin(currentBets)
             setBestPayout({ amount: maxWin, numbers: bestNumbers })
 
-            // Still allow hover override if hovering a specific number? 
+            // Still allow hover override if hovering a specific number?
             // Or just show Max Win permanently as requested?
             // "PAGO POTENCIAL SIEMPRE VISIBLE... INDICANDO EL NUMERO QUE MAS PAGA"
 
@@ -635,7 +909,7 @@ export const CasinoTable = () => {
             return
         }
         // Detect Round Finish (Balance Updated)
-        // We need to run logic ONLY exactly when a round finishes. 
+        // We need to run logic ONLY exactly when a round finishes.
         // Using roundHistory length change is safest.
     }, [smartAutoActive, isSpinning, smartAutoConfig.spinsRemaining])
 
@@ -760,60 +1034,813 @@ export const CasinoTable = () => {
     // MEMOIZED PROPS
     const placedNumbers = useMemo(() => getCoveredNumbers(currentBets), [currentBets])
 
+    const renderSidebarContent = () => {
+        const rankings = multiBot.current ? multiBot.current.getRankings() : []
+
+        switch (activeSidebarTab) {
+            case 'intelligence':
+                return (
+                    <>
+                        <div style={{ transform: 'scale(1.0)', transformOrigin: 'top left', zIndex: 50, position: 'relative', width: '100%' }}>
+                            <Racetrack
+                                onBatchBets={(bets) => onBatchBet(bets, selectedChip)}
+                                onHoverNumbers={setHoveredNumbers}
+                                neighborCount={neighborCount}
+                                setNeighborCount={setNeighborCount}
+                            />
+                        </div>
+                        <DealerSignatureTracker
+                            onPredictionUpdate={(num, sector) => {
+                                setPhysPrediction(num)
+                                setPhysPredictionSector(sector || [])
+                            }}
+                            disabled={isSpinning}
+                        />
+                        <UnifiedTelemetry physicsState={physicsState} />
+                        <DetailedHistoryWidget onClick={() => setShowHistoryModal(true)} />
+
+                        <div style={{
+                            background: 'rgba(0,0,0,0.3)',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            borderRadius: '10px',
+                            padding: '12px',
+                            marginTop: '10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            boxSizing: 'border-box',
+                            width: '100%'
+                        }}>
+                            <div style={{ fontSize: '0.8rem', color: '#ffd700', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>📈 RENDIMIENTO MULTI-BOT (SHADOW)</span>
+                                <span style={{ fontSize: '0.7rem', color: '#aaa', fontWeight: 'normal' }}>Base: $10K</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {rankings.slice(0, 4).map((bot, idx) => {
+                                    const profit = bot.netProfit
+                                    const isPos = profit > 0
+                                    const isNeg = profit < 0
+                                    return (
+                                        <div key={bot.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '4px' }}>
+                                            <span>#{idx + 1} {bot.label.split(' ')[0]}</span>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '0.65rem', color: '#aaa' }}>{bot.winRate.toFixed(0)}% WR</span>
+                                                <span style={{
+                                                    color: isPos ? '#4caf50' : (isNeg ? '#ff1744' : '#fff'),
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    {isPos ? '+' : ''}{formatValue(bot.netProfit)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </>
+                )
+            case 'forensic':
+                return (
+                    <>
+                        <div className="ct-widgets-grid">
+                            <StrategyMonitorWidget currentRoundBet={currentRoundBet} bestPayoutAmount={bestPayout.amount} />
+                            <AlphaWidget onBet={onBatchBet} placedNumbers={placedNumbers} />
+                            <InternalScannerWidget onBet={onBatchBet} />
+                            <OldestStreetsWidget onBet={onBatchBet} />
+                            <OldestLinesWidget onBet={onBatchBet} />
+                            <MethodsWidget onBet={onBatchBet} placedNumbers={placedNumbers} onToggleTable={() => setShowMethodsTable(true)} />
+                            <SystemsWidget onBet={onBatchBet} placedNumbers={placedNumbers} onToggleTable={() => setShowEfficiencyModal(true)} />
+                            <TopOpportunityWidget />
+                        </div>
+                        <AuditTowerWidget
+                            onShowRubricManual={() => setShowRubricModal(true)}
+                            onShowRubricApplied={() => setShowAppliedRubric(true)}
+                            onShowVisualManual={() => setShowVisualRubric(true)}
+                            onShowVisualApplied={() => setShowAppliedVisualRubric(true)}
+                            onShowValueManual={() => setShowValueRubric(true)}
+                            onShowValueApplied={() => setShowAppliedValueRubric(true)}
+                            onShowAppValue={() => setShowEconomicModal(true)}
+                            onShowForensicManual={() => setShowForensicManual(true)}
+                        />
+                    </>
+                )
+            case 'stats':
+                return <StatisticsPanel />
+            case 'projections':
+                return (
+                    <ProjectionsPanel
+                        balance={balance}
+                        history={roundHistory}
+                        viewCurrency={viewCurrency}
+                        currentBets={currentBets}
+                        onExpand={() => setShowProjectionsModal(true)}
+                    />
+                )
+            case 'history':
+                return <HistoryPanel />
+            case 'session':
+                return (
+                    <TimeManagementWidget
+                        isActive={timerMode && !isSpinning}
+                        timerMode={timerMode}
+                        duration={timerDuration}
+                        timeLeft={timeLeft}
+                        onToggle={() => {
+                            setTimerMode(!timerMode)
+                            if (!timerMode) setTimeLeft(timerDuration)
+                        }}
+                        onChangeDuration={setTimerDuration}
+                        totalSpins={roundHistory.length}
+                        totalIdleTime={totalIdleTime}
+                        lastActionTime={lastActionTime}
+                        onShowJustificationE24={() => addToast("Manual de Gestión de Tiempo", "info")}
+                    />
+                )
+            case 'banking':
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%' }}>
+                        <VerticalBanking
+                            balance={balance}
+                            maxBalance={maxBalance}
+                            bestPayout={bestPayout}
+                            currentRoundBet={currentRoundBet}
+                            formatBalance={formatBalance}
+                            formatValue={formatValue}
+                            setShowReloadModal={setShowReloadModal}
+                            setShowResetModal={setShowResetModal}
+                            setShowWithdrawModal={setShowWithdrawModal}
+                            setShowProjectionsModal={setShowProjectionsModal}
+                            isNewRecord={isNewRecord}
+                            initialCapital={initialCapital}
+                            sessionStart={sessionStart}
+                            lastWinAmount={lastWinAmount}
+                            currentBets={currentBets}
+                            viewCurrency={viewCurrency}
+                            setViewCurrency={setViewCurrency}
+                            exchangeRates={exchangeRates}
+                            targetProfit={targetProfit}
+                            stopLossLimit={stopLossLimit}
+                            setTargetProfit={setTargetProfit}
+                            setStopLossLimit={setStopLossLimit}
+                            roundHistory={roundHistory}
+                            setCurrentBets={setCurrentBets}
+                            placeBet={placeBet}
+                            handleClear={handleClear}
+                            setBetHistory={setBetHistory}
+                        />
+                        <div style={{
+                            background: 'rgba(0,0,0,0.3)',
+                            padding: '12px',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            boxSizing: 'border-box'
+                        }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#ffd700', cursor: 'pointer', userSelect: 'none' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={useVaRStopLoss}
+                                    onChange={(e) => setUseVaRStopLoss(e.target.checked)}
+                                    style={{ accentColor: '#ffd700', cursor: 'pointer', width: '14px', height: '14px', margin: 0 }}
+                                />
+                                <span>🛡️ STOP-LOSS DINÁMICO (VaR)</span>
+                            </label>
+                            {useVaRStopLoss && (
+                                <div style={{ fontSize: '0.75rem', color: '#aaa', paddingLeft: '22px' }}>
+                                    Límite VaR Activo: <strong style={{ color: '#ff1744' }}>{formatValue(activeStopLoss)}</strong>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+            default:
+                return null;
+        }
+    }
     return (
         <div
             className="casino-table"
             style={{ display: 'block' }}
             onMouseMove={handleMouseMove}
-        > {/* Switch to block for absolute children */}
-            {/* BRANDING HEADER */}
-            <Draggable index={1} totalCount={21} id="title" isEnabled={isEditMode} initialPos={positions.title} onDragEnd={onUpdatePos} style={{ zIndex: 4001, minWidth: '300px', minHeight: '60px', background: 'transparent' }}>
+        >
+            {limitFlash === 'stop-loss' && (
                 <div style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'transparent', // Transparent to show felt gradient
-                    border: 'none' // Explicitly no border
-                }}>
-                    <svg viewBox="0 0 500 85" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                        <text x="50%" y="45%" dominantBaseline="middle" textAnchor="middle"
-                            fill="#d4af37"
-                            fontFamily="Times New Roman, serif"
-                            fontWeight="bold"
-                            fontSize="42"
-                            letterSpacing="2px"
-                            style={{
-                                textShadow: '0 2px 10px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.4)',
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            GHR Ruleta Royale
-                        </text>
-                        <text x="50%" y="85%" dominantBaseline="middle" textAnchor="middle"
-                            fill="#aaa"
-                            fontFamily="'Roboto Mono', monospace"
-                            fontSize="14"
-                            letterSpacing="1px"
-                            style={{
-                                textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-                            }}
-                        >
-                            Version 1.0, 10 Enero 2025
-                        </text>
-                    </svg>
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    border: '25px solid rgba(255, 23, 68, 0.95)',
+                    boxShadow: 'inset 0 0 100px rgba(255, 23, 68, 0.9)',
+                    pointerEvents: 'none', zIndex: 99999,
+                    animation: 'pulseFlash 1s infinite'
+                }} />
+            )}
+            {limitFlash === 'target-profit' && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    border: '25px solid rgba(212, 175, 55, 0.95)',
+                    boxShadow: 'inset 0 0 100px rgba(212, 175, 55, 0.9)',
+                    pointerEvents: 'none', zIndex: 99999,
+                    animation: 'pulseFlash 1s infinite'
+                }} />
+            )}
+            {!isEditMode ? (
+                /* --- DUAL COLUMN ANTI-OVERLAP LAYOUT --- */
+                <div className="ct-layout-wrapper">
+                    {/* LEFT / MAIN COLUMN */}
+                    <div className="ct-main-column">
+                        {/* CONTROLS ROW WITH INLINED BRANDING */}
+                        <div className="ct-controls-row">
+                            {/* Compact Branding */}
+                            <div style={{ display: 'flex', flexDirection: 'column', paddingRight: '20px', borderRight: '1px solid rgba(212, 175, 55, 0.35)', marginRight: '10px', flexShrink: 0 }}>
+                                <span style={{
+                                    color: '#d4af37',
+                                    fontFamily: 'Times New Roman, serif',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.25rem',
+                                    letterSpacing: '1px',
+                                    textTransform: 'uppercase',
+                                    textShadow: '0 2px 5px rgba(0,0,0,0.5)',
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    GHR Ruleta Royale
+                                </span>
+                                <span style={{
+                                    color: '#aaa',
+                                    fontFamily: "'Roboto Mono', monospace",
+                                    fontSize: '0.65rem',
+                                    letterSpacing: '0.5px',
+                                    marginTop: '-1px'
+                                }}>
+                                    v1.0 - 10 Ene 2025
+                                </span>
+                            </div>
+                            <button onClick={() => setShowStrategiesModal(true)} style={{
+                                background: '#007bff', color: 'white', border: '1px solid #fff',
+                                padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                            }}>
+                                ESTRATEGIAS
+                            </button>
+                            <button onClick={() => setShowManualModal(true)} style={{
+                                background: '#17a2b8', color: 'white', border: '1px solid #fff',
+                                padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                            }}>
+                                MANUAL
+                            </button>
+                            <button onClick={() => setViewMode3D(!viewMode3D)} style={{
+                                background: '#6f42c1', color: 'white', border: '1px solid #fff',
+                                padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                            }}>
+                                {viewMode3D ? 'VISTA 2D' : 'VISTA 3D'}
+                            </button>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto', marginRight: '35px' }}>
+                                <button onClick={() => setIsEditMode(true)} style={{
+                                    background: '#444', color: 'white', border: '1px solid #fff',
+                                    padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                                }}>
+                                    🔓 MOVER ELEMENTOS
+                                </button>
+                                <button onClick={() => {
+                                    if (document.fullscreenElement) document.exitFullscreen();
+                                    else document.documentElement.requestFullscreen();
+                                }} style={{
+                                    background: isFullscreen ? '#4caf50' : '#444', color: 'white', border: '1px solid #fff',
+                                    padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                                }}>
+                                    {isFullscreen ? '🔲 SALIR PANTALLA' : '⛶ PANTALLA COMPLETA'}
+                                </button>
+                                <div
+                                    onClick={() => setIsLiveMode(!isLiveMode)}
+                                    style={{
+                                        background: isLiveMode ? '#ff0044' : '#444',
+                                        padding: '8px 15px',
+                                        borderRadius: '20px',
+                                        border: '2px solid #fff',
+                                        color: 'white',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+                                    }}
+                                >
+                                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: isLiveMode ? '#fff' : '#888' }} />
+                                    {isLiveMode ? "MODO EN VIVO" : "MODO SIMULACIÓN"}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* GAME ROW (Wheel + Board) */}
+                        <div className="ct-game-row">
+                            {/* Wheel */}
+                            <div style={{ flex: 'none', width: '420px', height: '420px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {viewMode3D ? (
+                                    <Roulette3D
+                                        wheelRotation={wheelRotation}
+                                        ballRotation={ballRotation}
+                                        showBall={showBall}
+                                        highlightedNumbers={hoveredNumbers}
+                                        placedNumbers={placedNumbers}
+                                        bestPayoutNumbers={bestPayout?.numbers || []}
+                                        size={420}
+                                        lastWin={lastWin}
+                                        isTurboMode={isTurboMode}
+                                    />
+                                ) : (
+                                    <RouletteWheel
+                                        wheelRotation={wheelRotation}
+                                        ballRotation={ballRotation}
+                                        showBall={showBall}
+                                        ballResetKey={ballResetKey}
+                                        highlightedNumbers={hoveredNumbers}
+                                        placedNumbers={placedNumbers}
+                                        bestPayoutNumbers={bestPayout?.numbers || []}
+                                        isTurboMode={isTurboMode}
+                                        size={420}
+                                        lastWin={lastWin}
+                                        isLiveMode={isLiveMode}
+                                        onManualWin={handleManualWin}
+                                        animState={animState}
+                                        isSpinning={isSpinning}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Board */}
+                            <div style={{ width: '756px', height: '615px', flex: 'none', display: 'flex', alignItems: 'flex-start', overflow: 'visible', paddingTop: '40px', boxSizing: 'border-box' }}>
+                                <div style={{ transform: 'scale(0.88)', transformOrigin: 'left top', width: '860px' }}>
+                                    <BettingBoard
+                                        bets={currentBets}
+                                        onPlaceBet={onPlaceBet}
+                                        onBatchBet={(bets) => onBatchBet(bets, selectedChip)}
+                                        lastWin={lastWin}
+                                        onHoverNumbers={setHoveredNumbers}
+                                        history={numberHistory}
+                                        showEfficiency={showEfficiency}
+                                        setShowEfficiency={setShowEfficiency}
+                                        onNeighborBet={(num) => handleNeighborBet(num, neighborCount, selectedChip)}
+                                        showActiveBets={showActiveBets}
+                                        setShowActiveBets={setShowActiveBets}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* BOTTOM CONTROLS & CHIPS ROW */}
+                        <div className="ct-controls-panel-row" style={{ display: 'flex', gap: '10px', width: 'calc(100% - 30px)', maxWidth: '1113px', marginLeft: '15px', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', boxSizing: 'border-box' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
+                                <div className="ct-controls-panel" style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '10px', background: 'transparent', border: 'none', padding: 0 }}>
+                                    {!isLiveMode && (
+                                        <button className="ct-control-btn ct-btn-spin" onClick={handleSpin} disabled={isSpinning || timerMode} style={{ margin: 0 }}>
+                                            {isSpinning ? "..." : (timerMode ? "AUTO" : "GIRAR")}
+                                        </button>
+                                    )}
+                                    {!isLiveMode && (
+                                        <button
+                                            onClick={() => setIsTurboMode(!isTurboMode)}
+                                            className={`ct-control-btn ${isTurboMode ? 'ct-btn-gold' : 'ct-btn-blue'}`}
+                                            style={{
+                                                background: isTurboMode ? 'linear-gradient(135deg, #1e1010, #3a0007)' : 'rgba(20, 20, 20, 0.85)',
+                                                color: isTurboMode ? '#ff1744' : '#d4af37',
+                                                border: isTurboMode ? '1px solid #ff1744' : '1px solid rgba(212, 175, 55, 0.4)',
+                                                fontWeight: 'bold',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '5px',
+                                                boxShadow: isTurboMode ? '0 0 10px rgba(255, 23, 68, 0.3)' : 'none'
+                                            }}
+                                        >
+                                            ⚡ TURBO: {isTurboMode ? 'ON' : 'OFF'}
+                                        </button>
+                                    )}
+                                    <button onClick={handleRepeat} disabled={isSpinning || Object.keys(lastBets).length === 0} className="ct-control-btn ct-btn-blue">
+                                        REPETIR
+                                    </button>
+                                    <button onClick={handleDouble} disabled={isSpinning || Object.keys(currentBets).length === 0} className="ct-control-btn ct-btn-blue">
+                                        DOBLAR
+                                    </button>
+                                    <button onClick={handleUndo} disabled={isSpinning || betHistory.length === 0} className="ct-control-btn ct-btn-bordeaux">
+                                        DESHACER
+                                    </button>
+                                    <button onClick={handleClear} disabled={isSpinning || Object.keys(currentBets).length === 0} className="ct-control-btn ct-btn-crimson">
+                                        LIMPIAR
+                                    </button>
+                                </div>
+                                {!isLiveMode && (
+                                    <TimeBar
+                                        isActive={timerMode && !isSpinning}
+                                        timerMode={timerMode}
+                                        duration={timerDuration}
+                                        timeLeft={timeLeft}
+                                        onToggle={() => {
+                                            setTimerMode(!timerMode)
+                                            if (!timerMode) setTimeLeft(timerDuration)
+                                        }}
+                                        onChangeDuration={setTimerDuration}
+                                    />
+                                )}
+                            </div>
+
+                            <div className="ui-overlay-loose" style={{ flex: 'none', background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div className="chip-selector">
+                                    {[1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].map(val => {
+                                        let display = formatChipValue(val)
+                                        if (viewCurrency === 'COL') {
+                                            const realVal = val * CHIP_RATES.COL
+                                            if (realVal >= 1000000) display = '$' + (realVal / 1000000).toLocaleString() + 'M'
+                                            else if (realVal >= 1000) display = '$' + (realVal / 1000).toLocaleString() + 'K'
+                                        }
+                                        return (
+                                            <div key={val} className={`chip-btn chip-${val} ${selectedChip === val ? 'selected' : ''}`}
+                                                onClick={() => setSelectedChip(val)}
+                                                style={{
+                                                    fontSize: '1.1rem',
+                                                    ...(val === recommendedChipVal ? {
+                                                        boxShadow: isRecommendedDueToGiovanni
+                                                            ? '0 0 15px #ff1744, inset 0 0 8px #ff1744'
+                                                            : '0 0 15px #ffd700, inset 0 0 8px #ffd700',
+                                                        border: isRecommendedDueToGiovanni
+                                                            ? '2px solid #ff1744'
+                                                            : '2px solid #ffd700',
+                                                        animation: isRecommendedDueToGiovanni
+                                                            ? 'pulseRecommendedRed 1.5s infinite'
+                                                            : 'pulseRecommendedGold 1.5s infinite'
+                                                    } : {})
+                                                }}
+                                            >
+                                                {display}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                                {riskCopilotEnabled && !smartAutoActive && (
+                                    <div className="copilot-suggest-banner" style={{
+                                        marginTop: '8px',
+                                        padding: '6px 12px',
+                                        background: 'rgba(212, 175, 55, 0.12)',
+                                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        color: '#ffd700',
+                                        fontSize: '0.85rem',
+                                        textShadow: '0 0 5px rgba(212, 175, 55, 0.4)',
+                                        boxShadow: 'inset 0 0 10px rgba(212, 175, 55, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3)',
+                                        backdropFilter: 'blur(4px)',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <span>⚡</span>
+                                            <span>CO-PILOTO: Sugerido: <strong>{formatChipValue(suggestedChipVal)}</strong></span>
+                                        </span>
+                                        <button
+                                            onClick={() => setSelectedChip(suggestedChipVal)}
+                                            style={{
+                                                background: 'linear-gradient(135deg, #ffd700, #b8860b)',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                color: '#000',
+                                                padding: '2px 8px',
+                                                fontSize: '0.8rem',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 0 5px rgba(212, 175, 55, 0.5)',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.filter = 'brightness(1.2)';
+                                                e.target.style.boxShadow = '0 0 8px rgba(212, 175, 55, 0.8)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.filter = 'none';
+                                                e.target.style.boxShadow = '0 0 5px rgba(212, 175, 55, 0.5)';
+                                            }}
+                                        >
+                                            Aplicar
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* WIDE ELITE SYSTEMS BOTTOM ROW */}
+                        <div className="elite-systems-bottom-row" style={{
+                            width: 'calc(100% - 30px)',
+                            maxWidth: '1113px',
+                            marginLeft: '15px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            padding: '15px 20px',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            marginTop: '-35px',
+                            boxSizing: 'border-box'
+                        }}>
+                            <div style={{
+                                fontSize: '0.85rem',
+                                color: '#d4af37',
+                                fontWeight: 'bold',
+                                letterSpacing: '1.5px',
+                                textTransform: 'uppercase',
+                                textShadow: '0 0 5px rgba(212, 175, 55, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                                marginBottom: '4px'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span>⚙️ SISTEMAS ÉLITE</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'none', fontWeight: 'normal' }}>
+                                        (18 Nums • 4 Fichas)
+                                    </span>
+                                </div>
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '0.75rem',
+                                    color: '#ffd700',
+                                    cursor: 'pointer',
+                                    textTransform: 'none',
+                                    fontWeight: 'normal',
+                                    userSelect: 'none'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={riskCopilotEnabled}
+                                        onChange={(e) => setRiskCopilotEnabled(e.target.checked)}
+                                        style={{
+                                            accentColor: '#ffd700',
+                                            cursor: 'pointer',
+                                            width: '14px',
+                                            height: '14px',
+                                            margin: 0
+                                        }}
+                                    />
+                                    <span>CO-PILOTO DE RIESGO</span>
+                                </label>
+                            </div>
+                            <div style={{
+                                display: 'flex',
+                                gap: '15px',
+                                justifyContent: 'space-between',
+                                width: '100%'
+                            }}>
+                                {ELITE_SYSTEMS.map(sys => {
+                                    const isActive = sys.bets.every(bId => currentBets[bId] && currentBets[bId] > 0);
+                                    const isBeta = sys.id === 'BETA';
+
+                                    // Calculate misses (madurez)
+                                    let misses = 0;
+                                    for (let i = numberHistory.length - 1; i >= 0; i--) {
+                                        if (sys.numbers.includes(numberHistory[i])) break;
+                                        misses++;
+                                    }
+
+                                    const tSystem = 37 / Math.max(sys.numbers.length, 1);
+                                    const ratio = misses / tSystem;
+                                    const percentage = Math.round(ratio * 100);
+
+                                    return (
+                                        <button
+                                            key={sys.id}
+                                            className={`elite-sys-btn ${isActive ? 'active' : ''} ${isBeta ? 'best' : ''}`}
+                                            onClick={() => onBatchBet(sys.bets, selectedChip)}
+                                            onMouseEnter={() => setHoveredNumbers(sys.numbers)}
+                                            onMouseLeave={() => setHoveredNumbers([])}
+                                            style={{
+                                                flex: 1,
+                                                height: '52px',
+                                                background: isActive
+                                                    ? 'linear-gradient(135deg, rgba(0, 243, 255, 0.25) 0%, rgba(0, 100, 150, 0.4) 100%)'
+                                                    : (isBeta
+                                                        ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(30, 25, 10, 0.3) 100%)'
+                                                        : 'rgba(20, 20, 20, 0.6)'),
+                                                border: isActive
+                                                    ? '2px solid #00f3ff'
+                                                    : (isBeta ? '1px solid #d4af37' : '1px solid rgba(255, 255, 255, 0.2)'),
+                                                boxShadow: isActive
+                                                    ? '0 0 12px rgba(0, 243, 255, 0.5)'
+                                                    : (isBeta ? '0 0 8px rgba(212, 175, 55, 0.25)' : 'none'),
+                                                color: isActive
+                                                    ? '#e0ffff'
+                                                    : (isBeta ? '#ffd700' : '#eee'),
+                                                borderRadius: '8px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '0 10px',
+                                                textShadow: isActive ? '0 0 5px #00f3ff' : 'none',
+                                                transition: 'all 0.2s ease-in-out'
+                                            }}
+                                            title={`${sys.name} • ICR: ${sys.icr} • IBES: ${sys.ibes} • Madurez: ${percentage}% (${misses} giros)\nClick para apostar • Hover para iluminar`}
+                                        >
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px', lineHeight: '1.2' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <span style={{ fontSize: '0.85rem' }}>{sys.badge}</span>
+                                                    <span style={{ fontSize: '0.9rem', fontWeight: '800' }}>{sys.name}</span>
+                                                </div>
+                                                <div style={{ fontSize: '0.72rem', color: isActive ? '#d0f5ff' : '#aaa', fontWeight: 'bold' }}>
+                                                    ICR: {sys.icr}
+                                                </div>
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                borderLeft: '1px solid rgba(255, 255, 255, 0.15)',
+                                                paddingLeft: '8px',
+                                                height: '100%',
+                                                alignSelf: 'stretch',
+                                                justifyContent: 'center'
+                                            }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '1' }}>
+                                                    <span style={{ fontSize: '0.62rem', color: '#999', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                                                        MADUREZ
+                                                    </span>
+                                                    <span style={{
+                                                        fontSize: '1.2rem',
+                                                        fontWeight: '900',
+                                                        color: misses > tSystem ? '#ff3d00' : misses > (tSystem / 2) ? '#ff9100' : '#00e676',
+                                                        textShadow: misses > (tSystem / 2) ? '0 0 5px rgba(255, 145, 0, 0.3)' : 'none',
+                                                        marginTop: '2px'
+                                                    }}>
+                                                        {percentage}%
+                                                    </span>
+                                                </div>
+                                                <span style={{
+                                                    fontSize: '0.85rem',
+                                                    color: misses > (tSystem / 2) ? '#ff9100' : '#888',
+                                                    fontWeight: 'bold',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '1px'
+                                                }} title={`Ausencia: ${misses} giros`}>
+                                                    🔥{misses}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT / SIDEBAR COLUMN */}
+                    <div className="ct-sidebar-panel">
+                        {/* PERSISTENT VIP FINANCIAL TELEMETRY HEADER */}
+                        <div style={{
+                            padding: '12px 15px',
+                            background: 'rgba(20, 20, 20, 0.7)',
+                            borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+                            borderTopLeftRadius: '10px',
+                            borderTopRightRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '10px',
+                            backdropFilter: 'blur(10px)',
+                            flexShrink: 0
+                        }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ fontSize: '0.65rem', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                    Saldo VIP
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                                    <span style={{ fontSize: '1.4rem', color: '#ffd700', fontFamily: "'Roboto Mono', monospace", fontWeight: 'bold', textShadow: '0 0 10px rgba(255, 215, 0, 0.3)' }}>
+                                        {formatBalance(balance)}
+                                    </span>
+                                    <span style={{ fontSize: '0.8rem', color: (balance - initialCapital) > 0 ? '#4caf50' : '#888', fontFamily: "'Roboto Mono', monospace", fontWeight: 'bold' }}>
+                                        {(balance - initialCapital) > 0 ? '+' : ''}{formatValue(balance - initialCapital)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '4px', background: 'rgba(0, 0, 0, 0.4)', padding: '3px', borderRadius: '8px', border: '1px solid #333' }}>
+                                {['COL', 'USA', 'EUR'].map(curr => (
+                                    <button
+                                        key={curr}
+                                        onClick={() => setViewCurrency(curr)}
+                                        className={`ct-currency-btn ${viewCurrency === curr ? 'active' : ''}`}
+                                        style={{
+                                            padding: '4px 8px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                            background: viewCurrency === curr ? '#d4af37' : 'transparent',
+                                            color: viewCurrency === curr ? '#000' : '#888',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            minWidth: '38px',
+                                            lineHeight: '1.1'
+                                        }}
+                                        title={curr === 'COL' ? 'Pesos Colombianos' : (curr === 'USA' ? 'Dólares (USD)' : 'Euros (EUR)')}
+                                    >
+                                        <span>{curr}</span>
+                                        {curr !== 'COL' && exchangeRates && (
+                                            <span style={{ fontSize: '0.5rem', opacity: 0.8, fontWeight: 'normal', fontFamily: 'monospace', marginTop: '1px' }}>
+                                                {curr === 'USA' && exchangeRates.COP ? `${Math.round(exchangeRates.COP)}` : ''}
+                                                {curr === 'EUR' && exchangeRates.EUR && exchangeRates.COP ? `${Math.round(exchangeRates.COP / exchangeRates.EUR)}` : ''}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <AICopilotWidget />
+                        <div className="ct-sidebar-tabs">
+                            <button onClick={() => setActiveSidebarTab('intelligence')} className={`ct-tab-btn ${activeSidebarTab === 'intelligence' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">🛰️</span>
+                                <span>Inteligencia</span>
+                            </button>
+                            <button onClick={() => setActiveSidebarTab('forensic')} className={`ct-tab-btn ${activeSidebarTab === 'forensic' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">🔬</span>
+                                <span>Forense</span>
+                            </button>
+                            <button onClick={() => setActiveSidebarTab('banking')} className={`ct-tab-btn ${activeSidebarTab === 'banking' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">🏦</span>
+                                <span>Banca</span>
+                            </button>
+                            <button onClick={() => setActiveSidebarTab('stats')} className={`ct-tab-btn ${activeSidebarTab === 'stats' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">🧮</span>
+                                <span>Estadísticas</span>
+                            </button>
+                            <button onClick={() => setActiveSidebarTab('projections')} className={`ct-tab-btn ${activeSidebarTab === 'projections' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">📈</span>
+                                <span>Proyecciones</span>
+                            </button>
+                            <button onClick={() => setActiveSidebarTab('history')} className={`ct-tab-btn ${activeSidebarTab === 'history' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">📜</span>
+                                <span>Historial</span>
+                            </button>
+                            <button onClick={() => setActiveSidebarTab('session')} className={`ct-tab-btn ${activeSidebarTab === 'session' ? 'active' : ''}`}>
+                                <span className="ct-tab-icon">⏱️</span>
+                                <span>Sesión</span>
+                            </button>
+                        </div>
+                        <div className="ct-sidebar-content">
+                            {renderSidebarContent()}
+                        </div>
+                    </div>
                 </div>
-            </Draggable>
+            ) : (
+                /* --- DRAGGABLE / MOVEMENT LAYOUT (renders the 8 primary elements) --- */
+                <>
+                    {/* BRANDING HEADER */}
+                    <Draggable index={1} totalCount={21} id="title" isEnabled={isEditMode} initialPos={positions.title} onDragEnd={onUpdatePos} style={{ zIndex: 4001, minWidth: '300px', minHeight: '60px', background: 'transparent' }}>
+                        <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'transparent',
+                            border: 'none'
+                        }}>
+                            <svg viewBox="0 0 500 85" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                                <text x="50%" y="45%" dominantBaseline="middle" textAnchor="middle"
+                                    fill="#d4af37"
+                                    fontFamily="Times New Roman, serif"
+                                    fontWeight="bold"
+                                    fontSize="42"
+                                    letterSpacing="2px"
+                                    style={{
+                                        textShadow: '0 2px 10px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.4)',
+                                        textTransform: 'uppercase'
+                                    }}
+                                >
+                                    GHR Ruleta Royale
+                                </text>
+                                <text x="50%" y="85%" dominantBaseline="middle" textAnchor="middle"
+                                    fill="#aaa"
+                                    fontFamily="'Roboto Mono', monospace"
+                                    fontSize="14"
+                                    letterSpacing="1px"
+                                    style={{
+                                        textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                                    }}
+                                >
+                                    Version 1.0, 10 Enero 2025
+                                </text>
+                            </svg>
+                        </div>
+                    </Draggable>
 
-
-            {/* LOCK/UNLOCK BUTTON - Now Draggable */}
-            <Draggable index={2} totalCount={21} id="layoutControls" isEnabled={isEditMode} initialPos={positions.layoutControls} onDragEnd={onUpdatePos}
-                style={{ zIndex: 5000 }} // Keep on top
-            >
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    {isEditMode && (
-                        <>
+                    {/* LOCK/UNLOCK BUTTON - Now Draggable */}
+                    <Draggable index={2} totalCount={21} id="layoutControls" isEnabled={isEditMode} initialPos={positions.layoutControls} onDragEnd={onUpdatePos} style={{ zIndex: 5000 }}>
+                        <div style={{ display: 'flex', gap: '10px' }}>
                             <button onClick={handleSaveLayout} style={{
                                 background: '#28a745', color: 'white', border: '1px solid #fff',
                                 padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
@@ -827,7 +1854,6 @@ export const CasinoTable = () => {
                                 style={{ display: 'none' }}
                                 accept=".json"
                             />
-                            {/* HELP BUTTON */}
                             <button
                                 onClick={() => setShowLayoutHelp(true)}
                                 style={{
@@ -849,359 +1875,794 @@ export const CasinoTable = () => {
                             >
                                 ↺ RESTAURAR DISEÑO
                             </button>
-                        </>
-                    )}
-
-                    {/* STRATEGIES BUTTON */}
-                    <button
-                        onClick={() => setShowStrategiesModal(true)}
-                        style={{
-                            background: '#007bff', color: 'white', border: '1px solid #fff',
-                            padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
-                        }}
-                    >
-                        ESTRATEGIAS
-                    </button>
-                    {/* MANUAL STRATEGY BUTTON */}
-                    <button
-                        onClick={() => setShowManualModal(true)}
-                        style={{
-                            background: '#17a2b8', color: 'white', border: '1px solid #fff',
-                            padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
-                        }}
-                    >
-                        MANUAL
-                    </button>
-                    <button
-                        onClick={() => setViewMode3D(!viewMode3D)}
-                        style={{
-                            background: '#6f42c1', color: 'white', border: '1px solid #fff',
-                            padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
-                        }}
-                    >
-                        {viewMode3D ? 'VISTA 2D' : 'VISTA 3D'}
-                    </button>
-                </div>
-            </Draggable>
-
-
-            {/* GAME CONTROLS (Strategies, Audio, Tools) */}
-            <Draggable index={3} totalCount={21} id="toolBox" isEnabled={isEditMode} initialPos={positions.toolBox || { x: 200, y: 750 }} onDragEnd={onUpdatePos} style={{ zIndex: 4002 }}>
-                <div style={{ display: 'flex', gap: '10px', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '8px' }}>
-                    <button onClick={() => setShowStrategiesModal(true)} style={{
-                        background: '#222', color: '#ff00ff', border: '1px solid #ff00ff',
-                        width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold', boxShadow: '0 0 5px #ff00ff'
-                    }} title="Estrategias Maestras">
-                        🧠
-                    </button>
-
-                    {/* RULETA RUBRIC BUTTON */}
-                    <button onClick={() => setShowRubricModal(true)} style={{
-                        background: '#222', color: '#4f4', border: '1px solid #4f4',
-                        width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold', boxShadow: '0 0 5px #4f4'
-                    }} title="Ver Calidad / Rúbrica">
-                        📊
-                    </button>
-
-                    {/* AUDIO SETTINGS BUTTON */}
-                    <button onClick={() => setShowAudioSettingsModal(true)} style={{
-                        background: '#222', color: '#ffd700', border: '1px solid #ffd700',
-                        width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold', boxShadow: '0 0 5px #ffd700'
-                    }} title="Configuración de Audio">
-                        🔊
-                    </button>
-
-                    {/* ACTIVE BETS TOGGLE BUTTON - NEW */}
-                    <button onClick={() => setShowActiveBets(!showActiveBets)} style={{
-                        background: showActiveBets ? '#ff9800' : '#222', color: showActiveBets ? '#000' : '#ff9800',
-                        border: '1px solid #ff9800',
-                        width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold', boxShadow: '0 0 5px #ff9800'
-                    }} title="Ver/Ocultar Panel de Apuestas">
-                        📝
-                    </button>
-
-
-
-
-
-                    {/* 3D TOGGLE BUTTON */}
-                    <button onClick={() => setViewMode3D(!viewMode3D)} style={{
-                        background: viewMode3D ? '#00CED1' : '#222',
-                        color: viewMode3D ? '#000' : '#00CED1',
-                        border: '1px solid #00CED1',
-                        width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold', boxShadow: '0 0 5px #00CED1'
-                    }} title="Alternar Vista 2D / 3D">
-                        🎲
-                    </button>
-
-                    {/* HISTORY BUTTON - ALWAYS VISIBLE */}
-                    <button onClick={() => setShowHistoryModal(true)} style={{
-                        background: '#6610f2', color: 'white', border: '1px solid #fff',
-                        padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold',
-                        boxShadow: '0 0 10px rgba(102, 16, 242, 0.5)'
-                    }}>
-                        📜 HISTORIAL
-                    </button>
-                    <button
-                        onClick={() => setIsEditMode(!isEditMode)}
-                        style={{
-                            background: isEditMode ? '#ff4444' : '#444',
-                            color: 'white', border: '1px solid #fff',
-                            padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
-                        }}
-                    >
-                        {isEditMode ? '🔒 BLOQUEAR DISEÑO' : '🔓 MOVER ELEMENTOS'}
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (document.fullscreenElement) {
-                                document.exitFullscreen()
-                            } else {
-                                document.documentElement.requestFullscreen()
-                            }
-                        }}
-                        style={{
-                            background: isFullscreen ? '#4caf50' : '#444',
-                            color: 'white', border: '1px solid #fff',
-                            padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
-                        }}
-                        title="Alternar pantalla completa (F11)"
-                    >
-                        {isFullscreen ? '🔲 SALIR PANTALLA' : '⛶ PANTALLA COMPLETA'}
-                    </button>
-                </div>
-            </Draggable >
-
-            {/* 0. LIVE MODE TOGGLE (Top Right of Table or Controls) */}
-            < Draggable index={4} totalCount={21} id="modeToggle" isEnabled={isEditMode} initialPos={positions.modeToggle || { x: 800, y: 20 }} onDragEnd={onUpdatePos} style={{ zIndex: 4005 }}>
-                <div
-                    onClick={() => setIsLiveMode(!isLiveMode)}
-                    style={{
-                        background: isLiveMode ? '#ff0044' : '#444',
-                        padding: '8px 15px',
-                        borderRadius: '20px',
-                        border: '2px solid #fff',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-                    }}
-                >
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: isLiveMode ? '#fff' : '#888' }} />
-                    {isLiveMode ? "MODO EN VIVO" : "MODO SIMULACIÓN"}
-                </div>
-            </Draggable >
-
-            {/* 1. WHEEL SECTION */}
-            <Draggable index={5} totalCount={21} id="wheel" isEnabled={isEditMode} initialPos={positions.wheel} onDragEnd={onUpdatePos} style={{ padding: '10px' }} >
-                {
-                    viewMode3D ? (
-                        <Roulette3D
-                            wheelRotation={wheelRotation}
-                            ballRotation={ballRotation}
-                            showBall={showBall}
-                            size={500}
-                            lastWin={lastWin} // Pass lastWin to 3D for markers?
-                        />
-                    ) : (
-                        <RouletteWheel
-                            wheelRotation={wheelRotation}
-                            ballRotation={ballRotation}
-                            showBall={showBall}
-                            ballResetKey={ballResetKey}
-                            highlightedNumbers={hoveredNumbers}
-                            placedNumbers={placedNumbers}
-                            size={500}
-                            lastWin={lastWin}
-                            isLiveMode={isLiveMode}
-                            isLiveMode={isLiveMode}
-                            onManualWin={handleManualWin}
-                            animState={animState}
-                        />
-                    )}
-            </Draggable >
-
-            {/* 2. BOARD SECTION */}
-            < Draggable index={6} totalCount={21} id="board" isEnabled={isEditMode} initialPos={positions.board} onDragEnd={onUpdatePos} >
-                <div
-                    style={{ transform: 'scale(0.9)', transformOrigin: 'top left', width: 'fit-content' }}
-                    onMouseMove={handleMouseMove} // TRACK MOUSE HERE
-                >
-                    <BettingBoard
-                        bets={currentBets}
-                        onPlaceBet={onPlaceBet}
-                        onBatchBet={(bets) => onBatchBet(bets, selectedChip)}
-                        lastWin={lastWin}
-                        onHoverNumbers={setHoveredNumbers}
-                        history={numberHistory}
-                        showEfficiency={showEfficiency}
-                        setShowEfficiency={setShowEfficiency}
-                        onNeighborBet={(num) => handleNeighborBet(num, neighborCount, selectedChip)}
-                        showActiveBets={showActiveBets}
-                        setShowActiveBets={setShowActiveBets}
-                    />
-                </div>
-            </Draggable >
-
-
-
-
-
-            {/* 4. TELEMETRY */}
-            < Draggable index={7} totalCount={21} id="telemetry" isEnabled={isEditMode} initialPos={positions.telemetry} onDragEnd={onUpdatePos} >
-                <div className="ct-telemetry">
-                    <div style={{ marginBottom: 8, color: '#d4af37', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        🔬 Telemetría
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '5px' }}>
-                        <div>Bola:</div> <div style={{ color: 'white' }}>{physicsState.ballType.name}</div>
-                        <div>Salida:</div> <div style={{ color: 'white' }}>{physicsState.startPoint.name}</div>
-                        <div style={{ borderTop: '1px solid #444', paddingTop: 5 }}>Sentido Bola:</div>
-                        <div style={{ borderTop: '1px solid #444', paddingTop: 5, color: '#8f8' }}>{physicsState.ballDirection}</div>
-                        <div>Vel. Bola:</div> <div style={{ color: '#4ff' }}>{physicsState.ballSpeed.name}</div>
-                        <div style={{ borderTop: '1px solid #444', paddingTop: 5 }}>Sentido Cilindro:</div>
-                        <div style={{ borderTop: '1px solid #444', paddingTop: 5, color: '#f88' }}>{physicsState.wheelDirection}</div>
-                        <div>Vel. Cil:</div> <div style={{ color: '#f88' }}>{physicsState.wheelSpeed}</div>
-                        <div style={{ gridColumn: '1 / -1', marginTop: 10, paddingTop: 10, borderTop: '1px dashed #555', textAlign: 'center', color: '#aaa' }}>
-                            Permutaciones: <span style={{ color: '#fff', fontWeight: 'bold' }}>432</span>
-                        </div>
-                    </div>
-                </div>
-            </Draggable >
-
-            {/* NEW: SESSION CLOCK (Top Right) */}
-            < Draggable index={8} totalCount={21} id="clock" isEnabled={isEditMode} initialPos={positions.clock || { x: 1600, y: 20 }} onDragEnd={onUpdatePos} >
-                <SessionClock />
-            </Draggable >
-
-            {/* NEW: SPIN COUNTER */}
-            < Draggable index={9} totalCount={21} id="spinCounter" isEnabled={isEditMode} initialPos={positions.spinCounter} onDragEnd={onUpdatePos} >
-                <SpinCounter />
-            </Draggable >
-
-            {/* NEW: DETAILED HISTORY WIDGET */}
-            < Draggable index={10} totalCount={21} id="detailedHistory" isEnabled={isEditMode} initialPos={positions.detailedHistory} onDragEnd={onUpdatePos} className="ct-history-widget" >
-                <DetailedHistoryWidget onClick={() => setShowHistoryModal(true)} />
-            </Draggable >
-
-            {/* MODALS */}
-            {showHistoryModal && <DetailedHistoryModal onClose={() => setShowHistoryModal(false)} />}
-
-
-            {/* 5. PAYTABLE (INFO) */}
-            <Draggable index={11} totalCount={21} id="paytable" isEnabled={isEditMode} initialPos={positions.paytable} onDragEnd={onUpdatePos}>
-                <div className="ct-help-controls">
-                    <div
-                        onClick={() => setShowHelpModal(true)}
-                        className="ct-round-btn ct-btn-gold"
-                        title="Ver Guía de Apuestas"
-                    >
-                        ?
-                    </div>
-                    <div
-                        onClick={() => setShowManualModal(true)}
-                        className="ct-round-btn ct-btn-white"
-                        title="Códice GHR (Manual)"
-                    >
-                        📖
-                    </div>
-                </div>
-            </Draggable>
-
-
-
-            {/* NEW: STATISTICS PANEL */}
-            <Draggable index={12} totalCount={21} id="statistics" isEnabled={isEditMode} initialPos={positions.statistics} onDragEnd={onUpdatePos}>
-                <StatisticsPanel />
-            </Draggable>
-
-
-
-            {/* NEW: RACETRACK */}
-            {/* NEW: RACETRACK - HIGH Z-INDEX TO PREVENT OVERLAP */}
-            <Draggable index={13} totalCount={21} id="racetrack" isEnabled={isEditMode} initialPos={positions.racetrack} onDragEnd={onUpdatePos}>
-                <div style={{ transform: 'scale(1.0)', transformOrigin: 'top left', zIndex: 50, position: 'relative' }}>
-                    <Racetrack
-                        onBatchBets={(bets) => handleBatchBets(bets, selectedChip)}
-                        onHoverNumbers={setHoveredNumbers}
-                        neighborCount={neighborCount}
-                        setNeighborCount={setNeighborCount}
-                    />
-                </div>
-            </Draggable>
-
-            {/* NEW: RECORD / VICTORY MODAL */
-                /* (Legacy Modals removed to fix ReferenceErrors. Handled at bottom of render) */
-            }
-
-            {/* NEW: RECORD / VICTORY MODAL */}
-            {
-                showRecordModal && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                        background: 'rgba(0,0,0,0.85)', zIndex: 10001,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                            padding: '3px', borderRadius: '22px', // Gradient Border Wrapper
-                            boxShadow: '0 0 60px rgba(255, 215, 0, 0.6)'
-                        }}>
-                            <div style={{
-                                background: '#111', padding: '40px', borderRadius: '20px',
-                                textAlign: 'center', width: '450px'
+                            <button onClick={() => setShowStrategiesModal(true)} style={{
+                                background: '#007bff', color: 'white', border: '1px solid #fff',
+                                padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
                             }}>
-                                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🏆</div>
-                                <h1 style={{ color: '#FFD700', fontSize: '2.2rem', marginBottom: '15px', textTransform: 'uppercase' }}>
-                                    ¡Nuevo Récord!
-                                </h1>
-                                <p style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '10px' }}>
-                                    Has superado tu saldo máximo histórico.
-                                </p>
-                                <p style={{ color: '#aaa', marginBottom: '5px' }}>
-                                    Saldo Actual: <span style={{ color: '#4f4', fontWeight: 'bold' }}>{formatBalance(balance)}</span>
-                                </p>
-                                <p style={{ color: '#ffd700', fontSize: '1.1rem', fontWeight: 'bold', fontStyle: 'italic', marginBottom: '30px' }}>
-                                    TIP: Comienza de nuevo con apuestas mínimas.
-                                </p>
+                                ESTRATEGIAS
+                            </button>
+                            <button onClick={() => setShowManualModal(true)} style={{
+                                background: '#17a2b8', color: 'white', border: '1px solid #fff',
+                                padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                            }}>
+                                MANUAL
+                            </button>
+                            <button onClick={() => setViewMode3D(!viewMode3D)} style={{
+                                background: '#6f42c1', color: 'white', border: '1px solid #fff',
+                                padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                            }}>
+                                {viewMode3D ? 'VISTA 2D' : 'VISTA 3D'}
+                            </button>
+                        </div>
+                    </Draggable>
 
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+                    {/* LIVE MODE TOGGLE */}
+                    <Draggable index={4} totalCount={21} id="modeToggle" isEnabled={isEditMode} initialPos={positions.modeToggle || { x: 800, y: 20 }} onDragEnd={onUpdatePos} style={{ zIndex: 4005 }}>
+                        <div
+                            onClick={() => setIsLiveMode(!isLiveMode)}
+                            style={{
+                                background: isLiveMode ? '#ff0044' : '#444',
+                                padding: '8px 15px',
+                                borderRadius: '20px',
+                                border: '2px solid #fff',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+                            }}
+                        >
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: isLiveMode ? '#fff' : '#888' }} />
+                            {isLiveMode ? "MODO EN VIVO" : "MODO SIMULACIÓN"}
+                        </div>
+                    </Draggable>
+
+                    {/* WHEEL */}
+                    <Draggable index={5} totalCount={21} id="wheel" isEnabled={isEditMode} initialPos={positions.wheel} onDragEnd={onUpdatePos} style={{ padding: '10px' }} >
+                        {viewMode3D ? (
+                            <Roulette3D
+                                wheelRotation={wheelRotation}
+                                ballRotation={ballRotation}
+                                showBall={showBall}
+                                size={500}
+                                lastWin={lastWin}
+                                isTurboMode={isTurboMode}
+                            />
+                        ) : (
+                            <RouletteWheel
+                                width="500px"
+                                wheelRotation={wheelRotation}
+                                ballRotation={ballRotation}
+                                showBall={showBall}
+                                ballResetKey={ballResetKey}
+                                highlightedNumbers={hoveredNumbers}
+                                placedNumbers={placedNumbers}
+                                bestPayoutNumbers={bestPayout?.numbers || []}
+                                isTurboMode={isTurboMode}
+                                size={500}
+                                lastWin={lastWin}
+                                isLiveMode={isLiveMode}
+                                onManualWin={handleManualWin}
+                                animState={animState}
+                                isSpinning={isSpinning}
+                            />
+                        )}
+                    </Draggable>
+
+                    {/* BOARD */}
+                    <Draggable index={6} totalCount={21} id="board" isEnabled={isEditMode} initialPos={positions.board} onDragEnd={onUpdatePos} >
+                        <div style={{ transform: 'scale(0.9)', transformOrigin: 'top left', width: 'fit-content' }}>
+                            <BettingBoard
+                                bets={currentBets}
+                                onPlaceBet={onPlaceBet}
+                                onBatchBet={(bets) => onBatchBet(bets, selectedChip)}
+                                lastWin={lastWin}
+                                onHoverNumbers={setHoveredNumbers}
+                                history={numberHistory}
+                                showEfficiency={showEfficiency}
+                                setShowEfficiency={setShowEfficiency}
+                                onNeighborBet={(num) => handleNeighborBet(num, neighborCount, selectedChip)}
+                                showActiveBets={showActiveBets}
+                                setShowActiveBets={setShowActiveBets}
+                            />
+                        </div>
+                    </Draggable>
+
+                    {/* CONTROLS HUD */}
+                    <Draggable index={19} totalCount={21} id="controls" isEnabled={isEditMode} initialPos={positions.controls} onDragEnd={onUpdatePos}>
+                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                            <div className="ct-controls-panel">
+                                {!isLiveMode && (
+                                    <button className="ct-control-btn ct-btn-spin" onClick={handleSpin} disabled={isSpinning || timerMode}>
+                                        {isSpinning ? "..." : (timerMode ? "AUTO" : "GIRAR")}
+                                    </button>
+                                )}
+                                {!isLiveMode && (
                                     <button
-                                        onClick={() => setShowRecordModal(false)}
+                                        onClick={() => setIsTurboMode(!isTurboMode)}
+                                        className={`ct-control-btn ${isTurboMode ? 'ct-btn-gold' : 'ct-btn-blue'}`}
                                         style={{
-                                            background: '#4f4', border: 'none', color: '#000', padding: '15px 30px',
-                                            fontSize: '1.1rem', fontWeight: 'bold', borderRadius: '10px', cursor: 'pointer',
-                                            textTransform: 'uppercase', boxShadow: '0 0 15px rgba(68, 255, 68, 0.4)'
+                                            background: isTurboMode ? 'linear-gradient(135deg, #1e1010, #3a0007)' : 'rgba(20, 20, 20, 0.85)',
+                                            color: isTurboMode ? '#ff1744' : '#d4af37',
+                                            border: isTurboMode ? '1px solid #ff1744' : '1px solid rgba(212, 175, 55, 0.4)',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '5px',
+                                            boxShadow: isTurboMode ? '0 0 10px rgba(255, 23, 68, 0.3)' : 'none'
                                         }}
                                     >
-                                        ¡Vamos por más!
+                                        ⚡ TURBO: {isTurboMode ? 'ON' : 'OFF'}
+                                    </button>
+                                )}
+                                <button onClick={handleRepeat} disabled={isSpinning || Object.keys(lastBets).length === 0} className="ct-control-btn ct-btn-blue">
+                                    REPETIR
+                                </button>
+                                <button onClick={handleDouble} disabled={isSpinning || Object.keys(currentBets).length === 0} className="ct-control-btn ct-btn-blue">
+                                    DOBLAR
+                                </button>
+                                <button onClick={handleUndo} disabled={isSpinning || betHistory.length === 0} className="ct-control-btn ct-btn-bordeaux">
+                                    DESHACER
+                                </button>
+                                <button onClick={handleClear} disabled={isSpinning || Object.keys(currentBets).length === 0} className="ct-control-btn ct-btn-crimson">
+                                    LIMPIAR
+                                </button>
+                            </div>
+                            {!isLiveMode && (
+                                <TimeBar
+                                    isActive={timerMode && !isSpinning}
+                                    timerMode={timerMode}
+                                    duration={timerDuration}
+                                    timeLeft={timeLeft}
+                                    onToggle={() => {
+                                        setTimerMode(!timerMode)
+                                        if (!timerMode) setTimeLeft(timerDuration)
+                                    }}
+                                    onChangeDuration={setTimerDuration}
+                                />
+                            )}
+                        </div>
+                    </Draggable>
+
+                    {/* CHIPS HUD */}
+                    <Draggable index={21} totalCount={21} id="chips" isEnabled={isEditMode} initialPos={positions.chips} onDragEnd={onUpdatePos}>
+                        <div className={`ui-overlay-loose ${isSpinning ? 'disabled' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div className="chip-selector">
+                                {[1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].map(val => {
+                                    let display = formatChipValue(val)
+                                    if (viewCurrency === 'COL') {
+                                        const realVal = val * CHIP_RATES.COL
+                                        if (realVal >= 1000000) display = '$' + (realVal / 1000000).toLocaleString() + 'M'
+                                        else if (realVal >= 1000) display = '$' + (realVal / 1000).toLocaleString() + 'K'
+                                    }
+                                    return (
+                                        <div key={val} className={`chip-btn chip-${val} ${selectedChip === val ? 'selected' : ''}`}
+                                            onClick={() => setSelectedChip(val)}
+                                            style={{
+                                                fontSize: '1.1rem',
+                                                ...(val === recommendedChipVal ? {
+                                                    boxShadow: isRecommendedDueToGiovanni
+                                                        ? '0 0 15px #ff1744, inset 0 0 8px #ff1744'
+                                                        : '0 0 15px #ffd700, inset 0 0 8px #ffd700',
+                                                    border: isRecommendedDueToGiovanni
+                                                        ? '2px solid #ff1744'
+                                                        : '2px solid #ffd700',
+                                                    animation: isRecommendedDueToGiovanni
+                                                        ? 'pulseRecommendedRed 1.5s infinite'
+                                                        : 'pulseRecommendedGold 1.5s infinite'
+                                                } : {})
+                                            }}
+                                        >
+                                            {display}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            {riskCopilotEnabled && !smartAutoActive && (
+                                <div className="copilot-suggest-banner" style={{
+                                    marginTop: '8px',
+                                    padding: '6px 12px',
+                                    background: 'rgba(212, 175, 55, 0.12)',
+                                    border: '1px solid rgba(212, 175, 55, 0.3)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    color: '#ffd700',
+                                    fontSize: '0.85rem',
+                                    textShadow: '0 0 5px rgba(212, 175, 55, 0.4)',
+                                    boxShadow: 'inset 0 0 10px rgba(212, 175, 55, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3)',
+                                    backdropFilter: 'blur(4px)',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span>⚡</span>
+                                        <span>CO-PILOTO: Sugerido: <strong>{formatChipValue(suggestedChipVal)}</strong></span>
+                                    </span>
+                                    <button
+                                        onClick={() => setSelectedChip(suggestedChipVal)}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #ffd700, #b8860b)',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            color: '#000',
+                                            padding: '2px 8px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 0 5px rgba(212, 175, 55, 0.5)',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.filter = 'brightness(1.2)';
+                                            e.target.style.boxShadow = '0 0 8px rgba(212, 175, 55, 0.8)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.filter = 'none';
+                                            e.target.style.boxShadow = '0 0 5px rgba(212, 175, 55, 0.5)';
+                                        }}
+                                    >
+                                        Aplicar
                                     </button>
                                 </div>
+                            )}
+                        </div>
+                    </Draggable>
+
+                    {/* ELITE SYSTEMS DRAGGABLE */}
+                    <Draggable index={22} totalCount={21} id="eliteSystems" isEnabled={isEditMode} initialPos={positions.eliteSystems} onDragEnd={onUpdatePos}>
+                        <div className={`ui-overlay-loose ${isSpinning ? 'disabled' : ''}`} style={{
+                            background: 'rgba(0,0,0,0.5)',
+                            padding: '15px 20px',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            width: '100%',
+                            boxSizing: 'border-box'
+                        }}>
+                            <div style={{
+                                fontSize: '0.85rem',
+                                color: '#d4af37',
+                                fontWeight: 'bold',
+                                letterSpacing: '1.5px',
+                                textTransform: 'uppercase',
+                                textShadow: '0 0 5px rgba(212, 175, 55, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                                marginBottom: '8px'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span>⚙️ SISTEMAS ÉLITE</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'none', fontWeight: 'normal' }}>
+                                        (18 Nums • 4 Fichas)
+                                    </span>
+                                </div>
+                                <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '0.75rem',
+                                    color: '#ffd700',
+                                    cursor: 'pointer',
+                                    textTransform: 'none',
+                                    fontWeight: 'normal',
+                                    userSelect: 'none'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={riskCopilotEnabled}
+                                        onChange={(e) => setRiskCopilotEnabled(e.target.checked)}
+                                        style={{
+                                            accentColor: '#ffd700',
+                                            cursor: 'pointer',
+                                            width: '14px',
+                                            height: '14px',
+                                            margin: 0
+                                        }}
+                                    />
+                                    <span>CO-PILOTO DE RIESGO</span>
+                                </label>
+                            </div>
+                            <div style={{
+                                display: 'flex',
+                                gap: '15px',
+                                justifyContent: 'space-between',
+                                width: '100%'
+                            }}>
+                                {ELITE_SYSTEMS.map(sys => {
+                                    const isActive = sys.bets.every(bId => currentBets[bId] && currentBets[bId] > 0);
+                                    const isBeta = sys.id === 'BETA';
+
+                                    // Calculate misses (madurez)
+                                    let misses = 0;
+                                    for (let i = numberHistory.length - 1; i >= 0; i--) {
+                                        if (sys.numbers.includes(numberHistory[i])) break;
+                                        misses++;
+                                    }
+
+                                    const tSystem = 37 / Math.max(sys.numbers.length, 1);
+                                    const ratio = misses / tSystem;
+                                    const percentage = Math.round(ratio * 100);
+
+                                    return (
+                                        <button
+                                            key={sys.id}
+                                            className={`elite-sys-btn ${isActive ? 'active' : ''} ${isBeta ? 'best' : ''}`}
+                                            onClick={() => onBatchBet(sys.bets, selectedChip)}
+                                            onMouseEnter={() => setHoveredNumbers(sys.numbers)}
+                                            onMouseLeave={() => setHoveredNumbers([])}
+                                            style={{
+                                                flex: 1,
+                                                height: '52px',
+                                                background: isActive
+                                                    ? 'linear-gradient(135deg, rgba(0, 243, 255, 0.25) 0%, rgba(0, 100, 150, 0.4) 100%)'
+                                                    : (isBeta
+                                                        ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(30, 25, 10, 0.3) 100%)'
+                                                        : 'rgba(20, 20, 20, 0.6)'),
+                                                border: isActive
+                                                    ? '2px solid #00f3ff'
+                                                    : (isBeta ? '1px solid #d4af37' : '1px solid rgba(255, 255, 255, 0.2)'),
+                                                boxShadow: isActive
+                                                    ? '0 0 12px rgba(0, 243, 255, 0.5)'
+                                                    : (isBeta ? '0 0 8px rgba(212, 175, 55, 0.25)' : 'none'),
+                                                color: isActive
+                                                    ? '#e0ffff'
+                                                    : (isBeta ? '#ffd700' : '#eee'),
+                                                borderRadius: '8px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '0 10px',
+                                                textShadow: isActive ? '0 0 5px #00f3ff' : 'none',
+                                                transition: 'all 0.2s ease-in-out'
+                                            }}
+                                            title={`${sys.name} • ICR: ${sys.icr} • IBES: ${sys.ibes} • Madurez: ${percentage}% (${misses} giros)\nClick para apostar • Hover para iluminar`}
+                                        >
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px', lineHeight: '1.2' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <span style={{ fontSize: '0.85rem' }}>{sys.badge}</span>
+                                                    <span style={{ fontSize: '0.9rem', fontWeight: '800' }}>{sys.name}</span>
+                                                </div>
+                                                <div style={{ fontSize: '0.72rem', color: isActive ? '#d0f5ff' : '#aaa', fontWeight: 'bold' }}>
+                                                    ICR: {sys.icr}
+                                                </div>
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                borderLeft: '1px solid rgba(255, 255, 255, 0.15)',
+                                                paddingLeft: '8px',
+                                                height: '100%',
+                                                alignSelf: 'stretch',
+                                                justifyContent: 'center'
+                                            }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '1' }}>
+                                                    <span style={{ fontSize: '0.62rem', color: '#999', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                                                        MADUREZ
+                                                    </span>
+                                                    <span style={{
+                                                        fontSize: '1.2rem',
+                                                        fontWeight: '900',
+                                                        color: misses > tSystem ? '#ff3d00' : misses > (tSystem / 2) ? '#ff9100' : '#00e676',
+                                                        textShadow: misses > (tSystem / 2) ? '0 0 5px rgba(255, 145, 0, 0.3)' : 'none',
+                                                        marginTop: '2px'
+                                                    }}>
+                                                        {percentage}%
+                                                    </span>
+                                                </div>
+                                                <span style={{
+                                                    fontSize: '0.85rem',
+                                                    color: misses > (tSystem / 2) ? '#ff9100' : '#888',
+                                                    fontWeight: 'bold',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '1px'
+                                                }} title={`Ausencia: ${misses} giros`}>
+                                                    🔥{misses}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </Draggable>
+
+                    {/* SIDEBAR IN EDIT MODE */}
+                    <Draggable index={3} totalCount={21} id="sidebar" isEnabled={isEditMode} initialPos={positions.sidebar || { x: 1050, y: 10 }} onDragEnd={onUpdatePos} style={{ zIndex: 4000 }}>
+                        <div className="ct-sidebar-panel" style={{ height: '730px' }}>
+                            {/* PERSISTENT VIP FINANCIAL TELEMETRY HEADER */}
+                            <div style={{
+                                padding: '12px 15px',
+                                background: 'rgba(20, 20, 20, 0.7)',
+                                borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+                                borderTopLeftRadius: '10px',
+                                borderTopRightRadius: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '10px',
+                                backdropFilter: 'blur(10px)',
+                                flexShrink: 0
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <span style={{ fontSize: '0.65rem', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                        Saldo VIP
+                                    </span>
+                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                                        <span style={{ fontSize: '1.4rem', color: '#ffd700', fontFamily: "'Roboto Mono', monospace", fontWeight: 'bold', textShadow: '0 0 10px rgba(255, 215, 0, 0.3)' }}>
+                                            {formatBalance(balance)}
+                                        </span>
+                                        <span style={{ fontSize: '0.8rem', color: (balance - initialCapital) > 0 ? '#4caf50' : '#888', fontFamily: "'Roboto Mono', monospace", fontWeight: 'bold' }}>
+                                            {(balance - initialCapital) > 0 ? '+' : ''}{formatValue(balance - initialCapital)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '4px', background: 'rgba(0, 0, 0, 0.4)', padding: '3px', borderRadius: '8px', border: '1px solid #333' }}>
+                                    {['COL', 'USA', 'EUR'].map(curr => (
+                                        <button
+                                            key={curr}
+                                            onClick={() => setViewCurrency(curr)}
+                                            className={`ct-currency-btn ${viewCurrency === curr ? 'active' : ''}`}
+                                            style={{
+                                                padding: '4px 8px',
+                                                fontSize: '0.7rem',
+                                                fontWeight: 'bold',
+                                                background: viewCurrency === curr ? '#d4af37' : 'transparent',
+                                                color: viewCurrency === curr ? '#000' : '#888',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                minWidth: '38px',
+                                                lineHeight: '1.1'
+                                            }}
+                                            title={curr === 'COL' ? 'Pesos Colombianos' : (curr === 'USA' ? 'Dólares (USD)' : 'Euros (EUR)')}
+                                        >
+                                            <span>{curr}</span>
+                                            {curr !== 'COL' && exchangeRates && (
+                                                <span style={{ fontSize: '0.5rem', opacity: 0.8, fontWeight: 'normal', fontFamily: 'monospace', marginTop: '1px' }}>
+                                                    {curr === 'USA' && exchangeRates.COP ? `${Math.round(exchangeRates.COP)}` : ''}
+                                                    {curr === 'EUR' && exchangeRates.EUR && exchangeRates.COP ? `${Math.round(exchangeRates.COP / exchangeRates.EUR)}` : ''}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <AICopilotWidget />
+                            <div className="ct-sidebar-tabs">
+                                <button onClick={() => setActiveSidebarTab('intelligence')} className={`ct-tab-btn ${activeSidebarTab === 'intelligence' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">🛰️</span>
+                                    <span>Inteligencia</span>
+                                </button>
+                                <button onClick={() => setActiveSidebarTab('forensic')} className={`ct-tab-btn ${activeSidebarTab === 'forensic' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">🔬</span>
+                                    <span>Forense</span>
+                                </button>
+                                <button onClick={() => setActiveSidebarTab('banking')} className={`ct-tab-btn ${activeSidebarTab === 'banking' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">🏦</span>
+                                    <span>Banca</span>
+                                </button>
+                                <button onClick={() => setActiveSidebarTab('stats')} className={`ct-tab-btn ${activeSidebarTab === 'stats' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">🧮</span>
+                                    <span>Estadísticas</span>
+                                </button>
+                                <button onClick={() => setActiveSidebarTab('projections')} className={`ct-tab-btn ${activeSidebarTab === 'projections' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">📈</span>
+                                    <span>Proyecciones</span>
+                                </button>
+                                <button onClick={() => setActiveSidebarTab('history')} className={`ct-tab-btn ${activeSidebarTab === 'history' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">📜</span>
+                                    <span>Historial</span>
+                                </button>
+                                <button onClick={() => setActiveSidebarTab('session')} className={`ct-tab-btn ${activeSidebarTab === 'session' ? 'active' : ''}`}>
+                                    <span className="ct-tab-icon">⏱️</span>
+                                    <span>Sesión</span>
+                                </button>
+                            </div>
+                            <div className="ct-sidebar-content">
+                                {renderSidebarContent()}
+                            </div>
+                        </div>
+                    </Draggable>
+                </>
+            )}
+
+            {/* --- GLOBAL OVERLAYS & MODALS --- */}
+            {/* 6. WIN EFFECTS (Particles) */}
+            <WinEffects lastWin={lastWin} lastWinAmount={lastWinAmount} />
+
+            {/* 7. GIANT DR STATUS OVERLAY (POP-UP) */}
+            {statusOverlay && (
+                <div className="ct-status-overlay" style={{ zIndex: Z_LAYERS.STATUS_OVERLAY }}>
+                    <div className="ct-status-title" style={{ color: lastWinAmount > 0 ? '#4f4' : '#f44' }}>
+                        {lastWinAmount > 0 ? "¡VICTORIA!" : "NO VA MÁS"}
+                    </div>
+                    {lastWinAmount > 0 && (
+                        <div className="ct-status-amount" style={{ color: '#4f4' }}>
+                            {formatValue(lastWinAmount)}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* NEW: RECORD / VICTORY MODAL */}
+            {showRecordModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.85)', zIndex: 10001,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <div style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                        padding: '3px', borderRadius: '22px',
+                        boxShadow: '0 0 60px rgba(255, 215, 0, 0.6)'
+                    }}>
+                        <div style={{
+                            background: '#111', padding: '40px', borderRadius: '20px',
+                            textAlign: 'center', width: '450px'
+                        }}>
+                            <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🏆</div>
+                            <h1 style={{ color: '#FFD700', fontSize: '2.2rem', marginBottom: '15px', textTransform: 'uppercase' }}>
+                                ¡Nuevo Récord!
+                            </h1>
+                            <p style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '10px' }}>
+                                Has superado tu saldo máximo histórico.
+                            </p>
+                            <p style={{ color: '#aaa', marginBottom: '5px' }}>
+                                Saldo Actual: <span style={{ color: '#4f4', fontWeight: 'bold' }}>{formatBalance(balance)}</span>
+                            </p>
+                            <p style={{ color: '#ffd700', fontSize: '1.1rem', fontWeight: 'bold', fontStyle: 'italic', marginBottom: '30px' }}>
+                                TIP: Comienza de nuevo con apuestas mínimas.
+                            </p>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+                                <button
+                                    onClick={() => setShowRecordModal(false)}
+                                    style={{
+                                        background: '#4f4', border: 'none', color: '#000', padding: '15px 30px',
+                                        fontSize: '1.1rem', fontWeight: 'bold', borderRadius: '10px', cursor: 'pointer',
+                                        textTransform: 'uppercase', boxShadow: '0 0 15px rgba(68, 255, 68, 0.4)'
+                                    }}
+                                >
+                                    ¡Vamos por más!
+                                </button>
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
+            {/* BANKRUPTCY MODAL */}
+            {showBankruptcy && !isSpinning && (
+                <div className="ct-bankruptcy-overlay" style={{ zIndex: Z_LAYERS.CRITICAL_MODAL }}>
+                    <div className="ct-bankruptcy-content">
+                        <h1 className="ct-status-title" style={{ fontSize: '2rem' }}>
+                            {balance === 0 ? 'Bienvenido' : 'Saldo Insuficiente'}
+                        </h1>
+                        <p style={{ color: '#aaa', marginBottom: '20px' }}>
+                            {balance === 0
+                                ? `Por favor, ingrese el monto en ${viewCurrency} para comenzar.`
+                                : `Se ha quedado sin fichas. Ingrese monto en ${viewCurrency} para recargar.`}
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+                            <input
+                                type="number"
+                                placeholder={`Monto (${viewCurrency})`}
+                                value={buyInAmount}
+                                onChange={(e) => setBuyInAmount(e.target.value)}
+                                autoFocus
+                                className="ct-finance-value"
+                                style={{
+                                    padding: '10px', borderRadius: '5px', border: '1px solid #444',
+                                    background: '#222', color: '#fff', fontSize: '1.2rem',
+                                    width: '200px', textAlign: 'center', fontWeight: 'normal'
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleReloadSubmit()
+                                }}
+                            />
+                        </div>
+                        <button
+                            onClick={handleReloadSubmit}
+                            className="ct-control-btn ct-btn-gold"
+                            style={{ padding: '12px 30px', fontSize: '1.2rem', width: 'auto' }}
+                        >
+                            INGRESAR FICHAS
+                        </button>
+                        <div style={{ marginTop: '15px' }}>
+                            <button
+                                onClick={() => setShowBankruptcy(false)}
+                                style={{
+                                    background: 'transparent', border: 'none', color: '#666',
+                                    textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9rem'
+                                }}
+                            >
+                                Solo Mirar (Cerrar)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {/* WITHDRAW MODAL */}
+            {showWithdrawModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                    background: 'rgba(0,0,0,0.9)', zIndex: Z_LAYERS.CRITICAL_MODAL,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(8px)'
+                }}>
+                    <div style={{
+                        background: 'linear-gradient(145deg, #1a1a1a, #0d0d0d)',
+                        border: '1px solid #333',
+                        padding: '40px',
+                        borderRadius: '20px',
+                        textAlign: 'center',
+                        boxShadow: '0 0 50px rgba(0,0,0,0.8)',
+                        maxWidth: '450px',
+                        width: '90%'
+                    }}>
+                        <h2 style={{ color: '#aaa', fontSize: '1.8rem', marginBottom: '10px', textTransform: 'uppercase' }}>Retirar Fondos</h2>
+                        <p style={{ color: '#666', marginBottom: '20px', fontSize: '1rem', lineHeight: '1.5' }}>
+                            Ingresa la cantidad que deseas retirar de tu saldo.
+                        </p>
+                        <div style={{ marginBottom: '30px', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: '1.2rem' }}>$</span>
+                            <input
+                                type="number"
+                                value={withdrawAmount}
+                                onChange={(e) => setWithdrawAmount(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleWithdrawSubmit()}
+                                placeholder="0"
+                                autoFocus
+                                style={{
+                                    width: '100%',
+                                    padding: '15px 15px 15px 35px',
+                                    background: '#000',
+                                    border: '1px solid #444',
+                                    borderRadius: '10px',
+                                    color: '#fff',
+                                    fontSize: '1.5rem',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    outline: 'none',
+                                    fontFamily: 'Roboto Mono, monospace'
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setShowWithdrawModal(false)}
+                                style={{
+                                    padding: '15px 30px',
+                                    borderRadius: '50px',
+                                    border: '1px solid #444',
+                                    background: 'transparent',
+                                    color: '#888',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.9rem',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                CANCELAR
+                            </button>
+                            <button
+                                onClick={handleWithdrawSubmit}
+                                style={{
+                                    padding: '15px 40px',
+                                    borderRadius: '50px',
+                                    border: 'none',
+                                    background: 'linear-gradient(145deg, #d32f2f, #b71c1c)',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.1rem',
+                                    boxShadow: '0 4px 15px rgba(211, 47, 47, 0.4)',
+                                    transform: 'scale(1.05)',
+                                    textTransform: 'uppercase'
+                                }}
+                            >
+                                RETIRAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* TOOLTIP MANAGER (Lens & Hover) */}
+            {/* RESET MODAL */}
+            {showResetModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                    background: 'rgba(0,0,0,0.95)', zIndex: Z_LAYERS.CRITICAL_MODAL,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(10px)'
+                }}>
+                    <div style={{
+                        background: 'linear-gradient(145deg, #2a0a0a, #1a0505)',
+                        border: '2px solid #ff4444',
+                        padding: '40px',
+                        borderRadius: '20px',
+                        textAlign: 'center',
+                        boxShadow: '0 0 60px rgba(255, 68, 68, 0.4)',
+                        maxWidth: '500px',
+                        width: '90%'
+                    }}>
+                        <div style={{ fontSize: '4rem', marginBottom: '20px' }}>⚠️</div>
+                        <h2 style={{ color: '#ff4444', fontSize: '2rem', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                            ¿Reinicio Completo?
+                        </h2>
+                        <div style={{ color: '#fff', marginBottom: '30px', fontSize: '1.1rem', lineHeight: '1.6', textAlign: 'left', background: 'rgba(0,0,0,0.5)', padding: '15px', borderRadius: '10px' }}>
+                            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                                <li>Tu saldo volverá a <b>$0</b>.</li>
+                                <li>Se borrará todo el historial de jugadas.</li>
+                                <li>Se eliminará el récord de saldo máximo.</li>
+                            </ul>
+                        </div>
+                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setShowResetModal(false)}
+                                style={{
+                                    padding: '15px 30px',
+                                    borderRadius: '50px',
+                                    border: '1px solid #666',
+                                    background: 'transparent',
+                                    color: '#aaa',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '1rem',
+                                    transition: 'all 0.2s',
+                                    flex: 1
+                                }}
+                            >
+                                CANCELAR
+                            </button>
+                            <button
+                                onClick={() => {
+                                    hardReset()
+                                    setMaxBalance(0)
+                                    setShowResetModal(false)
+                                    addToast("Sistema Reiniciado Correctamente", "success")
+                                    soundManager.playChip()
+                                }}
+                                style={{
+                                    padding: '15px 30px',
+                                    borderRadius: '50px',
+                                    border: 'none',
+                                    background: 'linear-gradient(145deg, #d32f2f, #b71c1c)',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '1rem',
+                                    boxShadow: '0 4px 20px rgba(211, 47, 47, 0.5)',
+                                    transform: 'scale(1.05)',
+                                    textTransform: 'uppercase',
+                                    flex: 1
+                                }}
+                            >
+                                SÍ, BORRAR TODO
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TOOLTIP LENS & HOVER */}
             <TooltipManager
                 showLens={!viewMode3D}
-
                 viewMode3D={viewMode3D}
                 currentBets={currentBets}
                 handlePlaceBet={handlePlaceBet}
@@ -1214,868 +2675,6 @@ export const CasinoTable = () => {
                 formatValue={formatValue}
             />
 
-            {/* WIN EFFECTS (Overlay) */}
-            <WinEffects
-                amount={lastWinAmount}
-                gameMode={gameMode}
-                viewCurrency={viewCurrency}
-                formatValue={formatValue}
-            />
-
-
-
-
-
-
-
-            {/* HISTORY PANEL */}
-            <Draggable index={14} totalCount={21} id="history" isEnabled={isEditMode} initialPos={positions.history} onDragEnd={onUpdatePos}>
-                <HistoryPanel />
-            </Draggable>
-
-            {/* TOP OPPORTUNITY WIDGET */}
-            <Draggable index={15} totalCount={21} id="opportunity" isEnabled={isEditMode} initialPos={positions.opportunity} onDragEnd={onUpdatePos}>
-                <TopOpportunityWidget />
-            </Draggable>
-
-
-
-
-
-            {/* PROJECTIONS PANEL */}
-            <Draggable index={16} totalCount={21} id="projections" isEnabled={isEditMode} initialPos={positions.projections} onDragEnd={onUpdatePos}>
-                <ProjectionsPanel
-                    balance={balance}
-                    history={roundHistory}
-                />
-            </Draggable>
-
-            {/* ACTIVE BETS PANEL */}
-            {/* ACTIVE BETS PANEL */}
-            {
-                showActiveBets && (
-                    <Draggable index={17} totalCount={21} id="activeBets" isEnabled={isEditMode} initialPos={positions.activeBets} onDragEnd={onUpdatePos}>
-                        <ActiveBetsPanel
-                            currentBets={currentBets}
-                            onClear={handleClear}
-                            onClose={() => setShowActiveBets(false)}
-                        />
-                    </Draggable>
-                )
-            }
-
-            {/* 7. BUY-IN / BANKRUPTCY MODAL */}
-            {
-                showBankruptcy && !isSpinning && (
-                    <div className="ct-bankruptcy-overlay" style={{ zIndex: Z_LAYERS.CRITICAL_MODAL }}>
-                        <div className="ct-bankruptcy-content">
-                            <h1 className="ct-status-title" style={{ fontSize: '2rem' }}>
-                                {balance === 0 ? 'Bienvenido' : 'Saldo Insuficiente'}
-                            </h1>
-                            <p style={{ color: '#aaa', marginBottom: '20px' }}>
-                                {balance === 0
-                                    ? `Por favor, ingrese el monto en ${viewCurrency} para comenzar.`
-                                    : `Se ha quedado sin fichas. Ingrese monto en ${viewCurrency} para recargar.`}
-                            </p>
-
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-                                <input
-                                    type="number"
-                                    placeholder={`Monto (${viewCurrency})`}
-                                    value={buyInAmount}
-                                    onChange={(e) => setBuyInAmount(e.target.value)}
-                                    autoFocus
-                                    className="ct-finance-value"
-                                    style={{
-                                        padding: '10px', borderRadius: '5px', border: '1px solid #444',
-                                        background: '#222', color: '#fff', fontSize: '1.2rem',
-                                        width: '200px', textAlign: 'center', fontWeight: 'normal'
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleReloadSubmit()
-                                    }}
-                                />
-                            </div>
-
-                            <button
-                                onClick={handleReloadSubmit}
-                                className="ct-control-btn ct-btn-gold"
-                                style={{ padding: '12px 30px', fontSize: '1.2rem', width: 'auto' }}
-                            >
-                                INGRESAR FICHAS
-                            </button>
-
-                            {/* CLOSE / JUST WATCH BUTTON */}
-                            <div style={{ marginTop: '15px' }}>
-                                <button
-                                    onClick={() => setShowBankruptcy(false)}
-                                    style={{
-                                        background: 'transparent', border: 'none', color: '#666',
-                                        textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9rem'
-                                    }}
-                                >
-                                    Solo Mirar (Cerrar)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* CSS ANIMATIONS */}
-            <style>{`
-                @keyframes pulse {
-                    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-                    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
-                    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
-                }
-                @keyframes fadeInScale {
-                    from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-                    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-                }
-                @keyframes blinkGreen {
-                    0% { background-color: #43a047; box-shadow: 0 0 15px #43a047; }
-                    50% { background-color: #66bb6a; box-shadow: 0 0 25px #66bb6a; transform: scale(1.02); }
-                    100% { background-color: #43a047; box-shadow: 0 0 15px #43a047; }
-                }
-            `}</style>
-
-            {/* 6. UNIFIED BANKING HUD (VERTICAL TOWER - MASSIVE FONTS) */}
-            <Draggable index={18} totalCount={21} id="banking" isEnabled={isEditMode} onDragEnd={onUpdatePos}>
-                <div className="panel-tray-dark" style={{
-                    width: '320px', minWidth: '320px',
-                    display: 'flex', flexDirection: 'column',
-                    padding: '0', // Padding moved to content
-                    overflow: 'hidden'
-                }}>
-                    {/* HEADER */}
-                    <div className="panel-tray-header">
-                        🏦 BANCA Y ESTADO
-                    </div>
-
-                    {/* BODY */}
-                    <div className="panel-tray-content" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '20px' }}>
-
-                        {/* SECTION: CONTROLS & RESET */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '10px' }}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setShowReloadModal(true)
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                title="Recargar Fichas"
-                                style={{
-
-                                    background: '#2e7d32', // Green
-                                    color: '#fff',
-                                    border: '1px solid #4caf50',
-                                    borderRadius: '4px',
-                                    fontSize: '0.8rem',
-                                    cursor: 'pointer',
-                                    padding: '5px 15px',
-                                    fontWeight: 'bold',
-                                    textTransform: 'uppercase',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                    zIndex: 1000,
-                                    pointerEvents: 'auto'
-                                }}
-                            >
-                                💲 Recargar
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setShowResetModal(true)
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                title="Reiniciar TODO (Saldo a 0)"
-                                style={{
-                                    background: '#3e1a1a', color: '#ff4444', border: '1px solid #ff4444', borderRadius: '4px',
-                                    fontSize: '0.8rem', cursor: 'pointer', padding: '5px 10px',
-                                    transition: 'all 0.2s', textTransform: 'uppercase',
-                                    fontWeight: 'bold', zIndex: 1000, pointerEvents: 'auto'
-                                }}
-                            >
-                                ⚠ Reiniciar
-                            </button>
-                        </div>
-
-                        {/* SECTION: SECONDARY ACTIONS (WITHDRAW & PROJECTIONS) */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '10px', marginTop: '-5px' }}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setShowWithdrawModal(true)
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                title="Retirar Ganancias"
-                                style={{
-                                    background: '#333', color: '#aaa', border: '1px solid #555', borderRadius: '4px',
-                                    fontSize: '0.8rem', cursor: 'pointer', padding: '5px 15px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: 'bold', textTransform: 'uppercase', transition: 'all 0.2s',
-                                    zIndex: 1000, pointerEvents: 'auto'
-                                }}
-                            >
-                                ⬇ Retirar
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setShowProjectionsModal(true)
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                title="Proyecciones y Metas"
-                                style={{
-                                    background: '#d4af37', color: '#000', border: 'none', borderRadius: '4px',
-                                    fontSize: '0.8rem', cursor: 'pointer', padding: '5px 15px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: 'bold', textTransform: 'uppercase', transition: 'all 0.2s',
-                                    zIndex: 1000, pointerEvents: 'auto'
-                                }}
-                            >
-                                📈 Proy
-                            </button>
-                        </div>
-
-                        {/* SECTION: BALANCE */}
-                        <div className="ct-banking-row">
-                            <div style={{
-                                fontSize: '1rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold',
-                                textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
-                                display: 'flex', alignItems: 'center'
-                            }}>
-                                <span>Saldo</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                                {/* Action buttons kept, but could be moved if user meant STRICT uniformity */}
-                            </div>
-                            <div style={{ fontSize: '1.9rem', color: '#ffd700', fontWeight: 'bold', textAlign: 'right', lineHeight: '1', fontFamily: 'Roboto Mono, monospace' }}>
-                                {formatBalance(balance)}
-                            </div>
-                        </div>
-
-                        {/* SECTION: POTENTIAL BEST PAYOUT */}
-                        <div className="ct-banking-row">
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                <div style={{ fontSize: '0.8rem', color: '#aaa', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>
-                                    Mejor Pago
-                                </div>
-                                <div style={{ fontSize: '0.8rem', color: '#ffcc00', fontWeight: 'bold' }}>
-                                    {bestPayout.numbers.length > 0 ? (bestPayout.numbers.length > 5 ? 'Varios...' : bestPayout.numbers.join(', ')) : '-'}
-                                </div>
-                            </div>
-                            <div style={{
-                                fontSize: '1.4rem',
-                                color: bestPayout.amount > 0 ? '#ffcc00' : '#444',
-                                textAlign: 'right',
-                                fontFamily: 'Roboto Mono, monospace',
-                                lineHeight: '1',
-                                textShadow: bestPayout.amount > 0 ? '0 0 10px rgba(255, 204, 0, 0.3)' : 'none'
-                            }}>
-                                {formatValue(bestPayout.amount)}
-                            </div>
-                        </div>
-
-                        {/* SECTION: POTENTIAL MAX BALANCE */}
-                        {bestPayout.amount > 0 && (
-                            <div className="ct-banking-row">
-                                <div style={{ fontSize: '0.8rem', color: '#aaa', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>
-                                    Saldo Potencial
-                                </div>
-                                <div style={{
-                                    fontSize: '1.4rem',
-                                    color: (balance + bestPayout.amount) > maxBalance ? '#4caf50' : '#ff4444',
-                                    textAlign: 'right',
-                                    lineHeight: '1',
-                                    fontFamily: 'Roboto Mono, monospace',
-                                    textShadow: (balance + bestPayout.amount) > maxBalance ? '0 0 10px rgba(76, 175, 80, 0.4)' : 'none',
-                                    position: 'relative',
-                                    display: 'flex',
-                                    justifyContent: 'flex-end',
-                                    alignItems: 'center',
-                                    gap: '10px'
-                                }}>
-                                    {/* Suggestion Popup if not breaking record */}
-                                    {(balance + bestPayout.amount) <= maxBalance && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            right: '100%',
-                                            marginRight: '15px',
-                                            background: '#ff4444',
-                                            color: 'white',
-                                            padding: '5px 10px',
-                                            borderRadius: '5px',
-                                            fontSize: '0.7rem',
-                                            fontWeight: 'bold',
-                                            whiteSpace: 'nowrap',
-                                            animation: 'pulse 1s infinite',
-                                            boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
-                                        }}>
-                                            DOBLA APUESTA ⤴
-                                            <div style={{
-                                                position: 'absolute',
-                                                right: '-5px',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                borderTop: '5px solid transparent',
-                                                borderBottom: '5px solid transparent',
-                                                borderLeft: '5px solid #ff4444'
-                                            }} />
-                                        </div>
-                                    )}
-                                    {formatBalance(balance + bestPayout.amount)}
-                                </div>
-                            </div>
-                        )}
-
-
-
-                        {/* SECTION: MAX BALANCE */}
-                        <div className="ct-banking-row">
-                            <div style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>Saldo Máximo</div>
-                            <div style={{
-                                fontSize: '1.4rem',
-                                color: isNewRecord ? '#fff' : '#d4af37',
-                                textAlign: 'right',
-                                lineHeight: '1',
-                                fontFamily: 'Roboto Mono, monospace',
-                                opacity: isNewRecord ? 1 : 0.8,
-                                textShadow: isNewRecord ? '0 0 15px gold, 0 0 30px white' : 'none',
-                                transition: 'all 0.3s ease'
-                            }}>
-                                {formatBalance(maxBalance)} {isNewRecord && '🏆'}
-                            </div>
-                        </div>
-
-                        {/* SECTION: POTENTIAL DIFFERENCE (RELOCATED) */}
-                        {bestPayout.amount > 0 && (
-                            <div style={{
-                                width: '100%',
-                                // Special case for DR row - keeps custom style but matches height potentially?
-                                // Or should it also be a row? User said "EACH FIELD".
-                                // Keeping it distinct but cleaner for now as it has background color logic.
-                                // Actually, let's wrap contents in a row logic if possible, but the background needs to cover all.
-                                height: '55px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                marginTop: '10px',
-                                background: ((balance - currentRoundBet + bestPayout.amount) - maxBalance) > 0 ? '#43a047' : '#e53935',
-                                borderRadius: '8px',
-                                paddingLeft: '10px',
-                                paddingRight: '10px',
-                                boxShadow: ((balance - currentRoundBet + bestPayout.amount) - maxBalance) > 0 ? '0 0 15px #43a047' : '0 0 15px #e53935',
-                                animation: ((balance - currentRoundBet + bestPayout.amount) - maxBalance) > 0 ? 'blinkGreen 1s infinite' : 'none'
-                            }}>
-                                <div style={{ fontSize: '0.8rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>
-                                    DR= Diferencia Record
-                                </div>
-                                <div style={{
-                                    fontSize: '1.6rem',
-                                    color: '#fff', // White text for contrast on Magenta
-                                    textAlign: 'right',
-                                    lineHeight: '1',
-                                    fontFamily: 'Roboto Mono, monospace',
-                                    fontWeight: 'bold'
-                                }}>
-                                    {(() => {
-                                        const val = (balance - currentRoundBet + bestPayout.amount) - maxBalance
-                                        return val > 0 ? '+' + formatBalance(val) : formatBalance(val)
-                                    })()}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* SECTION: INITIAL BALANCE */}
-                        <div className="ct-banking-row">
-                            <div style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>Saldo Inicial</div>
-                            <div style={{ fontSize: '1.4rem', color: '#888', textAlign: 'right', lineHeight: '1', fontFamily: 'Roboto Mono, monospace' }}>
-                                {formatValue(initialCapital)}
-                            </div>
-                        </div>
-
-                        {/* SECTION: PROFIT */}
-                        <div className="ct-banking-row">
-                            <div className="ct-finance-label" style={{ marginBottom: 0 }}>Ganancia Neta</div>
-                            <div className={`ct-finance-value ct-val-lg ${(maxBalance - initialCapital) > 0 ? 'ct-text-green' : 'ct-text-gray'}`} style={{ fontSize: '1.9rem' }}>
-                                {formatValue(maxBalance - initialCapital)}
-                            </div>
-                        </div>
-
-                        {/* SECTION: DIFFERENCE MULTIPLIER */}
-                        {bestPayout.amount > 0 && currentRoundBet > 0 && (
-                            <div className="ct-banking-row">
-                                <div className="ct-finance-label" style={{ marginBottom: 0 }}>
-                                    Nx = Diferencia/Apuesta
-                                </div>
-                                <div className={`ct-finance-value ct-val-lg ${Math.round(((balance - currentRoundBet + bestPayout.amount) - maxBalance) / currentRoundBet) >= 0 ? 'ct-text-green' : 'ct-text-red'}`} style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)', fontSize: '2.4rem' }}>
-                                    {Math.round(((balance - currentRoundBet + bestPayout.amount) - maxBalance) / currentRoundBet)}x
-                                </div>
-                            </div>
-                        )}
-
-                        {/* SECTION: RECORD PROFIT PER MINUTE */}
-                        {(maxBalance - initialCapital) > 0 && (
-                            <>
-                                <div className="ct-banking-row">
-                                    <div className="ct-finance-label" style={{ marginBottom: 0 }}>
-                                        Ganancia Récord / Min
-                                    </div>
-                                    <div className="ct-finance-value ct-val-sm ct-text-green">
-                                        {(() => {
-                                            const mins = Math.max(0.1, (Date.now() - sessionStart) / 60000)
-                                            const profit = maxBalance - initialCapital
-                                            return formatValue(profit / mins)
-                                        })()}
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* SECTION: BET */}
-                        <div className="ct-banking-row">
-                            <div className="ct-finance-label" style={{ marginBottom: 0 }}>Apuesta</div>
-                            <div className="ct-finance-value ct-val-md ct-text-white" style={{ fontSize: '1.4rem' }}>
-                                {formatValue(currentRoundBet)}
-                            </div>
-                        </div>
-
-                        {/* SECTION: COVERAGE */}
-                        <div className="ct-banking-row">
-                            <div className="ct-finance-label" style={{ marginBottom: 0 }}>Cobertura</div>
-                            <div className="ct-finance-value ct-val-sm ct-text-blue" style={{ opacity: 0.9 }}>
-                                {calculateCoverage(currentBets).toFixed(1)}%
-                            </div>
-                        </div>
-
-                        {/* SECTION: WIN */}
-                        <div className="ct-banking-row">
-                            <div style={{ fontSize: '0.8rem', color: '#aaa', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>Ganancia</div>
-                            <div style={{
-                                fontSize: '2.4rem',
-                                color: lastWinAmount > 0 ? '#4f4' : '#555',
-                                fontWeight: 'bold',
-                                textAlign: 'right',
-                                lineHeight: '1',
-                                fontFamily: 'Roboto Mono, monospace',
-                                textShadow: lastWinAmount > 0 ? '0 0 15px rgba(68, 255, 68, 0.5)' : 'none',
-                                transition: 'all 0.3s ease'
-                            }}>
-                                {formatValue(lastWinAmount)}
-                            </div>
-                        </div>
-
-                        {/* CURRENCY SELECTOR */}
-                        <div style={{ display: 'flex', gap: '5px', marginTop: '10px', height: '40px' }}>
-                            {['COL', 'USA', 'EUR'].map(curr => (
-                                <button key={curr} onClick={() => setViewCurrency(curr)}
-                                    className={`ct-currency-btn ${viewCurrency === curr ? 'active' : ''}`}
-                                >
-                                    <span style={{ fontWeight: 'bold', fontSize: '1.0rem' }}>{curr}</span>
-                                    {curr !== 'COL' && exchangeRates && (
-                                        <span style={{ fontSize: '1.2rem', marginTop: '4px', opacity: 0.95, fontWeight: 'bold', color: viewCurrency === curr ? '#000' : '#888' }}>
-                                            {curr === 'USA' && exchangeRates.COP ? `TRM ${Math.round(exchangeRates.COP)}` : ''}
-                                            {curr === 'EUR' && exchangeRates.EUR && exchangeRates.COP ? `TRM ${Math.round(exchangeRates.COP / exchangeRates.EUR)}` : ''}
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </Draggable >
-
-            {/* 6. WIN EFFECTS (Particles) */}
-            < WinEffects lastWin={lastWin} lastWinAmount={lastWinAmount} />
-
-            {/* OLD TOOLTIP REDUNDANT - Handled by TooltipManager */}
-
-
-            {/* 7. GIANT DR STATUS OVERLAY (POP-UP) */}
-            {
-                statusOverlay && (
-                    <div className="ct-status-overlay" style={{ zIndex: Z_LAYERS.STATUS_OVERLAY }}>
-                        <div className="ct-status-title" style={{ color: lastWinAmount > 0 ? '#4f4' : '#f44' }}>
-                            {lastWinAmount > 0 ? "¡VICTORIA!" : "NO VA MÁS"}
-                        </div>
-                        {lastWinAmount > 0 && (
-                            <div className="ct-status-amount" style={{ color: '#4f4' }}>
-                                {formatValue(lastWinAmount)}
-                            </div>
-                        )}
-                    </div>
-                )
-            }
-
-
-            {/* 1. CONTROLS HUD */}
-            <Draggable index={19} totalCount={21} id="controls" isEnabled={isEditMode} initialPos={positions.controls} onDragEnd={onUpdatePos}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                    <div className="ct-controls-panel">
-                        {/* SPIN BUTTON - Hidden/Disabled in Live Mode */}
-                        {!isLiveMode && (
-                            <button className="ct-control-btn ct-btn-spin" onClick={handleSpin} disabled={isSpinning || timerMode}>
-                                {isSpinning ? "..." : (timerMode ? "AUTO" : "GIRAR")}
-                            </button>
-                        )}
-                        <button onClick={handleRepeat} disabled={isSpinning || Object.keys(lastBets).length === 0}
-                            className="ct-control-btn ct-btn-blue">
-                            REPETIR
-                        </button>
-                        <button onClick={handleDouble} disabled={isSpinning || Object.keys(currentBets).length === 0}
-                            className="ct-control-btn ct-btn-blue">
-                            DOBLAR
-                        </button>
-                        <button onClick={handleUndo} disabled={isSpinning || betHistory.length === 0}
-                            className="ct-control-btn ct-btn-bordeaux">
-                            DESHACER
-                        </button>
-                        <button onClick={handleClear} disabled={isSpinning || Object.keys(currentBets).length === 0}
-                            className="ct-control-btn ct-btn-crimson">
-                            LIMPIAR
-                        </button>
-                    </div>
-                    {/* TimeBar - Only show in Simulation Mode */}
-                    {!isLiveMode && (
-                        <TimeBar
-                            isActive={timerMode && !isSpinning}
-                            timerMode={timerMode}
-                            duration={timerDuration}
-                            timeLeft={timeLeft}
-                            onToggle={() => {
-                                setTimerMode(!timerMode)
-                                if (!timerMode) setTimeLeft(timerDuration) // Reset when enabling
-                            }}
-                            onChangeDuration={setTimerDuration}
-                        />
-                    )}
-                </div>
-            </Draggable>
-
-
-            {/* AUTOPLAY HUD */}
-            <Draggable index={20} totalCount={21} id="autoplay" isEnabled={isEditMode} initialPos={positions.autoplay} onDragEnd={onUpdatePos}>
-                <div className="ct-autoplay-panel">
-                    <div className="ct-auto-label">
-                        AUTO ({smartAutoActive ? smartAutoConfig.spinsRemaining : autoPlayCount}):
-                    </div>
-                    {(autoPlayCount > 0 || smartAutoActive) ? (
-                        <button onClick={() => {
-                            setAutoPlayCount(0)
-                            setSmartAutoActive(false)
-                            addToast("Autoplay Detenido Manualmente", "info")
-                        }}
-                            className="ct-auto-btn stop"
-                        >
-                            DETENER
-                        </button>
-                    ) : (
-                        [10, 25, 50, 100, 480].map(count => (
-                            <button key={count}
-                                onClick={() => {
-                                    if (count === 480) {
-                                        // SPECIAL MACRO: Trigger Hybrid Hedge Pro
-                                        handleClear() // Ensure clean start
-                                        handleApplyStrategy('HYBRID_HEDGE_PRO', 480)
-                                    } else {
-                                        setAutoPlayCount(count)
-                                    }
-                                }}
-                                className={`ct-auto-btn ${count === 480 ? 'gold' : ''}`}
-                            >
-                                {count === 480 ? '👑 480' : count}
-                            </button>
-                        ))
-                    )}
-                </div>
-            </Draggable>
-
-            {/* 7. CHIPS HUD (Separated) */}
-            <Draggable index={21} totalCount={21} id="chips" isEnabled={isEditMode} initialPos={positions.chips} onDragEnd={onUpdatePos}>
-                <div className={`ui-overlay-loose ${isSpinning ? 'disabled' : ''}`}>
-                    <div className="chip-selector">
-                        {[1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].map(val => {
-                            let display = formatChipValue(val)
-                            // Custom formatting for Chips in COL to use K/M
-                            if (viewCurrency === 'COL') {
-                                const realVal = val * CHIP_RATES.COL
-                                if (realVal >= 1000000) display = '$' + (realVal / 1000000).toLocaleString() + 'M'
-                                else if (realVal >= 1000) display = '$' + (realVal / 1000).toLocaleString() + 'K'
-                            }
-
-                            return (
-                                <div key={val} className={`chip-btn chip-${val} ${selectedChip === val ? 'selected' : ''}`}
-                                    onClick={() => setSelectedChip(val)}
-                                    style={{
-                                        fontSize: viewCurrency === 'COL' ? '0.85rem' : '1rem', // Adjust for longer labels if not K? But K makes them short.
-                                        // Actually user asked to INCREASE font.
-                                        fontSize: '1.1rem'
-                                    }}
-                                >
-                                    {display}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            </Draggable>
-
-            {/* Top Opportunity Widget - Floating */}
-            <Draggable id="opportunity" isEnabled={isEditMode} initialPos={positions.opportunity} onDragEnd={onUpdatePos}>
-                <TopOpportunityWidget />
-            </Draggable>
-
-            {/* History Panel - Floating */}
-            <Draggable id="history" isEnabled={isEditMode} initialPos={positions.history} onDragEnd={onUpdatePos}>
-                <HistoryPanel />
-            </Draggable>
-
-            {/* ACTIVE BETS PANEL - Dynamic Pop-up */}
-            {
-                showActiveBets && (
-                    <Draggable id="activeBets" isEnabled={isEditMode} initialPos={positions.activeBets || { x: 20, y: 500 }} onDragEnd={onUpdatePos} style={{ zIndex: Z_LAYERS.ACTIVE_BETS }}>
-                        <ActiveBetsPanel
-                            currentBets={currentBets}
-                            onClose={() => setShowActiveBets(false)}
-                            viewCurrency={viewCurrency}
-                        />
-                    </Draggable>
-                )
-            }
-
-            {/* Projections Panel - Floating */}
-            <Draggable id="projections" isEnabled={isEditMode} initialPos={positions.projections} onDragEnd={onUpdatePos}
-                style={{ zIndex: Z_LAYERS.PROJECTIONS }}
-            >
-                <ProjectionsPanel viewCurrency={viewCurrency} currentBets={currentBets} />
-            </Draggable>
-
-            {/* --- CONTROL ICONS ($, Σ, M) --- */}
-            {/* Dollar Icon - System Efficiency */}
-            <Draggable index={22} totalCount={25} id="dollarIcon" isEnabled={isEditMode} initialPos={positions.dollarIcon} onDragEnd={onUpdatePos} style={{ zIndex: 2000 }}>
-                <DollarIcon onClick={() => setShowEfficiencyModal(true)} />
-            </Draggable>
-
-
-
-            {/* Methods Icon - Methods Table */}
-            <Draggable index={24} totalCount={25} id="methodsIcon" isEnabled={isEditMode} initialPos={positions.methodsIcon} onDragEnd={onUpdatePos} style={{ zIndex: 2000 }}>
-                <MethodsIcon onClick={() => setShowMethodsTable(true)} />
-            </Draggable>
-
-            {/* Scanner Icon - Internal Market Scanner */}
-            <Draggable index={25} totalCount={25} id="scannerIcon" isEnabled={isEditMode} initialPos={positions.scannerIcon || { x: 1350, y: 30 }} onDragEnd={onUpdatePos} style={{ zIndex: 2000 }}>
-                <ScannerIcon onClick={() => setShowScannerModal(true)} />
-            </Draggable>
-
-            {
-                showEfficiencyModal && (
-                    <SystemEfficiencyModal
-                        onClose={() => setShowEfficiencyModal(false)}
-                        onBatchBet={onBatchBet}
-                        currentBets={currentBets}
-                        selectedChip={selectedChip}
-                    />
-                )
-            }
-
-            {
-                showMethodsTable && (
-                    <MethodsTable
-                        onClose={() => setShowMethodsTable(false)}
-                        onBatchBet={onBatchBet}
-                        currentBets={currentBets}
-                        selectedChip={selectedChip}
-                    />
-                )
-            }
-
-            {
-                showScannerModal && (
-                    <InternalScannerModal
-                        onClose={() => setShowScannerModal(false)}
-                        onBatchBet={onBatchBet}
-                        currentBets={currentBets}
-                        selectedChip={selectedChip}
-                    />
-                )
-            }
-
-            {/* RELOAD MODAL moved to GameOverlayManager */}
-
-
-            {/* WITHDRAW MODAL */}
-            {
-                showWithdrawModal && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                        background: 'rgba(0,0,0,0.9)', zIndex: Z_LAYERS.CRITICAL_MODAL,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        backdropFilter: 'blur(8px)'
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(145deg, #1a1a1a, #0d0d0d)',
-                            border: '1px solid #333',
-                            padding: '40px',
-                            borderRadius: '20px',
-                            textAlign: 'center',
-                            boxShadow: '0 0 50px rgba(0,0,0,0.8)',
-                            maxWidth: '450px',
-                            width: '90%'
-                        }}>
-                            <h2 style={{ color: '#aaa', fontSize: '1.8rem', marginBottom: '10px', textTransform: 'uppercase' }}>Retirar Fondos</h2>
-                            <p style={{ color: '#666', marginBottom: '20px', fontSize: '1rem', lineHeight: '1.5' }}>
-                                Ingresa la cantidad que deseas retirar de tu saldo.
-                            </p>
-
-                            <div style={{ marginBottom: '30px', position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: '1.2rem' }}>$</span>
-                                <input
-                                    type="number"
-                                    value={withdrawAmount}
-                                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleWithdrawSubmit()}
-                                    placeholder="0"
-                                    autoFocus
-                                    style={{
-                                        width: '100%',
-                                        padding: '15px 15px 15px 35px',
-                                        background: '#000',
-                                        border: '1px solid #444',
-                                        borderRadius: '10px',
-                                        color: '#fff',
-                                        fontSize: '1.5rem',
-                                        fontWeight: 'bold',
-                                        textAlign: 'center',
-                                        outline: 'none',
-                                        fontFamily: 'Roboto Mono, monospace'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                                <button
-                                    onClick={() => setShowWithdrawModal(false)}
-                                    style={{
-                                        padding: '15px 30px',
-                                        borderRadius: '50px',
-                                        border: '1px solid #444',
-                                        background: 'transparent',
-                                        color: '#888',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.9rem',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    CANCELAR
-                                </button>
-                                <button
-                                    onClick={handleWithdrawSubmit}
-                                    style={{
-                                        padding: '15px 40px',
-                                        borderRadius: '50px',
-                                        border: 'none',
-                                        background: 'linear-gradient(145deg, #d32f2f, #b71c1c)', // Red theme for withdraw
-                                        color: '#fff',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '1.1rem',
-                                        boxShadow: '0 4px 15px rgba(211, 47, 47, 0.4)',
-                                        transform: 'scale(1.05)',
-                                        textTransform: 'uppercase'
-                                    }}
-                                >
-                                    RETIRAR
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* RESET MODAL */}
-            {
-                showResetModal && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                        background: 'rgba(0,0,0,0.95)', zIndex: Z_LAYERS.CRITICAL_MODAL,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        backdropFilter: 'blur(10px)'
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(145deg, #2a0a0a, #1a0505)',
-                            border: '2px solid #ff4444',
-                            padding: '40px',
-                            borderRadius: '20px',
-                            textAlign: 'center',
-                            boxShadow: '0 0 60px rgba(255, 68, 68, 0.4)',
-                            maxWidth: '500px',
-                            width: '90%'
-                        }}>
-                            <div style={{ fontSize: '4rem', marginBottom: '20px' }}>⚠️</div>
-                            <h2 style={{ color: '#ff4444', fontSize: '2rem', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                                ¿Reinicio Completo?
-                            </h2>
-                            <div style={{ color: '#fff', marginBottom: '30px', fontSize: '1.1rem', lineHeight: '1.6', textAlign: 'left', background: 'rgba(0,0,0,0.5)', padding: '15px', borderRadius: '10px' }}>
-                                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                                    <li>Tu saldo volverá a <b>$0</b>.</li>
-                                    <li>Se borrará todo el historial de jugadas.</li>
-                                    <li>Se eliminará el récord de saldo máximo.</li>
-                                </ul>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                                <button
-                                    onClick={() => setShowResetModal(false)}
-                                    style={{
-                                        padding: '15px 30px',
-                                        borderRadius: '50px',
-                                        border: '1px solid #666',
-                                        background: 'transparent',
-                                        color: '#aaa',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '1rem',
-                                        transition: 'all 0.2s',
-                                        flex: 1
-                                    }}
-                                >
-                                    CANCELAR
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        hardReset()
-                                        setMaxBalance(0)
-                                        setShowResetModal(false)
-                                        addToast("Sistema Reiniciado Correctamente", "success")
-                                        soundManager.playChip()
-                                    }}
-                                    style={{
-                                        padding: '15px 30px',
-                                        borderRadius: '50px',
-                                        border: 'none',
-                                        background: 'linear-gradient(145deg, #d32f2f, #b71c1c)',
-                                        color: '#fff',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '1rem',
-                                        boxShadow: '0 4px 20px rgba(211, 47, 47, 0.5)',
-                                        transform: 'scale(1.05)',
-                                        textTransform: 'uppercase',
-                                        flex: 1
-                                    }}
-                                >
-                                    SÍ, BORRAR TODO
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
             {/* GAME OVERLAY MANAGER (Handles all secondary modals) */}
             <GameOverlayManager
                 showLayoutHelp={showLayoutHelp} setShowLayoutHelp={setShowLayoutHelp}
@@ -2084,10 +2683,16 @@ export const CasinoTable = () => {
                 showReloadModal={showReloadModal} setShowReloadModal={setShowReloadModal}
                 showStrategiesModal={showStrategiesModal} setShowStrategiesModal={setShowStrategiesModal}
                 showRubric={showRubricModal} setShowRubric={setShowRubricModal}
+                showAppliedRubric={showAppliedRubric} setShowAppliedRubric={setShowAppliedRubric}
                 showProjectionsModal={showProjectionsModal} setShowProjectionsModal={setShowProjectionsModal}
                 showManualModal={showManualModal} setShowManualModal={setShowManualModal}
                 showAudioSettings={showAudioSettingsModal} setShowAudioSettings={setShowAudioSettingsModal}
                 showDetailedHistory={showDetailedHistory} setShowDetailedHistory={setShowDetailedHistory}
+                showVisualRubric={showVisualRubric} setShowVisualRubric={setShowVisualRubric}
+                showAppliedVisualRubric={showAppliedVisualRubric} setShowAppliedVisualRubric={setShowAppliedVisualRubric}
+                showValueRubric={showValueRubric} setShowValueRubric={setShowValueRubric}
+                showAppliedValueRubric={showAppliedValueRubric} setShowAppliedValueRubric={setShowAppliedValueRubric}
+                showForensicManual={showForensicManual} setShowForensicManual={setShowForensicManual}
                 // Data
                 roundHistory={roundHistory}
                 balance={balance}
@@ -2099,16 +2704,14 @@ export const CasinoTable = () => {
             />
 
             {/* EFFICIENCY MODALS (Moved from BettingBoard) */}
-            {
-                showEfficiencyModal && (
-                    <SystemEfficiencyModal
-                        onClose={() => setShowEfficiencyModal(false)}
-                        onBatchBet={onBatchBet}
-                        currentBets={currentBets}
-                        selectedChip={selectedChip}
-                    />
-                )
-            }
+            {showEfficiencyModal && (
+                <SystemEfficiencyModal
+                    onClose={() => setShowEfficiencyModal(false)}
+                    onBatchBet={onBatchBet}
+                    currentBets={currentBets}
+                    selectedChip={selectedChip}
+                />
+            )}
 
             <InternalScannerModal
                 isOpen={showScannerModal}
@@ -2125,6 +2728,29 @@ export const CasinoTable = () => {
                 selectedChip={selectedChip}
                 currentBets={currentBets}
             />
-        </div >
+
+            {/* ECONOMIC VALUE MODAL */}
+            {showEconomicModal && (
+                <EconomicValueModal onClose={() => setShowEconomicModal(false)} />
+            )}
+
+            <style>{`
+                @keyframes pulseFlash {
+                    0% { opacity: 0.5; }
+                    50% { opacity: 0.95; }
+                    100% { opacity: 0.5; }
+                }
+                @keyframes pulseRecommendedGold {
+                    0% { transform: scale(1); box-shadow: 0 0 8px #ffd700; }
+                    50% { transform: scale(1.08); box-shadow: 0 0 20px #ffd700; }
+                    100% { transform: scale(1); box-shadow: 0 0 8px #ffd700; }
+                }
+                @keyframes pulseRecommendedRed {
+                    0% { transform: scale(1); box-shadow: 0 0 8px #ff1744; }
+                    50% { transform: scale(1.08); box-shadow: 0 0 20px #ff1744; }
+                    100% { transform: scale(1); box-shadow: 0 0 8px #ff1744; }
+                }
+            `}</style>
+        </div>
     )
 }

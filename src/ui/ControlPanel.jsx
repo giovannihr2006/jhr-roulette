@@ -18,9 +18,9 @@ export const ControlPanel = () => {
     // --- UI CONTROLS ---
     useControls('INTERFACE', {
         'Modo Ingeniero': { value: false, onChange: (v) => setUI({ showStats: v, showFinance: v, showGraph: v }) },
-        'Ver Estad铆sticas': { value: false, render: (get) => get('INTERFACE.Modo Ingeniero'), onChange: (v) => setUI({ showStats: v }) },
+        'Ver Estad韘ticas': { value: false, render: (get) => get('INTERFACE.Modo Ingeniero'), onChange: (v) => setUI({ showStats: v }) },
         'Ver Finanzas': { value: false, render: (get) => get('INTERFACE.Modo Ingeniero'), onChange: (v) => setUI({ showFinance: v }) },
-        'Ver Gr谩fica': { value: false, render: (get) => get('INTERFACE.Modo Ingeniero'), onChange: (v) => setUI({ showGraph: v }) },
+        'Ver Gr醘ica': { value: false, render: (get) => get('INTERFACE.Modo Ingeniero'), onChange: (v) => setUI({ showGraph: v }) },
     }, { collapsed: true })
 
     // Strategy Selector via Leva
@@ -57,7 +57,7 @@ export const ControlPanel = () => {
         const num = Math.floor(Math.random() * 37)
         addResult(num)
 
-        // Simulaci贸n Financiera Simple para testing
+        // Simulaci髇 Financiera Simple para testing
         // 50/50 chance de ganar 1 fichas o perder 1
         const win = Math.random() > 0.5
         const delta = win ? 3500 : -100
@@ -82,19 +82,19 @@ export const ControlPanel = () => {
         minIncrement: { value: 1, min: 1, step: 1 },
     })
 
-    const targetValues = useControls('Finanzas (Objetivos/L铆mites)', {
+    const targetValues = useControls('Finanzas (Objetivos/L韒ites)', {
         minWinSuggested: { value: 1100, step: 100 },
         maxWinOneGame: { value: 55500, step: 500 },
         targetHourlyWin: { value: 333.33, step: 10 },
     })
 
-    const ensayoValues = useControls('Simulaci贸n (ENSAYO)', {
-        timeCompression: { value: 1.0, min: 0.1, max: 100, step: 0.1, label: 'Compresi贸n Tiempo' },
-        projectedHours: { value: 4, step: 0.5, label: 'Horas Sesi贸n' },
+    const ensayoValues = useControls('Simulaci髇 (ENSAYO)', {
+        timeCompression: { value: 1.0, min: 0.1, max: 100, step: 0.1, label: 'Compresi髇 Tiempo' },
+        projectedHours: { value: 4, step: 0.5, label: 'Horas Sesi髇' },
         targetRateMonth: { value: 73728000, step: 1000, label: 'Meta Mensual' },
     })
 
-    const physicsValues = useControls('F铆sica (Genesis Engine)', {
+    const physicsValues = useControls('F韘ica (Genesis Engine)', {
         ballMass: { value: 0.05, min: 0.01, max: 0.5, step: 0.01 },
         friction: { value: 0.01, min: 0, max: 0.1, step: 0.001 },
         gravity: { value: -9.81, step: 0.1 },
@@ -122,7 +122,7 @@ export const ControlPanel = () => {
 
     // Sync Ensayo
     useEffect(() => {
-        // We need to add setEnsayo to store first, let's assume it exists or use generic setter if preferred, 
+        // We need to add setEnsayo to store first, let's assume it exists or use generic setter if preferred,
         // but for now I will add setEnsayo to MasterConfig in next tool call to match this.
         // Wait, I can't add it there. I need to add it to MasterConfig first.
         // UseGenesisStore needs setEnsayo.

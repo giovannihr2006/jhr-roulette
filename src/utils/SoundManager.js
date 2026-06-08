@@ -2,10 +2,17 @@ class SoundManager {
     constructor() {
         this.ctx = null
         this.masterGain = null
+        this.sfxGain = null
+        this.ambienceGain = null
         this.ambienceNodes = null
         this.ballLoopNodes = null
         this.initialized = false
         this.isMuted = false
+
+        // Volume persistence (pre-initialization safe)
+        this.masterVol = 0.4
+        this.sfxVol = 1.0
+        this.ambienceVol = 0.5
     }
 
     init() {
@@ -18,10 +25,10 @@ class SoundManager {
         this.sfxGain = this.ctx.createGain()
         this.ambienceGain = this.ctx.createGain()
 
-        // Defaults - Slightly lower master to be polite
-        this.masterGain.gain.value = 0.4
-        this.sfxGain.gain.value = 1.0
-        this.ambienceGain.gain.value = 0.5
+        // Apply persisted volume configurations
+        this.masterGain.gain.value = this.masterVol
+        this.sfxGain.gain.value = this.sfxVol
+        this.ambienceGain.gain.value = this.ambienceVol
 
         // Routing
         this.sfxGain.connect(this.masterGain)
@@ -32,9 +39,18 @@ class SoundManager {
     }
 
     setVolume(channel, value) {
+        const val = parseFloat(value)
+        if (isNaN(val)) return
+
+        if (channel === 'MASTER') this.masterVol = val
+        if (channel === 'SFX') this.sfxVol = val
+        if (channel === 'AMBIENCE') this.ambienceVol = val
+
         if (!this.initialized) return
         const time = this.ctx.currentTime + 0.1
-        if (channel === 'MASTER') this.masterGain.gain.linearRampToValueAtTime(value, time)
+        if (channel === 'MASTER') this.masterGain.gain.linearRampToValueAtTime(val, time)
+        if (channel === 'SFX') this.sfxGain.gain.linearRampToValueAtTime(val, time)
+        if (channel === 'AMBIENCE') this.ambienceGain.gain.linearRampToValueAtTime(val, time)
     }
 
     setMute(mute) {

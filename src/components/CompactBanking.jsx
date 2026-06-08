@@ -19,6 +19,10 @@ export const CompactBanking = ({
     const diffRecord = potentialTotal - maxBalance
     const isRecordBreaking = diffRecord > 0
 
+    // NEW: Giovanni's condition (El mejor pago más el saldo actual tiene que ser mayor que el récord histórico, sino doblar apuesta)
+    const isGiovanniConditionMet = (bestPayout.amount + balance) > maxBalance
+    const shouldDoubleBetGiovanni = !isGiovanniConditionMet
+
     return (
         <div style={{
             display: 'flex',
@@ -90,7 +94,7 @@ export const CompactBanking = ({
                         {diffRecord > 0 ? '+' + formatBalance(diffRecord) : formatBalance(diffRecord)}
                     </span>
                     {/* DOBLA APUESTA TIP */}
-                    {!isRecordBreaking && (
+                    {(shouldDoubleBetGiovanni || !isRecordBreaking) && (
                         <div style={{ fontSize: '0.6rem', color: '#aaa', marginTop: '2px' }}>
                             DOBLA APUESTA ⤴
                         </div>

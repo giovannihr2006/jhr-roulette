@@ -13,7 +13,7 @@ const blinkStyle = {
 }
 
 // Add global style for keyframes if not present (simple hack or rely on CSS file)
-// Better: Add inline style tag or assume css file has it. 
+// Better: Add inline style tag or assume css file has it.
 // Let's add the keyframes to the button style directly or via a style tag in the main file.
 // For now, I'll add a style tag injection or just use simple opacity pulsing.
 
@@ -95,7 +95,7 @@ DollarIcon.propTypes = {
     onClick: PropTypes.func.isRequired
 }
 
-// Sigma Icon - Opens Simple Efficiency Modal  
+// Sigma Icon - Opens Simple Efficiency Modal
 export const SigmaIcon = ({ onClick }) => (
     <div className="control-icon-wrapper" style={{ padding: '5px' }}>
         <IconButton
@@ -129,4 +129,21 @@ MethodsIcon.propTypes = {
     onClick: PropTypes.func.isRequired
 }
 
-export default { DollarIcon, SigmaIcon, MethodsIcon }
+// Scanner Icon - Opens Internal Scanner Modal
+export const ScannerIcon = ({ onClick }) => (
+    <div className="control-icon-wrapper" style={{ padding: '5px' }}>
+        <IconButton
+            icon="🔍"
+            color="#00ff88"
+            bgColor="rgba(0, 255, 136, 0.1)"
+            onClick={onClick}
+            title="Scanner Interno (Apuestas Internas)"
+        />
+    </div>
+)
+
+ScannerIcon.propTypes = {
+    onClick: PropTypes.func.isRequired
+}
+
+export default { DollarIcon, SigmaIcon, MethodsIcon, ScannerIcon }

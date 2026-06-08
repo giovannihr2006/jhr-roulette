@@ -270,16 +270,16 @@ const SimpleEfficiencyModal = ({ onClose, onBatchBet, currentBets }) => {
                         </table>
 
                         {/* STRATEGY EXPLANATION */}
-                        <div style={{ marginTop: '15px', padding: '10px', background: '#111', borderRadius: '4px', border: '1px solid #333', fontSize: '0.85rem', color: '#aaa', maxWidth: '400px', margin: '15px auto' }}>
-                            <div style={{ color: '#4fc3f7', fontWeight: 'bold', marginBottom: '4px', textAlign: 'center' }}>💡 ESTRATEGIA: GOLPE DOBLE</div>
-                            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                                Las filas con 👑 son tus <strong>Mejores Opciones</strong>.
+                        <div style={{ marginTop: '15px', padding: '10px', background: 'rgba(255, 235, 59, 0.05)', borderRadius: '4px', border: '1px solid rgba(255, 235, 59, 0.3)', fontSize: '0.85rem', color: '#ccc', maxWidth: '550px', margin: '15px auto' }}>
+                            <div style={{ color: '#ffeb3b', fontWeight: 'bold', marginBottom: '4px', textAlign: 'center' }}>⚠️ AUDITORÍA FORENSE: REGLA 5X UNIFICADA</div>
+                            <div style={{ textAlign: 'center', marginBottom: '8px', color: '#fff' }}>
+                                Todas las apuestas externas (Simples, Docenas y Columnas) requieren <strong>5 unidades</strong>.
                             </div>
                             <div style={{ lineHeight: '1.4', textAlign: 'justify' }}>
-                                <strong>¿Por qué?</strong> Una densidad alta (ej. 5/12) indica una concentración masiva de atributos.
+                                <strong>Análisis de Valor:</strong> Bajo esta regla, las Docenas y Columnas con alta densidad (ej. 8/12) son superiores a las Suertes Sencillas (Rojo/Par).
                                 <br />
                                 <span style={{ color: '#81c784', display: 'block', marginTop: '5px', textAlign: 'center' }}>
-                                    <em>Al apostar aquí, buscas capturar coincidencias superpuestas (Columna + Color/Paridad) en una sola jugada.</em>
+                                    <em>¡Busca la máxima concentración de números por el mismo costo de 5 fichas!</em>
                                 </span>
                             </div>
                         </div>

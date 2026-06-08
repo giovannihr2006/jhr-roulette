@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { useFinancialStore } from '../logic/FinancialSimulator'
 import { soundManager } from '../utils/SoundManager'
 import { BETTING_STRATEGIES } from '../logic/BettingStrategies'
-import { LIMITS, getBetType } from '../config/GameLimits'
+import { LIMITS } from '../config/GameLimits'
 import { getNeighbours } from '../utils/rouletteUtils' // NEW
 import { useToastStore } from '../logic/ToastStore'
 import { calculateRisk } from '../utils/BetValidator'
+import { optimizeBets, getBetType } from '../logic/RouletteUtils'
 
 export const useRouletteLogic = ({
     currentBets,
@@ -28,10 +29,18 @@ export const useRouletteLogic = ({
         if (isSpinning) return
 
         const limits = LIMITS[gameMode] || LIMITS['REAL']
+        const betType = getBetType(betId)
 
-        // 1. Min Bet
-        if (selectedChip < limits.MIN_BET) {
-            addToast(`Mínimo de apuesta es ${limits.MIN_BET}`, 'error')
+        // 1. Min Bet Logic (Standard vs Outside Multiplier)
+        const isOutside = betType === 'SIMPLE' || betType === 'DOZEN'
+        const effectiveMin = isOutside ? (limits.MIN_BET * 5) : limits.MIN_BET
+
+        if (selectedChip < effectiveMin) {
+            if (isOutside) {
+                addToast(`Mínimo para apuestas de suertes (Simples/Docenas) es de ${effectiveMin} fichas`, 'error')
+            } else {
+                addToast(`Mínimo de apuesta es ${limits.MIN_BET}`, 'error')
+            }
             return
         }
 
@@ -57,7 +66,6 @@ export const useRouletteLogic = ({
         }
 
         // Exec Store Action
-        const betType = getBetType(betId)
         const currentOnSpot = currentBets[betId] || 0
         const result = placeBet(selectedChip, betType, currentOnSpot)
 
@@ -80,16 +88,32 @@ export const useRouletteLogic = ({
     }
 
     const handleBatchBets = (betsToPlace, chipValue) => {
-        if (isSpinning) return { success: false }
+        if (isSpinning) return
+
+        // VALIDATION: Check Minimums for Batch
+        const limits = LIMITS[gameMode] || LIMITS['REAL']
+        for (const betId of betsToPlace) {
+            const betType = getBetType(betId)
+            const isOutside = betType === 'SIMPLE' || betType === 'DOZEN'
+            const effectiveMin = isOutside ? (limits.MIN_BET * 5) : limits.MIN_BET
+
+            if (chipValue < effectiveMin) {
+                if (isOutside) {
+                    addToast(`Ajuste su ficha: Mínimo para apuestas de suertes es ${effectiveMin}`, 'error')
+                } else {
+                    addToast(`Ajuste su ficha: Mínimo de apuesta es ${limits.MIN_BET}`, 'error')
+                }
+                return false
+            }
+        }
+
         const totalCost = betsToPlace.length * chipValue
         const result = placeBet(totalCost, 'BATCH')
 
         if (!result.success) {
             if (result.error === 'INSUFFICIENT_FUNDS') {
-                // Return specific error for UI handling (Reload Modal)
-                return { success: false, error: 'INSUFFICIENT_FUNDS' }
+                return { success: false, error: 'INSUFFICIENT_FUNDS', cost: totalCost }
             }
-            addToast(`Saldo insuficiente ($${totalCost})`, 'error')
             return { success: false, error: result.error }
         }
 
@@ -106,7 +130,7 @@ export const useRouletteLogic = ({
             return next
         })
         setBetHistory(prev => [...prev, { bets: newBatch, totalCost }])
-        return { success: true }
+        return true
     }
 
     const handleRepeat = () => {
@@ -181,8 +205,9 @@ export const useRouletteLogic = ({
 
     const handleNeighborBet = (number, count, chipValue) => {
         if (isSpinning) return
-        const neighbors = getNeighbours(number, count)
-        handleBatchBets(neighbors, chipValue)
+        const neighbors = getNeighbours(number, count).map(n => parseInt(n))
+        const optimized = optimizeBets(neighbors)
+        return handleBatchBets(optimized, chipValue)
     }
 
     return {
@@ -195,4 +220,3 @@ export const useRouletteLogic = ({
         handleNeighborBet // NEW
     }
 }
-

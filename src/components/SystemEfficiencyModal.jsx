@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { OFFSETS_0_36 } from '../logic/RouletteUtils';
 
 // --- LOGIC ENGINE (Ported & Enhanced for Bet Placement) ---
 const WHEEL_ORDER = [
@@ -40,45 +41,83 @@ const generateBets = () => {
   for (let n = 1; n <= 31; n += 3) {
     bets.push({ type: 'LINE', cost: 1, nums: [n, n + 1, n + 2, n + 3, n + 4, n + 5], id: `LINE_${n}` });
   }
+
+  // 7. Outside Bets (Rule 5x)
+  const REDS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+  const COL1 = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34];
+  const COL2 = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35];
+  const COL3 = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36];
+
+  bets.push({ type: 'OUT', cost: 5, nums: REDS, id: 'RED' });
+  bets.push({ type: 'OUT', cost: 5, nums: WHEEL_ORDER.filter(n => n !== 0 && !REDS.includes(n)), id: 'BLACK' });
+  bets.push({ type: 'OUT', cost: 5, nums: WHEEL_ORDER.filter(n => n !== 0 && n % 2 === 0), id: 'EVEN' });
+  bets.push({ type: 'OUT', cost: 5, nums: WHEEL_ORDER.filter(n => n !== 0 && n % 2 !== 0), id: 'ODD' });
+  bets.push({ type: 'OUT', cost: 5, nums: WHEEL_ORDER.filter(n => n >= 1 && n <= 18), id: 'LOW' });
+  bets.push({ type: 'OUT', cost: 5, nums: WHEEL_ORDER.filter(n => n >= 19 && n <= 36), id: 'HIGH' });
+
+  bets.push({ type: 'OUT', cost: 5, nums: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], id: 'DOZ1' });
+  bets.push({ type: 'OUT', cost: 5, nums: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], id: 'DOZ2' });
+  bets.push({ type: 'OUT', cost: 5, nums: [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36], id: 'DOZ3' });
+
+  bets.push({ type: 'OUT', cost: 5, nums: COL1, id: 'COL1' });
+  bets.push({ type: 'OUT', cost: 5, nums: COL2, id: 'COL2' });
+  bets.push({ type: 'OUT', cost: 5, nums: COL3, id: 'COL3' });
+
   return bets;
 };
 
 const BETS = generateBets();
 
 const calculateMinCost = (requiredNums) => {
+  if (!requiredNums || requiredNums.length === 0) return { cost: 0, bets: [] };
   let remaining = new Set(requiredNums);
   let totalCost = 0;
   let chosenBets = [];
 
   while (remaining.size > 0) {
     let bestBet = null;
+    let bestEfficiency = Infinity; // Lower is better (Cost / Covered)
     let maxCovered = 0;
 
+    // Create a target set for strict containment audit
+    const targetSet = new Set(requiredNums);
+
     for (const bet of BETS) {
+      // STRICT GEOMETRIC AUDIT: Only allow a bet if 100% of its numbers are in targetSet
+      const isClean = bet.nums.every(n => targetSet.has(n));
+      if (!isClean) continue;
+
       let useful = 0;
-      let invalid = false;
       for (const n of bet.nums) {
         if (remaining.has(n)) useful++;
-        else invalid = true;
       }
-      if (invalid) continue; // Strict clean cover
-      if (useful > maxCovered) {
+
+      if (useful === 0) continue;
+
+      const efficiency = bet.cost / useful;
+      // TIE BREAKER:
+      // 1. Better efficiency (Cost / TargetCovered)
+      // 2. If equal, MINIMUM total coverage (nums.length) to avoid collateral disaster
+      // 3. If still equal, prefer higher coverage (to consolidate chips)
+      if (efficiency < bestEfficiency ||
+        (efficiency === bestEfficiency && bet.nums.length < (bestBet ? bestBet.nums.length : 99)) ||
+        (efficiency === bestEfficiency && bet.nums.length === (bestBet ? bestBet.nums.length : 99) && useful > maxCovered)) {
+        bestEfficiency = efficiency;
         maxCovered = useful;
         bestBet = bet;
       }
     }
 
-    if (bestBet) {
+    if (bestBet && bestEfficiency < 1) { // 1 is the cost of a Straight Up pleno
       totalCost += bestBet.cost;
       chosenBets.push(bestBet.id);
       for (const n of bestBet.nums) remaining.delete(n);
     } else {
-      if (remaining.size > 0) {
-        const arr = Array.from(remaining);
-        totalCost += arr.length;
-        arr.forEach(n => chosenBets.push(n.toString()));
-        remaining.clear();
-      }
+      // Step 3: Plenos (Remaining)
+      const arr = Array.from(remaining);
+      totalCost += arr.length;
+      arr.forEach(n => chosenBets.push(n.toString()));
+      remaining.clear();
     }
   }
   return { cost: totalCost, bets: chosenBets };
@@ -95,11 +134,16 @@ const getRelativeSectors = (centerNum) => {
     }
     return nums;
   };
+
+  // UNIFIED CRITERIA: [-3, +3] Global
+  let set = OFFSETS_0_36[centerNum];
+  if (!set) set = { n: [-3, 3], v: [-9, 9] }; // Fallback
+
   return {
-    nucleo: getSlice(-3, 3),
-    vecinos: getSlice(-8, 8),
-    tiers: getSlice(12, 23),
-    orphelins: [...getSlice(9, 11), ...getSlice(24, 28)]
+    nucleo: getSlice(set.n[0], set.n[1]),
+    vecinos: getSlice(set.v[0], set.v[1]),
+    tiers: getSlice(11, 22),
+    orphelins: [...getSlice(8, 10), ...getSlice(23, 27)]
   };
 };
 
@@ -124,26 +168,30 @@ const SystemEfficiencyModal = ({ onClose, onBatchBet, currentBets, selectedChip 
 
       results.push({
         sys: i,
-        // Nucleo (7 nums)
+        // Nucleo (Dynamic Coverage)
         cNucleo: resNucleo.cost,
-        dNucleo: (resNucleo.cost / 7).toFixed(3),
+        nNucleo: sectors.nucleo.length,
+        dNucleo: (resNucleo.cost / sectors.nucleo.length).toFixed(3),
         bNucleo: resNucleo.bets,
-        // Tiers (12 nums)
+        // Tiers
         cTiers: resTiers.cost,
-        dTiers: (resTiers.cost / 12).toFixed(3),
+        nTiers: sectors.tiers.length,
+        dTiers: (resTiers.cost / sectors.tiers.length).toFixed(3),
         bTiers: resTiers.bets,
-        // Orph (8 nums)
+        // Orphelins
         cOrph: resOrph.cost,
-        dOrph: (resOrph.cost / 8).toFixed(3),
+        nOrph: sectors.orphelins.length,
+        dOrph: (resOrph.cost / sectors.orphelins.length).toFixed(3),
         bOrph: resOrph.bets,
-        // Vecinos (17 nums)
+        // Vecinos
         cVecinos: resVecinos.cost,
-        dVecinos: (resVecinos.cost / 17).toFixed(3),
+        nVecinos: sectors.vecinos.length,
+        dVecinos: (resVecinos.cost / sectors.vecinos.length).toFixed(3),
         bVecinos: resVecinos.bets,
-        // Total (Complete System - All 37 Numbers)
+        // Total
         total,
         dTotal,
-        bTotal, // All bets combined
+        bTotal,
         ratio: dTotal
       });
     }
@@ -179,7 +227,7 @@ const SystemEfficiencyModal = ({ onClose, onBatchBet, currentBets, selectedChip 
   // Check if a specific sector has chips on the table
   const isSectorActive = (betIds) => {
     if (!currentBets || !betIds) return false;
-    // Strictness: Are ALL bets present? Or ANY? 
+    // Strictness: Are ALL bets present? Or ANY?
     // "MIENTRAS TENGA FICHAS" implies even one makes it active.
     // Let's go with ANY for visibility, but ALL is often better for checking "Is this system ON?".
     // Given the dynamic nature, check efficiently:
@@ -200,15 +248,23 @@ const SystemEfficiencyModal = ({ onClose, onBatchBet, currentBets, selectedChip 
     }
   };
 
-  const renderCell = (cost, decimal, bets, color, denominator) => {
+  const renderCell = (cost, decimal, bets, color, targetDenominator) => {
     const active = isSectorActive(bets);
     const isElite = cost <= 4;
+
+    // CALCULATIONS FOR ALPHA
+    const percentage = ((targetDenominator / 37) * 100).toFixed(1);
+    const alpha = (parseFloat(percentage) * parseFloat(decimal)).toFixed(1);
+
+    // Thresholds for Alpha highlighting
+    const isPowerful = parseFloat(alpha) > 20.0;
+    const isBalanced = parseFloat(alpha) >= 15.0 && parseFloat(alpha) <= 20.0;
 
     return (
       <td
         onClick={() => handleSectorClick(bets)}
         style={{
-          padding: '2px 4px',
+          padding: '4px 6px', // Slightly more padding
           textAlign: 'center',
           color: active ? '#fff' : isElite ? '#0ff' : color,
           fontWeight: isElite ? 'bold' : 'normal',
@@ -219,13 +275,28 @@ const SystemEfficiencyModal = ({ onClose, onBatchBet, currentBets, selectedChip 
             : isElite ? 'rgba(0, 255, 255, 0.05)' : 'transparent',
           borderRadius: '4px',
           border: active ? `1px solid ${color}` : isElite ? '1px dashed rgba(0,255,255,0.3)' : 'none',
-          transition: 'all 0.2s'
+          transition: 'all 0.2s',
+          lineHeight: '1.2'
         }}
-        title={`Click to place bets${isElite ? ' (Elite Efficiency)' : ''}`}
+        title={`Click to place bets\nAlpha Index: ${alpha}`}
       >
         {isElite && <span style={{ marginRight: '4px', fontSize: '0.9em' }}>💎</span>}
-        <span style={{ fontSize: '1.2em' }}>{cost}/{denominator}</span>
-        <div style={{ fontSize: '0.7em', color: active ? '#eee' : '#bbb', marginTop: '0px' }}>{decimal}</div>
+        <div style={{ fontSize: '0.95em', fontWeight: 'bold' }}>[{cost}F|{targetDenominator}N]</div>
+        <div style={{ fontSize: '0.85em', color: active ? '#eee' : '#bbb' }}>
+          {decimal} <span style={{ color: active ? '#fff' : color }}>{percentage}%</span>
+        </div>
+
+        {/* ALPHA INDEX DISPLAY */}
+        <div style={{
+          fontSize: '0.9em',
+          marginTop: '2px',
+          color: isPowerful ? '#00e676' : (isBalanced ? '#ffd700' : '#888'),
+          fontWeight: 'bold',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          paddingTop: '2px'
+        }}>
+          α {alpha}
+        </div>
       </td>
     );
   };
@@ -304,10 +375,10 @@ const SystemEfficiencyModal = ({ onClose, onBatchBet, currentBets, selectedChip 
                       SYS {row.sys}
                     </td>
                     {renderCell(row.total, row.dTotal, row.bTotal, '#0f0', 37)}
-                    {renderCell(row.cNucleo, row.dNucleo, row.bNucleo, '#ffd700', 7)}
-                    {renderCell(row.cTiers, row.dTiers, row.bTiers, '#e57373', 12)}
-                    {renderCell(row.cOrph, row.dOrph, row.bOrph, '#64b5f6', 8)}
-                    {renderCell(row.cVecinos, row.dVecinos, row.bVecinos, '#81c784', 17)}
+                    {renderCell(row.cNucleo, row.dNucleo, row.bNucleo, '#ffd700', row.nNucleo)}
+                    {renderCell(row.cTiers, row.dTiers, row.bTiers, '#e57373', row.nTiers)}
+                    {renderCell(row.cOrph, row.dOrph, row.bOrph, '#64b5f6', row.nOrph)}
+                    {renderCell(row.cVecinos, row.dVecinos, row.bVecinos, '#81c784', row.nVecinos)}
                   </tr>
                 );
               })}

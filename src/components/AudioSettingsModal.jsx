@@ -3,11 +3,11 @@ import { soundManager } from '../utils/SoundManager'
 import { dealer, PERSONALITIES } from '../utils/DealerVoice'
 
 export const AudioSettingsModal = ({ onClose }) => {
-    // Local State reflecting System State
+    // Local State reflecting System State (persisted volume configs)
     const [volumes, setVolumes] = useState({
-        master: soundManager.masterGain?.gain.value || 0.5,
-        sfx: soundManager.sfxGain?.gain.value || 1.0,
-        ambience: soundManager.ambienceGain?.gain.value || 0.8
+        master: soundManager.masterVol !== undefined ? soundManager.masterVol : 0.4,
+        sfx: soundManager.sfxVol !== undefined ? soundManager.sfxVol : 1.0,
+        ambience: soundManager.ambienceVol !== undefined ? soundManager.ambienceVol : 0.5
     })
 
     const [dealerConfig, setDealerConfig] = useState({

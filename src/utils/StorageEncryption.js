@@ -167,7 +167,7 @@ export const migrateToEncrypted = (keys) => {
             if (item && !item.startsWith('ENC:')) {
                 const value = JSON.parse(item)
                 secureStorage.setItem(key, value)
-                console.log(`[Migration] Encrypted: ${key}`)
+                // console.log(`[Migration] Encrypted: ${key}`)
             }
         } catch (error) {
             console.error(`[Migration] Error migrating ${key}:`, error)

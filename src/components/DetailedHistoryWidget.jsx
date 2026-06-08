@@ -1,6 +1,7 @@
 import React from 'react'
+import { ForensicBadge } from './ForensicBadge'
 
-export const DetailedHistoryWidget = ({ onClick }) => {
+export const DetailedHistoryWidget = ({ onClick, onShowTutorial }) => {
     return (
         <div
             onClick={onClick}
@@ -14,18 +15,40 @@ export const DetailedHistoryWidget = ({ onClick }) => {
                 color: '#e0e0e0',
                 fontFamily: 'Roboto, sans-serif',
                 width: '100%', height: '100%',
+                boxSizing: 'border-box',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer',
-                padding: '10px'
+                padding: '10px',
+                position: 'relative'
             }}
         >
-            <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📜</div>
+            <button
+                onClick={(e) => { e.stopPropagation(); onShowTutorial(); }}
+                title="Ver Justificación Forense (E21)"
+                style={{
+                    position: 'absolute',
+                    top: '5px', right: '5px',
+                    width: '18px', height: '18px',
+                    borderRadius: '50%',
+                    border: '1px solid #d4af37',
+                    background: 'rgba(0,0,0,0.5)',
+                    color: '#d4af37',
+                    fontSize: '0.6rem',
+                    cursor: 'help',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+            >
+                ⚖
+            </button>
+            <div style={{ fontSize: '1.2rem', marginBottom: '2px' }}>📜</div>
             <div style={{
-                fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase',
-                textAlign: 'center', lineHeight: '1.2'
+                fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase',
+                textAlign: 'center', lineHeight: '1.2',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'
             }}>
-                VER HISTORIAL<br />DETALLADO
+                <ForensicBadge id="detailedHistory" />
+                HISTORIAL DETALLADO
             </div>
         </div>
     )

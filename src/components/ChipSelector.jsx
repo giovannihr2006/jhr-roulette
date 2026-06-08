@@ -25,7 +25,7 @@ export const ChipSelector = ({ selectedChip, onSelectChip }) => {
                         borderRadius: '50%',
                         background: getChipGradient(value),
                         border: selectedChip === value
-                            ? '8px solid #fff'
+                            ? '3px solid #fff'
                             : '2px dashed rgba(255,255,255,0.5)',
                         boxShadow: selectedChip === value
                             ? '0 0 15px rgba(255,255,255,0.8), inset 0 0 10px rgba(0,0,0,0.5)'
@@ -52,7 +52,7 @@ const getChipGradient = (value) => {
         case 5: return 'radial-gradient(circle at 30% 30%, #d32f2f, #9a0007)' // Red
         case 25: return 'radial-gradient(circle at 30% 30%, #388e3c, #1b5e20)' // Green
         case 100: return 'radial-gradient(circle at 30% 30%, #1976d2, #0d47a1)' // Blue? Convention usually Black for 100, checking... standard is Black/100. Let's make it Black.
-        // Actually 100 is often Black. 
+        // Actually 100 is often Black.
         case 100: return 'radial-gradient(circle at 30% 30%, #222, #000)' // Black
         case 500: return 'radial-gradient(circle at 30% 30%, #9c27b0, #6a1b9a)' // Purple
         case 1000: return 'radial-gradient(circle at 30% 30%, #ffeb3b, #fbc02d)' // Gold
