@@ -20,7 +20,7 @@ exports[`ChipSelector > renders correctly with chip 1 selected 1`] = `
     25
   </div>
   <div
-    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(25, 118, 210), rgb(13, 71, 161)); border: 2px dashed rgba(255, 255, 255, 0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
+    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(34, 34, 34), rgb(0, 0, 0)); border: 2px dashed rgba(255, 255, 255, 0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
   >
     100
   </div>
@@ -57,7 +57,7 @@ exports[`ChipSelector > renders correctly with chip 100 selected 1`] = `
     25
   </div>
   <div
-    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(25, 118, 210), rgb(13, 71, 161)); border: 3px solid rgb(255, 255, 255); box-shadow: 0 0 15px rgba(255,255,255,0.8), inset 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1.15) translateY(-5px); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
+    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(34, 34, 34), rgb(0, 0, 0)); border: 3px solid rgb(255, 255, 255); box-shadow: 0 0 15px rgba(255,255,255,0.8), inset 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1.15) translateY(-5px); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
   >
     100
   </div>
@@ -94,7 +94,7 @@ exports[`ChipSelector > renders correctly with chip 1000 selected 1`] = `
     25
   </div>
   <div
-    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(25, 118, 210), rgb(13, 71, 161)); border: 2px dashed rgba(255, 255, 255, 0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
+    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(34, 34, 34), rgb(0, 0, 0)); border: 2px dashed rgba(255, 255, 255, 0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
   >
     100
   </div>
@@ -131,7 +131,7 @@ exports[`ChipSelector > renders correctly with no chip selected 1`] = `
     25
   </div>
   <div
-    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(25, 118, 210), rgb(13, 71, 161)); border: 2px dashed rgba(255, 255, 255, 0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
+    style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgb(34, 34, 34), rgb(0, 0, 0)); border: 2px dashed rgba(255, 255, 255, 0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-weight: bold; font-size: 14px; cursor: pointer; transform: scale(1); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
   >
     100
   </div>
