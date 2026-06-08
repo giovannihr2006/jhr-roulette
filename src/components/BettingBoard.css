@@ -1,5 +1,6 @@
 .board-container {
     display: flex;
+    flex-direction: column;
     justify-content: flex-start;
     /* Changed from center to allow right-side cropping without left clipping */
     align-items: center;
@@ -21,6 +22,77 @@
     /* Prevent squashing, force cropping */
     width: max-content;
     margin-top: 30px;
+}
+
+.maturity-filter-panel {
+    width: 100%;
+    max-width: 1113px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 12px;
+    padding: 6px 8px;
+    margin: 0 0 8px;
+    border: 1px solid rgba(255, 215, 0, 0.18);
+    border-radius: 6px;
+    background: rgba(8, 8, 8, 0.82);
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.06);
+}
+
+.maturity-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.maturity-filter-chip {
+    min-height: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cfcfcf;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.maturity-filter-chip:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    color: #ffffff;
+}
+
+.maturity-filter-chip.active {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.18);
+    color: #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.maturity-filter-chip.rank-1.active {
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+.maturity-filter-chip.rank-2.active {
+    border-color: #ff8c00;
+    color: #ffb347;
+}
+
+.maturity-filter-chip.rank-3.active {
+    border-color: #ff4500;
+    color: #ff8a50;
+}
+
+.maturity-filter-chip.rank-4.active {
+    border-color: #ff6b6b;
+    color: #ff9a9a;
 }
 
 /* ... (Existing code) ... */

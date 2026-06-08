@@ -18,6 +18,32 @@ const NUMBERS = [
 
 const REDS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
 const MATURITY_COLORS = ['#ffd700', '#ff8c00', '#ff4500', '#ff6b6b']
+const DEFAULT_MATURITY_TYPES = {
+    street: true,
+    corner: true,
+    line: true,
+    dozen: true,
+    column: true
+}
+const DEFAULT_MATURITY_RANKS = {
+    0: true,
+    1: true,
+    2: true,
+    3: true
+}
+const MATURITY_TYPE_OPTIONS = [
+    { key: 'street', label: 'Calles' },
+    { key: 'corner', label: 'Cuadros' },
+    { key: 'line', label: 'Lineas 6' },
+    { key: 'dozen', label: 'Docenas' },
+    { key: 'column', label: 'Columnas' }
+]
+const MATURITY_RANK_OPTIONS = [
+    { key: 0, label: '1' },
+    { key: 1, label: '2' },
+    { key: 2, label: '3' },
+    { key: 3, label: '4' }
+]
 
 const DOZEN_GROUPS = [
     { id: 'DOZ1', label: '1st 12', numbers: NUMBERS.filter(n => n >= 1 && n <= 12) },
@@ -258,6 +284,28 @@ export const BettingBoard = ({
     const [showMethodsTable, setShowMethodsTable] = React.useState(false) // NEW: Methods Table Modal
     const [isNeighborMode, setIsNeighborMode] = React.useState(false) // NEW: Global Neighbor Mode
     const [hoveredTarget, setHoveredTarget] = React.useState(false) // NEW: Tooltip state
+    const [maturityTypes, setMaturityTypes] = React.useState(DEFAULT_MATURITY_TYPES)
+    const [maturityRanks, setMaturityRanks] = React.useState(DEFAULT_MATURITY_RANKS)
+
+    const toggleMaturityType = (key) => {
+        setMaturityTypes(current => ({ ...current, [key]: !current[key] }))
+    }
+
+    const toggleMaturityRank = (key) => {
+        setMaturityRanks(current => ({ ...current, [key]: !current[key] }))
+    }
+
+    const setAllMaturityTypes = (value) => {
+        setMaturityTypes(Object.fromEntries(MATURITY_TYPE_OPTIONS.map(option => [option.key, value])))
+    }
+
+    const setAllMaturityRanks = (value) => {
+        setMaturityRanks(Object.fromEntries(MATURITY_RANK_OPTIONS.map(option => [option.key, value])))
+    }
+
+    const isMaturityVisible = (type, rank) => (
+        rank !== -1 && Boolean(maturityTypes[type]) && Boolean(maturityRanks[rank])
+    )
 
     // State for Dynamic Rows
     // OPTIMIZED DEFAULT: Cost Effective Symmetric Nucleos (23, 26, 0, 3)
@@ -903,7 +951,8 @@ export const BettingBoard = ({
                     const nums = [n1, n2, n3, n4].sort((a, b) => a - b)
                     const id = `CORNER_${nums.join('_')}`
 
-                    const matureRank = matureCorners.findIndex(cor => cor.id === id && cor.misses > 0)
+                    const rawMatureRank = matureCorners.findIndex(cor => cor.id === id && cor.misses > 0)
+                    const matureRank = isMaturityVisible('corner', rawMatureRank) ? rawMatureRank : -1
                     const hasBet = bets[id] || bets[getCanonicalBetId(id)]
 
                     const cornerStyle = {
@@ -977,7 +1026,8 @@ export const BettingBoard = ({
             if (nBot && nTop) {
                 // --- STREET BETS (Standard) ---
                 const streetId = `STREET_${nBot}`
-                const matureRank = matureStreets.findIndex(s => s.id === streetId && s.misses > 0)
+                const rawMatureRank = matureStreets.findIndex(s => s.id === streetId && s.misses > 0)
+                const matureRank = isMaturityVisible('street', rawMatureRank) ? rawMatureRank : -1
                 spots.push(
                     <div key={`street_${streetId}`} className="hotspot street"
                         style={{
@@ -1040,7 +1090,8 @@ export const BettingBoard = ({
                     const nextBot = getNum(2, c + 1)
                     if (nextBot) {
                         const lineId = `LINE_${nBot}_${nextBot}` // ID Format: LINE_1_4
-                        const matureRank = matureLines.findIndex(l => l.id === lineId && l.misses > 0)
+                        const rawMatureRank = matureLines.findIndex(l => l.id === lineId && l.misses > 0)
+                        const matureRank = isMaturityVisible('line', rawMatureRank) ? rawMatureRank : -1
                         const hasBet = bets[lineId] || bets[getCanonicalBetId(lineId)]
 
                         const lineStyle = {
@@ -1139,6 +1190,46 @@ export const BettingBoard = ({
             style={{ padding: '0', justifyContent: 'flex-start', alignItems: 'center', width: '100%', overflow: 'visible' }}
             onMouseLeave={handleGridLeave} // FAILSAFE TRIGGER
         >
+            <div className="maturity-filter-panel" onMouseLeave={() => setHoveredBet(null)}>
+                <div className="maturity-filter-group" aria-label="Tipos de madurez">
+                    <button
+                        type="button"
+                        className={`maturity-filter-chip ${MATURITY_TYPE_OPTIONS.every(option => maturityTypes[option.key]) ? 'active' : ''}`}
+                        onClick={() => setAllMaturityTypes(!MATURITY_TYPE_OPTIONS.every(option => maturityTypes[option.key]))}
+                    >
+                        Tipos
+                    </button>
+                    {MATURITY_TYPE_OPTIONS.map(option => (
+                        <button
+                            key={option.key}
+                            type="button"
+                            className={`maturity-filter-chip ${maturityTypes[option.key] ? 'active' : ''}`}
+                            onClick={() => toggleMaturityType(option.key)}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+                <div className="maturity-filter-group" aria-label="Ranking de madurez">
+                    <button
+                        type="button"
+                        className={`maturity-filter-chip ${MATURITY_RANK_OPTIONS.every(option => maturityRanks[option.key]) ? 'active' : ''}`}
+                        onClick={() => setAllMaturityRanks(!MATURITY_RANK_OPTIONS.every(option => maturityRanks[option.key]))}
+                    >
+                        Ranking
+                    </button>
+                    {MATURITY_RANK_OPTIONS.map(option => (
+                        <button
+                            key={option.key}
+                            type="button"
+                            className={`maturity-filter-chip rank-${option.key + 1} ${maturityRanks[option.key] ? 'active' : ''}`}
+                            onClick={() => toggleMaturityRank(option.key)}
+                        >
+                            M{option.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
             <div className="betting-grid" style={{ width: 'max-content', flexShrink: 0, position: 'relative' }}>
                 {/* E2 IDENTIFICATION LABEL */}
                 {/* E2 IDENTIFICATION LABEL REMOVED - Now in CasinoTable.jsx */}
@@ -1212,7 +1303,10 @@ export const BettingBoard = ({
                         }
 
                         // Check if this number is in one of the top 4 mature streets
-                        const matureStreetForNum = matureStreets.find(s => s.numbers.includes(num) && s.misses > 0)
+                        const matureStreetForNum = maturityTypes.street ? matureStreets.find(s => {
+                            const rankIdx = matureStreets.indexOf(s)
+                            return s.numbers.includes(num) && s.misses > 0 && Boolean(maturityRanks[rankIdx])
+                        }) : null
                         let matureClass = ''
                         if (matureStreetForNum) {
                             const rankIdx = matureStreets.indexOf(matureStreetForNum)
@@ -1223,7 +1317,10 @@ export const BettingBoard = ({
                         }
 
                         // Check if this number is in one of the top 4 mature corners
-                        const matureCornerForNum = matureCorners.find(c => c.numbers.includes(num) && c.misses > 0)
+                        const matureCornerForNum = maturityTypes.corner ? matureCorners.find(c => {
+                            const rankIdx = matureCorners.indexOf(c)
+                            return c.numbers.includes(num) && c.misses > 0 && Boolean(maturityRanks[rankIdx])
+                        }) : null
                         let matureCornerClass = ''
                         if (matureCornerForNum) {
                             const rankIdx = matureCorners.indexOf(matureCornerForNum)
@@ -1234,7 +1331,10 @@ export const BettingBoard = ({
                         }
 
                         // Check if this number is in one of the top 4 mature lines (seisenas)
-                        const matureLineForNum = matureLines.find(l => l.numbers.includes(num) && l.misses > 0)
+                        const matureLineForNum = maturityTypes.line ? matureLines.find(l => {
+                            const rankIdx = matureLines.indexOf(l)
+                            return l.numbers.includes(num) && l.misses > 0 && Boolean(maturityRanks[rankIdx])
+                        }) : null
                         let matureLineClass = ''
                         if (matureLineForNum) {
                             const rankIdx = matureLines.indexOf(matureLineForNum)
@@ -1280,7 +1380,8 @@ export const BettingBoard = ({
                 {/* 3. COLUMNS */}
                 <div className="columns-block">
                     {COLUMN_GROUPS.map(column => {
-                        const matureRank = matureColumns.findIndex(entry => entry.id === column.id && entry.misses > 0)
+                        const rawMatureRank = matureColumns.findIndex(entry => entry.id === column.id && entry.misses > 0)
+                        const matureRank = isMaturityVisible('column', rawMatureRank) ? rawMatureRank : -1
                         const matureEntry = matureRank !== -1 ? matureColumns[matureRank] : null
                         return (
                             <div key={column.id}
@@ -1305,7 +1406,8 @@ export const BettingBoard = ({
                 {/* 4. DOZENS */}
                 <div className="outside-row dozens-row">
                     {DOZEN_GROUPS.map(dozen => {
-                        const matureRank = matureDozens.findIndex(entry => entry.id === dozen.id && entry.misses > 0)
+                        const rawMatureRank = matureDozens.findIndex(entry => entry.id === dozen.id && entry.misses > 0)
+                        const matureRank = isMaturityVisible('dozen', rawMatureRank) ? rawMatureRank : -1
                         const matureEntry = matureRank !== -1 ? matureDozens[matureRank] : null
                         return (
                             <div key={dozen.id}
