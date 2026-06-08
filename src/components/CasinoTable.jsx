@@ -92,10 +92,17 @@ export const CasinoTable = () => {
     const [isLiveMode, setIsLiveMode] = useState(false)
 
     const handleManualWin = (number) => {
-        // Resolve round immediately without spinning
-        // Need to ensure sound plays
-        soundManager.playWin(0) // Generic win sound or specific?
-        resolveRound(number)
+        const totalWinnings = calculateWinnings(number, currentBets)
+        const roundBets = { ...currentBets }
+
+        if (totalWinnings > 0) {
+            soundManager.playWin(totalWinnings)
+        }
+
+        setLastWin(number)
+        resolveRound(totalWinnings, number, roundBets)
+        setCurrentBets({})
+        setBetHistory([])
     }
 
 
@@ -346,6 +353,7 @@ export const CasinoTable = () => {
         ballResetKey,
         showBall,
         lastWin,
+        setLastWin,
         lastWinAmount,
         animState
     } = useRouletteGame({

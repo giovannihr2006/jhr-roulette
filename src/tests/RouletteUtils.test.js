@@ -16,6 +16,7 @@ import {
     ALL_CORNERS,
     ALL_LINES
 } from '../logic/RouletteUtils'
+import { calculateRisk } from '../utils/BetValidator'
 
 // ============================================
 // CONSTANTES DE REFERENCIA
@@ -438,6 +439,39 @@ describe('calculateMaxPotentialWin', () => {
     })
 })
 
+
+// ============================================
+// SISTEMAS DINAMICOS Y RIESGO
+// ============================================
+describe('Sistemas dinamicos y riesgo', () => {
+    it('HUERFANOS dinamicos debe pagar todos los numeros cubiertos', () => {
+        for (let center = 0; center <= 36; center++) {
+            const betId = `HUERFANOS_${center}`
+            const bets = { [betId]: 100 }
+            const covered = getCoveredNumbers(bets)
+            const paid = ROULETTE_NUMBERS.filter(num => calculateWinnings(num, bets) > 0)
+
+            expect(paid.sort((a, b) => a - b)).toEqual(covered.sort((a, b) => a - b))
+        }
+    })
+
+    it('calculateRisk debe coincidir con el mayor neto de calculateWinnings', () => {
+        const cases = [
+            { ZERO: 100 },
+            { VOISINS: 100 },
+            { TERCIO_0: 100 },
+            { HUERFANOS_26: 100 },
+            { 17: 100, RED: 500 }
+        ]
+
+        cases.forEach(bets => {
+            const totalBet = Object.values(bets).reduce((sum, amount) => sum + amount, 0)
+            const expectedMaxNet = Math.max(...ROULETTE_NUMBERS.map(num => calculateWinnings(num, bets) - totalBet))
+
+            expect(calculateRisk(bets).maxWin).toBe(expectedMaxNet)
+        })
+    })
+})
 // ============================================
 // EDGE CASES
 // ============================================
