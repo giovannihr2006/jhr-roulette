@@ -1,0 +1,220 @@
+{
+    "title": {
+        "x": 700,
+        "y": 10,
+        "w": 542,
+        "h": 83,
+        "scale": 1
+    },
+    "layoutControls": {
+        "x": 80,
+        "y": 20,
+        "w": "auto",
+        "h": "auto"
+    },
+    "forensicManualButton": {
+        "x": 1300,
+        "y": 20,
+        "w": "auto",
+        "h": "auto"
+    },
+    "fullscreenIcon": {
+        "x": 1500,
+        "y": 20,
+        "w": 180,
+        "h": 40
+    },
+    "alphaWidget": {
+        "x": 20,
+        "y": 100,
+        "w": "auto",
+        "h": "auto"
+    },
+    "internalScannerWidget": {
+        "x": 20,
+        "y": 280,
+        "w": "auto",
+        "h": "auto"
+    },
+    "methodsWidget": {
+        "x": 20,
+        "y": 480,
+        "w": "auto",
+        "h": "auto"
+    },
+    "systemsWidget": {
+        "x": 20,
+        "y": 700,
+        "w": "auto",
+        "h": "auto"
+    },
+    "wheel": {
+        "x": 400,
+        "y": 120,
+        "w": 600,
+        "h": 600
+    },
+    "board": {
+        "x": 1050,
+        "y": 150,
+        "w": "auto",
+        "h": "auto",
+        "scale": 1
+    },
+    "racetrack": {
+        "x": 450,
+        "y": 750,
+        "w": "auto",
+        "h": "auto",
+        "scale": 1
+    },
+    "banking": {
+        "x": 1800,
+        "y": 40,
+        "w": "auto",
+        "h": "auto",
+        "scale": 1
+    },
+    "auditTowerWidget": {
+        "x": 1580,
+        "y": 40,
+        "w": "auto",
+        "h": "auto"
+    },
+    "statistics": {
+        "x": 1800,
+        "y": 400,
+        "w": 312,
+        "h": 800
+    },
+    "history": {
+        "x": 1580,
+        "y": 600,
+        "w": 320,
+        "h": 268
+    },
+    "controls": {
+        "x": 800,
+        "y": 900,
+        "w": 571,
+        "h": 147
+    },
+    "chips": {
+        "x": 1400,
+        "y": 900,
+        "w": 302,
+        "h": 146
+    },
+    "win": {
+        "x": 1050,
+        "y": 50
+    },
+    "paytable": {
+        "x": 250,
+        "y": 40
+    },
+    "clock": {
+        "x": 20,
+        "y": 920,
+        "w": 317,
+        "h": 134,
+        "scale": 0.9
+    },
+    "telemetry": {
+        "x": 40,
+        "y": 1050,
+        "w": 520,
+        "h": 252
+    },
+    "activeBets": {
+        "x": 450,
+        "y": 400,
+        "w": 353,
+        "h": 300,
+        "scale": 1
+    },
+    "dollarIcon": {
+        "x": 350,
+        "y": 100,
+        "w": "auto",
+        "h": "auto"
+    },
+    "sigmaIcon": {
+        "x": 350,
+        "y": 150,
+        "w": "auto",
+        "h": "auto"
+    },
+    "methodsIcon": {
+        "x": 350,
+        "y": 200,
+        "w": "auto",
+        "h": "auto"
+    },
+    "scannerIcon": {
+        "x": 350,
+        "y": 250,
+        "w": "auto",
+        "h": "auto"
+    },
+    "activeBetsIcon": {
+        "x": 350,
+        "y": 300,
+        "w": "auto",
+        "h": "auto"
+    },
+    "opportunity": {
+        "x": 1450,
+        "y": 800,
+        "w": 318,
+        "h": 169
+    },
+    "graphLauncher": {
+        "x": 900,
+        "y": 300,
+        "w": "auto",
+        "h": "auto"
+    },
+    "modeToggle": {
+        "x": 20,
+        "y": 20,
+        "w": 207,
+        "h": 50
+    },
+    "toolBox": {
+        "x": 240,
+        "y": 20,
+        "w": "auto",
+        "h": "auto"
+    },
+    "modeSwitch": {
+        "x": 662,
+        "y": 610,
+        "w": 233,
+        "h": 53
+    },
+    "timer": {
+        "x": 1410,
+        "y": 97,
+        "w": "auto",
+        "h": "auto"
+    },
+    "autoplay": {
+        "x": 801,
+        "y": 857,
+        "w": "auto",
+        "h": "auto"
+    },
+    "spinCounter": {
+        "x": 862,
+        "y": 952,
+        "w": 135,
+        "h": 50
+    },
+    "detailedHistory": {
+        "x": 40,
+        "y": 1200,
+        "w": "auto",
+        "h": "auto"
+    }
+}

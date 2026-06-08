@@ -38,9 +38,11 @@ preview_*/
 _backups/
 backups/
 temp_archive/
+ruleta antigravity/
 *.zip
 *.7z
 *.rar
+*.backup.*
 
 # Local agents, vaults, and private runtime state
 .agent/
@@ -59,6 +61,12 @@ android/app/build/
 android/build/
 android/.gradle/
 android/app/src/main/assets/public/
+
+# Generated analysis/runtime data
+data/logs/
+
+# Superseded local Electron entrypoint; use electron/main.cjs
+electron/main.js
 
 # Office/editor lock files
 ~$*
