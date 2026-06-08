@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {
@@ -16,7 +17,8 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5173,
+    port: 7777,
+    strictPort: true,
     open: 'chrome',
     host: true
   },
@@ -35,6 +37,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/tests/setup.js',
+    setupFiles: './src/tests/setup.js'
   }
 })
