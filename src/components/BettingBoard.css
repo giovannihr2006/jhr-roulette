@@ -21,7 +21,7 @@
     flex-shrink: 0;
     /* Prevent squashing, force cropping */
     width: max-content;
-    margin-top: 30px;
+    margin-top: 78px;
 }
 
 .maturity-filter-panel {
