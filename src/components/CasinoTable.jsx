@@ -1367,7 +1367,7 @@ export const CasinoTable = () => {
                             </div>
 
                             {/* Board */}
-                            <div style={{ width: '756px', height: '615px', flex: 'none', display: 'flex', alignItems: 'flex-start', overflow: 'visible', paddingTop: '40px', boxSizing: 'border-box' }}>
+                            <div style={{ width: '756px', height: '615px', flex: 'none', display: 'flex', alignItems: 'flex-start', overflow: 'visible', paddingTop: '24px', boxSizing: 'border-box' }}>
                                 <div style={{ transform: 'scale(0.88)', transformOrigin: 'left top', width: '860px' }}>
                                     <BettingBoard
                                         bets={currentBets}

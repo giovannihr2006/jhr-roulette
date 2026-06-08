@@ -9,6 +9,7 @@
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
+    position: relative;
     /* Ensure clean clipping */
 }
 
@@ -21,19 +22,23 @@
     flex-shrink: 0;
     /* Prevent squashing, force cropping */
     width: max-content;
-    margin-top: 78px;
+    margin-top: 56px;
 }
 
 .maturity-filter-panel {
-    width: 100%;
-    max-width: 1113px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 94%;
     box-sizing: border-box;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 8px 16px;
-    padding: 10px 12px;
+    padding: 8px 12px;
     margin: 0 0 8px;
     border: 1px solid rgba(255, 215, 0, 0.18);
     border-radius: 6px;
@@ -50,16 +55,16 @@
 }
 
 .maturity-filter-chip {
-    min-height: 38px;
-    min-width: 54px;
+    min-height: 32px;
+    min-width: 52px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 5px;
     background: rgba(255, 255, 255, 0.06);
     color: #cfcfcf;
-    font-size: 0.92rem;
+    font-size: 0.84rem;
     font-weight: 800;
     line-height: 1;
-    padding: 9px 13px;
+    padding: 7px 12px;
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
