@@ -124,6 +124,7 @@ import {
 export const CasinoTable = () => {
     const fileInputRef = useRef(null)
     const autoPlaySpinInFlightRef = useRef(false)
+    const addToast = useToastStore(state => state.addToast)
     // Rotation State
     // Game State (Refactored to Hook)
     // const isSpinning... removed
@@ -308,6 +309,13 @@ export const CasinoTable = () => {
             setMaxBalance(balance)
             setIsNewRecord(true)
 
+            if (autoPlayCount > 0) {
+                autoPlaySpinInFlightRef.current = false
+                setAutoPlayWaitingForBets(false)
+                setAutoPlayCount(0)
+                addToast("Record historico superado: jugadas programadas detenidas", "success")
+            }
+
             // Only show blocking modal if NOT in auto mode
             if (!smartAutoActive) {
                 setShowRecordModal(true)
@@ -327,7 +335,7 @@ export const CasinoTable = () => {
 
             setTimeout(() => setIsNewRecord(false), 3000)
         }
-    }, [balance, maxBalance])
+    }, [balance, maxBalance, autoPlayCount, smartAutoActive, addToast])
     // ----------------------------
 
 
@@ -775,8 +783,6 @@ export const CasinoTable = () => {
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [isSpinning, timerMode, handleSpin, handleClear, handleRepeat, handleDouble, handleUndo])
-
-    const addToast = useToastStore(state => state.addToast)
 
     const formatBalance = (creditValue) => {
         if (creditValue === undefined || creditValue === null || isNaN(creditValue)) return "$0.00"
