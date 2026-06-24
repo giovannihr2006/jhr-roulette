@@ -1,0 +1,913 @@
+.board-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* Changed from center to allow right-side cropping without left clipping */
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    /* Ensure clean clipping */
+}
+
+.betting-grid {
+    display: grid;
+    grid-template-columns: 50px repeat(12, 60px) 80px;
+    /* Last column widened to 80px for alignment */
+    grid-template-rows: 0px repeat(3, 64px) 48px 48px repeat(4, 72px);
+    gap: 2px;
+    flex-shrink: 0;
+    /* Prevent squashing, force cropping */
+    width: max-content;
+    margin-top: 8px;
+}
+
+.maturity-filter-panel {
+    position: relative;
+    margin: 4px auto 4px;
+    width: max-content;
+    max-width: 94%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 14px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 215, 0, 0.18);
+    border-radius: 6px;
+    background: rgba(8, 8, 8, 0.82);
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.06);
+}
+
+.maturity-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.maturity-filter-chip {
+    min-height: 28px;
+    min-width: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cfcfcf;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.maturity-filter-chip:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    color: #ffffff;
+}
+
+.maturity-filter-chip.active {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.18);
+    color: #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.maturity-filter-chip.rank-1.active {
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+.maturity-filter-chip.rank-2.active {
+    border-color: #ff8c00;
+    color: #ffb347;
+}
+
+.maturity-filter-chip.rank-3.active {
+    border-color: #ff4500;
+    color: #ff8a50;
+}
+
+.maturity-filter-chip.rank-4.active {
+    border-color: #ff6b6b;
+    color: #ff9a9a;
+}
+
+/* ... (Existing code) ... */
+
+/* EXTRA ROW 3 (Row 9) */
+.extra-row-3 {
+    grid-column: 2 / 14;
+    grid-row: 9;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* EXTRA ROW 4 (Row 10) */
+.extra-row-4 {
+    grid-column: 2 / 14;
+    grid-row: 10;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* ... (Existing code) ... */
+
+/* EXTRA ROW 2 (Row 8) */
+.extra-row-2 {
+    grid-column: 2 / 14;
+    grid-row: 8;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* EXTRA ROW 3 (Row 9) */
+.extra-row-3 {
+    grid-column: 2 / 14;
+    grid-row: 9;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* --- CELLS GENERAL --- */
+/* --- CELLS GENERAL --- */
+.grid-cell {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Subtle Bevel */
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.2), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    user-select: none;
+    font-size: 1.2rem;
+    font-family: 'Cinzel', serif;
+    /* Premium Font */
+}
+
+/* COLORS - NOW WITH GRADIENTS */
+.red {
+    background: linear-gradient(135deg, #d32f2f, #8b0000);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.black {
+    background: linear-gradient(135deg, #2c2c2c, #000000);
+    border: 1px solid #444;
+}
+
+.green {
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+}
+
+/* SYSTEM BUTTONS (RECT-CELL) - GLASS/GOLD STYLE */
+.rect-cell {
+    background: linear-gradient(to bottom, rgba(40, 40, 40, 0.9), rgba(10, 10, 10, 0.95));
+    border: 1px solid #d4af37;
+    /* Gold Rim */
+    border-radius: 4px;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.4),
+        /* Drop */
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Top Highlight */
+    color: #ffd700;
+    font-size: 0.9rem !important;
+    /* Fit text better */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 1px;
+    /* Gap for physical separation */
+}
+
+.rect-cell:hover {
+    background: linear-gradient(to bottom, #d4af37, #b8860b);
+    color: #000;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+    transform: translateY(-1px);
+}
+
+.rect-cell-active {
+    /* EMERGENCY PLAN: Commented out Gold Fill for readability */
+    /* background: linear-gradient(to bottom, #d4af37, #b8860b) !important; */
+    /* color: #000 !important; */
+    /* box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), inset 0 0 5px rgba(255, 255, 255, 0.4) !important; */
+    border: 1px solid #fff !important;
+    transform: translateY(-1px);
+    font-weight: 900 !important;
+    /* Optional: Subtle glow to maintain "active" feel without sacrificing text contrast */
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3) !important;
+}
+
+/* --- RESTORED CLASSES --- */
+
+.board-chip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+    border: 2px dashed #fff;
+    border-radius: 50%;
+    color: #000;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+/* HOVER HIGHLIGHTS */
+.highlight-preview {
+    position: relative;
+    z-index: 15;
+}
+
+.highlight-preview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    pointer-events: none;
+}
+
+.highlight-win {
+    position: relative;
+    z-index: 20;
+    animation: pulse-win 1s infinite alternate;
+}
+
+.highlight-win::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 255, 0, 0.3);
+    border: 2px solid #0f0;
+    box-shadow: 0 0 15px #0f0;
+    pointer-events: none;
+}
+
+@keyframes pulse-win {
+    from {
+        box-shadow: 0 0 5px #0f0;
+    }
+
+    to {
+        box-shadow: 0 0 20px #0f0, inset 0 0 10px #0f0;
+    }
+}
+
+/* HOTSPOTS */
+.hotspot {
+    position: absolute;
+    background: transparent;
+    border: none;
+    z-index: 20;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hotspot:hover {
+    background: rgba(255, 215, 0, 0.4);
+    border: 1px solid #d4af37;
+    box-shadow: 0 0 5px #d4af37;
+    border-radius: 4px;
+}
+
+.v-split {
+    width: 20px;
+    height: 100%;
+}
+
+.h-split {
+    width: 100%;
+    height: 20px;
+}
+
+.corner {
+    width: 20px;
+    height: 20px;
+}
+
+/* DIAMOND SHAPES (NEW) */
+.diamond-shape {
+    width: 20px;
+    height: 20px;
+    transform: rotate(45deg);
+    display: inline-block;
+}
+
+.diamond-shape.red {
+    background-color: #ff0000;
+    border: 1px solid #ffaaaa;
+    /* Lighter border for visibility */
+    box-shadow: 0 0 4px #ff0000;
+}
+
+.diamond-shape.black {
+    background-color: #000000;
+    border: 2px solid #ffffff;
+    /* White border for contrast on black bg */
+    box-shadow: 0 0 4px #ffffff;
+}
+
+/* --- SECTIONS --- */
+
+/* 1. ZERO */
+.zero-cell {
+    grid-column: 1;
+    grid-row: 2 / 5;
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+}
+
+/* CALL BETS ROW */
+.call-bets-row {
+    grid-column: 2 / 14;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+.call-bets-row .grid-cell {
+    font-size: 0.7rem;
+    /* Reduced to fit text */
+    line-height: 1.1;
+    padding: 2px;
+    text-align: center;
+}
+
+/* NUMBERS BLOCK */
+.numbers-block {
+    grid-column: 2 / 14;
+    grid-row: 2 / 5;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+}
+
+/* COLUMNS (2 to 1) */
+.columns-block {
+    grid-column: 14;
+    grid-row: 2 / 5;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+}
+
+.column-cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+    font-size: 0.9rem;
+    line-height: 1.1;
+    padding: 8px 8px;
+    box-sizing: border-box;
+}
+
+.payout-text {
+    font-weight: bold;
+    display: block;
+}
+
+.col-label {
+    font-size: 0.72rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    margin-top: 0;
+}
+
+/* DOZENS (Row 5) */
+.dozens-row {
+    grid-column: 2 / 14;
+    grid-row: 5;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* SIMPLE CHANCES (Row 6) */
+.simple-row {
+    grid-column: 2 / 14;
+    grid-row: 6;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2px;
+}
+
+/* EXTRA ROW 1 (Row 7) */
+.extra-row-1 {
+    grid-column: 2 / 14;
+    grid-row: 7;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+.extra-row-1 .grid-cell {
+    font-size: 0.95rem;
+    line-height: 1.1;
+    text-align: center;
+    padding: 2px;
+}
+
+/* EXTRA ROW 2 (Row 8) */
+.extra-row-2 {
+    grid-column: 2 / 14;
+    grid-row: 8;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+}
+
+/* CHIP STACK OVERRIDES */
+.chip-stack {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-chip-visual {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    box-shadow: 0 3px 2px rgba(0, 0, 0, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* FORCED VISIBILITY FOR SIX LINE CHIPS */
+.hotspot.six-line {
+    /* Ensure the container isn't clipping */
+    overflow: visible !important;
+    z-index: 10000 !important;
+    /* Highest priority */
+    pointer-events: auto !important;
+    /* Clickable */
+}
+
+/* Force children chips to be visible */
+.hotspot.six-line .chip-stack {
+    z-index: 10001 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.hotspot.six-line .board-chip-visual {
+    z-index: 10002 !important;
+    border: 2px solid #fff !important;
+    /* High contrast border */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8) !important;
+}
+
+.stack-total {
+    position: absolute;
+    top: -15px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffd700;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    border: 1px solid #ffd700;
+    z-index: 100;
+    white-space: nowrap;
+    text-shadow: none;
+    font-weight: bold;
+}
+
+/* DYNAMIC HIGHLIGHTS */
+.highlight-preview {
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 0 10px white !important;
+}
+
+.highlight-preview-gold {
+    background-color: rgba(255, 215, 0, 0.4) !important;
+    box-shadow: 0 0 10px #ffd700 !important;
+    border: 1px solid #ffd700 !important;
+}
+
+.highlight-preview-orange {
+    background-color: rgba(255, 140, 0, 0.4) !important;
+    box-shadow: 0 0 10px #ff9900 !important;
+    border: 1px solid #ff9900 !important;
+}
+
+.highlight-preview-red {
+    background-color: rgba(255, 0, 68, 0.4) !important;
+    box-shadow: 0 0 15px #ff0044 !important;
+    border: 1px solid #ff0044 !important;
+}
+
+/* FORENSIC CYAN HIGHLIGHTS */
+.highlight-placed {
+    background: radial-gradient(circle, rgba(0, 206, 209, 0.7) 0%, rgba(0, 139, 139, 0.6) 100%) !important;
+    box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.5), 0 0 10px rgba(0, 255, 255, 0.3) !important;
+    border: 1px solid #00ffff !important;
+    z-index: 5;
+}
+
+.highlight-best-payout {
+    background: radial-gradient(circle, rgba(0, 255, 255, 1) 0%, rgba(0, 180, 180, 0.95) 70%, rgba(0, 100, 100, 1) 100%) !important;
+    box-shadow: 0 0 35px #00ffff, inset 0 0 15px rgba(255, 255, 255, 0.9) !important;
+    border: 2px solid #ffffff !important;
+    z-index: 15 !important;
+    animation: neonCyanPulse 1.0s infinite alternate;
+    color: #000 !important;
+    /* Premium Contrast: Black on Neon Cyan */
+    text-shadow: none !important;
+}
+
+@keyframes neonCyanPulse {
+    from {
+        box-shadow: 0 0 15px #00ffff, inset 0 0 8px #00ffff;
+        transform: scale(1);
+    }
+
+    to {
+        box-shadow: 0 0 45px #00ffff, inset 0 0 25px rgba(255, 255, 255, 0.8);
+        transform: scale(1.03);
+    }
+}
+
+.highlight-win {
+    background-color: transparent !important;
+    border: 2px solid #00ff00 !important;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5) !important;
+    /* Outer glow only, reduced intensity */
+    animation: flashWin 1s infinite alternate;
+}
+
+.highlight-efficient {
+    background-color: rgba(0, 255, 0, 0.5) !important;
+    /* Strong Green Bg */
+    box-shadow: 0 0 20px #0f0, inset 0 0 10px #0f0 !important;
+    /* Double Glow */
+    animation: blinkGreen 0.6s infinite alternate;
+    /* Fast Pulse */
+    border: 2px solid #0f0 !important;
+    z-index: 50 !important;
+}
+
+@keyframes blinkGreen {
+    from {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes flashWin {
+    from {
+        opacity: 0.7;
+    }
+
+    to {
+        opacity: 1;
+        box-shadow: 0 0 30px #00ff00;
+    }
+}
+
+/* --- LUPA CUADRADA (SQUARE MAGNIFYING GLASS) ZOOM EFFECT FOR SYSTEM CARDS --- */
+.extra-row-2 .grid-cell {
+    transition: transform 0.22s cubic-bezier(0.25, 0.8, 0.25, 1.15),
+                box-shadow 0.22s ease,
+                border-color 0.22s ease,
+                background 0.22s ease !important;
+    position: relative;
+    z-index: 10;
+}
+
+.extra-row-2 .grid-cell:hover {
+    transform: scale(1.18) !important; /* Physically zoom by 18% */
+    z-index: 99999 !important; /* Float above all other cards and borders */
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.95),
+        0 0 25px rgba(212, 175, 55, 0.95),
+        inset 0 0 15px rgba(255, 255, 255, 0.25) !important;
+    border-color: #ffd700 !important; /* Premium Gold Rim highlight */
+    background: linear-gradient(135deg, rgba(60, 60, 60, 0.99), rgba(15, 15, 15, 1)) !important;
+}
+
+/* --- 💎 3D GLASSMORPHIC ROTATING DIAMOND ON MAT --- */
+.diamond-3d-container {
+    position: absolute;
+    width: 24px;
+    height: 36px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    perspective: 300px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.diamond-hover {
+    width: 100%;
+    height: 100%;
+    animation: diamondFloat 2s ease-in-out infinite;
+}
+
+.diamond-3d {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotateDiamond 3s linear infinite;
+}
+
+.diamond-face {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    opacity: 0.88;
+    transform-origin: center bottom;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.4));
+}
+
+/* Glassmorphic Facets */
+.face-top-1 {
+    border-width: 0 12px 18px 12px;
+    border-color: transparent transparent rgba(0, 229, 255, 0.75) transparent;
+    transform: rotateY(0deg) translateZ(12px) rotateX(30deg);
+}
+.face-top-2 {
+    border-width: 0 12px 18px 12px;
+    border-color: transparent transparent rgba(0, 184, 212, 0.85) transparent;
+    transform: rotateY(90deg) translateZ(12px) rotateX(30deg);
+}
+.face-top-3 {
+    border-width: 0 12px 18px 12px;
+    border-color: transparent transparent rgba(0, 229, 255, 0.75) transparent;
+    transform: rotateY(180deg) translateZ(12px) rotateX(30deg);
+}
+.face-top-4 {
+    border-width: 0 12px 18px 12px;
+    border-color: transparent transparent rgba(0, 184, 212, 0.85) transparent;
+    transform: rotateY(270deg) translateZ(12px) rotateX(30deg);
+}
+
+.face-bottom-1 {
+    border-width: 18px 12px 0 12px;
+    border-color: rgba(0, 151, 167, 0.85) transparent transparent transparent;
+    transform: rotateY(0deg) translateZ(12px) rotateX(-30deg) translateY(18px);
+}
+.face-bottom-2 {
+    border-width: 18px 12px 0 12px;
+    border-color: rgba(0, 131, 143, 0.95) transparent transparent transparent;
+    transform: rotateY(90deg) translateZ(12px) rotateX(-30deg) translateY(18px);
+}
+.face-bottom-3 {
+    border-width: 18px 12px 0 12px;
+    border-color: rgba(0, 151, 167, 0.85) transparent transparent transparent;
+    transform: rotateY(180deg) translateZ(12px) rotateX(-30deg) translateY(18px);
+}
+.face-bottom-4 {
+    border-width: 18px 12px 0 12px;
+    border-color: rgba(0, 131, 143, 0.95) transparent transparent transparent;
+    transform: rotateY(270deg) translateZ(12px) rotateX(-30deg) translateY(18px);
+}
+
+.diamond-shadow {
+    position: absolute;
+    width: 24px;
+    height: 7px;
+    background: rgba(0, 0, 0, 0.65);
+    border-radius: 50%;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.75);
+    filter: blur(1.5px);
+    animation: shadowPulse 2s ease-in-out infinite;
+}
+
+@keyframes rotateDiamond {
+    0% { transform: rotateY(0deg) rotateX(15deg); }
+    100% { transform: rotateY(360deg) rotateX(15deg); }
+}
+
+@keyframes diamondFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shadowPulse {
+    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.6; }
+    50% { transform: translateX(-50%) scale(1.3); opacity: 0.9; }
+}
+
+/* MATURE STREETS GLOWS & BADGES */
+.mature-glow-gold {
+    box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.8), 0 0 8px rgba(255, 215, 0, 0.4) !important;
+    border: 1px solid #ffd700 !important;
+}
+
+.mature-glow-orange {
+    box-shadow: inset 0 0 10px rgba(255, 140, 0, 0.8), 0 0 8px rgba(255, 140, 0, 0.4) !important;
+    border: 1px solid #ff8c00 !important;
+}
+
+.mature-glow-red {
+    box-shadow: inset 0 0 10px rgba(255, 69, 0, 0.8), 0 0 8px rgba(255, 69, 0, 0.4) !important;
+    border: 1px solid #ff4500 !important;
+}
+
+.mature-glow-coral {
+    box-shadow: inset 0 0 10px rgba(255, 107, 107, 0.8), 0 0 8px rgba(255, 107, 107, 0.4) !important;
+    border: 1px solid #ff6b6b !important;
+}
+
+.mature-street-badge {
+    animation: pulse-badge 1.5s infinite alternate;
+}
+
+@keyframes pulse-badge {
+    from {
+        opacity: 0.85;
+        transform: translate(-50%, 0) scale(1);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -2px) scale(1.05);
+    }
+}
+
+@keyframes dollyPulse {
+    0% {
+        transform: translate(-50%, -50%) rotate(45deg) scale(0.9);
+        box-shadow: 0 0 8px #ffd700, 0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 4px rgba(255,255,255,0.8);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(45deg) scale(1.15);
+        box-shadow: 0 0 15px #ffd700, 0 0 30px #ffd700, inset 0 0 6px rgba(255,255,255,0.9);
+    }
+}
+
+/* --- SOLID RANKING CARDS FOR DYNAMIC SYSTEMS --- */
+.rank-gold-card {
+    background: #ffd700 !important;
+    color: #000000 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
+    text-shadow: none !important;
+}
+.rank-gold-card, .rank-gold-card div, .rank-gold-card span {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.rank-orange-card {
+    background: #ff8c00 !important;
+    color: #000000 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
+    text-shadow: none !important;
+}
+.rank-orange-card, .rank-orange-card div, .rank-orange-card span {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.rank-red-card {
+    background: #ff4500 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
+    text-shadow: none !important;
+}
+.rank-red-card, .rank-red-card div, .rank-red-card span {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+.rank-coral-card {
+    background: #ff6b6b !important;
+    color: #000000 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
+    text-shadow: none !important;
+}
+.rank-coral-card, .rank-coral-card div, .rank-coral-card span {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+/* MATURE CORNERS GLOWS (Dashed border for layout distinctness) */
+.mature-corner-glow-gold {
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.5) !important;
+    border: 2px dashed #ffd700 !important;
+}
+
+.mature-corner-glow-orange {
+    box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.6), 0 0 10px rgba(255, 140, 0, 0.5) !important;
+    border: 2px dashed #ff8c00 !important;
+}
+
+.mature-corner-glow-red {
+    box-shadow: inset 0 0 12px rgba(255, 69, 0, 0.6), 0 0 10px rgba(255, 69, 0, 0.5) !important;
+    border: 2px dashed #ff4500 !important;
+}
+
+.mature-corner-glow-coral {
+    box-shadow: inset 0 0 12px rgba(255, 107, 107, 0.6), 0 0 10px rgba(255, 107, 107, 0.5) !important;
+    border: 2px dashed #ff6b6b !important;
+}
+
+/* MATURE LINES GLOWS (Dotted border for layout distinctness) */
+.mature-line-glow-gold {
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.5) !important;
+    border: 2px dotted #ffd700 !important;
+}
+
+.mature-line-glow-orange {
+    box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.6), 0 0 10px rgba(255, 140, 0, 0.5) !important;
+    border: 2px dotted #ff8c00 !important;
+}
+
+.mature-line-glow-red {
+    box-shadow: inset 0 0 12px rgba(255, 69, 0, 0.6), 0 0 10px rgba(255, 69, 0, 0.5) !important;
+    border: 2px dotted #ff4500 !important;
+}
+
+.mature-line-glow-coral {
+    box-shadow: inset 0 0 12px rgba(255, 107, 107, 0.6), 0 0 10px rgba(255, 107, 107, 0.5) !important;
+    border: 2px dotted #ff6b6b !important;
+}
+
+/* MATURE SPLITS (CABALLOS) GLOWS (Double border for layout distinctness) */
+.mature-split-glow-gold {
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.5) !important;
+    border: 3px double #ffd700 !important;
+}
+
+.mature-split-glow-orange {
+    box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.6), 0 0 10px rgba(255, 140, 0, 0.5) !important;
+    border: 3px double #ff8c00 !important;
+}
+
+.mature-split-glow-red {
+    box-shadow: inset 0 0 12px rgba(255, 69, 0, 0.6), 0 0 10px rgba(255, 69, 0, 0.5) !important;
+    border: 3px double #ff4500 !important;
+}
+
+.mature-split-glow-coral {
+    box-shadow: inset 0 0 12px rgba(255, 107, 107, 0.6), 0 0 10px rgba(255, 107, 107, 0.5) !important;
+    border: 3px double #ff6b6b !important;
+}

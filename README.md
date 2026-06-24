@@ -1,171 +1,111 @@
-/**
- * README.md - v0.1.18
- * Documentación principal del proyecto
- */
+# GHR Ruleta Royale 🎰
 
-# 🎰 JHR Quantum Roulette
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com)
+[![Tests](https://img.shields.io/badge/tests-157%20passed-brightgreen)](https://github.com)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**Versión:** 1.0.0  
-**Estado:** Production Ready  
-**Licencia:** MIT  
-
-## 📋 Descripción
-
-Simulador de ruleta europea con motor RNG determinista, sistema completo de gestión de bankroll, análisis Hot/Cold, historial de resultados, y características de juego responsable.
-
-## ✨ Características Principales
-
-### Core Features (v0.1.1 - v0.1.7)
-- ✅ Motor RNG determinista con modo producción y testing
-- ✅ Canvas responsivo 16:9 con detección de orientación
-- ✅ Sistema completo de pagos (27 tipos de apuestas)
-- ✅ Gestión de bankroll con validación en tiempo real
-- ✅ Grid layout 3×12 interactivo
-- ✅ Sistema de fichas con stacking visual
-- ✅ Outside bets, docenas y columnas
-
-### Advanced Features (v0.1.8 - v0.1.12)
-- ✅ Apuestas avanzadas (splits, streets, corners, lines)
-- ✅ Motor de giro con estados (READY, SPINNING, PAYING)
-- ✅ Animaciones de giro con overlays
-- ✅ Cálculo y pago automático de ganancias
-
-### Analytics & History (v0.1.13)
-- ✅ Sistema completo de historial (500 resultados)
-- ✅ Algoritmo Hot/Cold con scoring estadístico
-- ✅ Ticker visual de últimos 12 resultados
-- ✅ Panel Hot/Cold con gradientes y frecuencias
-- ✅ Detección de rachas y patrones
-
-### Session Management (v0.1.14)
-- ✅ Reloj en tiempo real (24h/12h)
-- ✅ Temporizador de sesión (HH:MM:SS)
-- ✅ Reality Check cada 30 minutos (juego responsable)
-- ✅ Estadísticas completas de sesión
-- ✅ Exportación JSON
-
-### User Experience (v0.1.15)
-- ✅ Tutorial interactivo paso a paso
-- ✅ Sistema de ayuda contextual
-- ✅ Atajos de teclado
-- ✅ UI/UX optimizada
+Una aplicación de ruleta europea profesional construida con React y Vite.
 
 ## 🚀 Inicio Rápido
 
-### Instalación
-
 ```bash
-# Clonar repositorio
-git clone https://github.com/tu-usuario/jhr-roulette.git
-cd jhr-roulette
+# Instalar dependencias
+npm install
 
-# Abrir en navegador
-open index.html
+# Ejecutar en desarrollo
+npm run dev
+
+# Ejecutar tests
+npm test
+
+# Build para producción
+npm run build
 ```
 
-### Uso Básico
-
-```javascript
-// Test de giro
-testSpin();
-
-// Simulación de 50 giros
-simulateSession(50);
-
-// Ver estadísticas
-printStats();
-
-// Exportar sesión
-exportSession();
-```
-
-### Atajos de Teclado
-
-- **SPACE** - Giro de prueba
-- **S** - Mostrar estadísticas
-- **H** - Análisis Hot/Cold
-- **R** - Reality Check manual
-
-## 📊 Arquitectura
+## 📁 Estructura del Proyecto
 
 ```
-jhr-roulette/
-├── engine/          # Motor RNG
-├── betting/         # Sistema de apuestas y pagos
-├── ui/              # Componentes visuales
-├── session/         # Gestión de sesión
-├── tutorial/        # Sistema de tutorial
-├── tests/           # Tests automatizados
-├── main.js          # Integración principal
-└── index.html       # Punto de entrada
+src/
+├── components/       # Componentes React (RouletteWheel, BettingBoard, etc.)
+├── hooks/           # Custom hooks (useRouletteGame, useCurrency, etc.)
+├── logic/           # Lógica de negocio (FinancialSimulator, RouletteUtils)
+├── config/          # Configuración (GameLimits, Theme)
+├── utils/           # Utilidades (SoundManager, BetValidator)
+└── tests/           # Tests unitarios y snapshots
 ```
+
+## 🏗️ Arquitectura
+
+```mermaid
+graph TD
+    A[CasinoTable] --> B[RouletteWheel]
+    A --> C[BettingBoard]
+    A --> D[FinancialSimulator Store]
+    C --> E[useRouletteLogic]
+    B --> F[useRouletteGame]
+    D --> G[Zustand/localStorage]
+```
+
+### Flujo de Datos
+1. **Usuario** coloca apuestas en `BettingBoard`
+2. **FinancialSimulator** (Zustand) gestiona el saldo y las transacciones
+3. **useRouletteGame** maneja la física del giro y RNG seguro
+4. **RouletteUtils** calcula ganancias y cobertura
 
 ## 🧪 Testing
 
-```javascript
-// Tests de motor RNG
-runEngineTests();
+```bash
+# Ejecutar todos los tests
+npm test
 
-// Tests de pagos
-runPayoutTests();
-
-// Tests de historial
-runHistoryTests();
+# Modo watch
+npm run test:watch
 ```
 
-## 📈 Estadísticas
+### Cobertura de Tests
+- `RouletteUtils.js` - 61 tests
+- `useRouletteGame.js` - 33 tests
+- `FinancialSimulator.js` - 50 tests
+- `ComponentSnapshots` - 13 tests
 
-- **Líneas de código:** ~8,000+
-- **Archivos JavaScript:** 30+
-- **Tests automatizados:** 50+
-- **Tipos de apuestas:** 27
-- **Números en ruleta:** 37 (0-36, europea)
+## 🔧 Scripts Disponibles
 
-## 🎯 Roadmap Futuro
+| Script | Descripción |
+|--------|-------------|
+| `npm run dev` | Servidor de desarrollo (puerto 5173) |
+| `npm run build` | Build de producción |
+| `npm run preview` | Preview del build |
+| `npm test` | Ejecutar tests |
+| `npm run test:watch` | Tests en modo watch |
+| `npm run lint` | Ejecutar ESLint |
 
-### Fase 2: Hiperrealismo Visual
-- Cilindro 3D con física realista
-- Bola con colisiones y fricción
-- Racetrack y call bets
-- Modo turbo
+## 📦 Tecnologías
 
-### Fase 3: Ecosistema
-- Base de datos y autenticación
-- Multiplayer en tiempo real
-- Leaderboards y logros
-- Multi-divisa
+- **React 18** - UI Library
+- **Vite** - Build tool
+- **Zustand** - State management
+- **Vitest** - Testing framework
+- **ESLint** - Linting
 
-### Fase 4: Alta Fidelidad
-- Iluminación PBR
-- Texturas y materiales avanzados
-- Efectos de partículas
-- Audio espacial 3D
+## 🎮 Características
 
-### Fase 5: IA y Despliegue
-- Análisis predictivo con IA
-- CI/CD automatizado
-- Telemetría y A/B testing
-- Marketing y localización
+- ✅ Ruleta Europea Realista (37 números)
+- ✅ Sistema financiero completo con historial
+- ✅ Múltiples tipos de apuestas (Pleno, Medios, Calles, etc.)
+- ✅ Animaciones y sonidos inmersivos
+- ✅ Modo Demo y Modo Real
+- ✅ Layout personalizable (drag & drop)
+- ✅ Estadísticas y análisis de estrategias
+- ✅ Sistemas de apuestas (SYSTEM 26, 23, 10)
 
-## 👥 Contribuciones
+## 🤝 Contribuir
 
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
+1. Fork el repositorio
+2. Crea tu branch (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push al branch (`git push origin feature/nueva-funcionalidad`)
 5. Abre un Pull Request
 
 ## 📄 Licencia
 
-MIT License - Ver archivo LICENSE para detalles
-
-## 📞 Contacto
-
-- **Email:** giovannihro2006@gmail.com
-- **GitHub:** [tu-usuario]
-- **Website:** [tu-website]
-
----
-
-**Hecho con ❤️ por Giovanni Holguin**
+MIT © 2025 GHR Ruleta Royale

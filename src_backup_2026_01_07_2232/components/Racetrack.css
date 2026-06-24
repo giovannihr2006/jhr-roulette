@@ -1,0 +1,52 @@
+.racetrack-container {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    user-select: none;
+}
+
+.racetrack-svg {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+
+.rt-zone {
+    fill: transparent;
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rt-zone:hover {
+    fill: rgba(255, 215, 0, 0.2);
+    stroke: #ffd700;
+    stroke-width: 2;
+}
+
+.rt-number {
+    font-size: 10px;
+    font-weight: bold;
+    fill: #fff;
+    pointer-events: none;
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
+
+.rt-label {
+    font-size: 12px;
+    fill: #aaa;
+    text-anchor: middle;
+    pointer-events: none;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.rt-zone:hover+.rt-label,
+.rt-zone:hover~text {
+    fill: #ffd700;
+    /* Gold text on hover */
+}

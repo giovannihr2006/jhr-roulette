@@ -1,0 +1,89 @@
+{
+    "session": "GHR_RULETA_ROYAL_290120260613",
+    "reference_image": "uploaded_media_1769685120014.png",
+    "coordinates": {
+        "title": {
+            "x": 600,
+            "y": 10,
+            "w": 542,
+            "h": 83
+        },
+        "layoutControls": {
+            "x": 10,
+            "y": 15
+        },
+        "clock": {
+            "x": 450,
+            "y": 85,
+            "w": 650,
+            "h": 60
+        },
+        "wheel": {
+            "x": -50,
+            "y": 110,
+            "w": 600,
+            "h": 600
+        },
+        "timeBar": {
+            "x": 20,
+            "y": 450
+        },
+        "racetrack": {
+            "x": 20,
+            "y": 550
+        },
+        "telemetry": {
+            "x": 20,
+            "y": 800
+        },
+        "board": {
+            "x": 450,
+            "y": 150
+        },
+        "alphaWidget": {
+            "x": 480,
+            "y": 640
+        },
+        "systemsWidget": {
+            "x": 480,
+            "y": 800
+        },
+        "opportunity": {
+            "x": 750,
+            "y": 640
+        },
+        "internalScannerWidget": {
+            "x": 1020,
+            "y": 640
+        },
+        "methodsWidget": {
+            "x": 1020,
+            "y": 800
+        },
+        "banking": {
+            "x": 1280,
+            "y": 10
+        },
+        "auditTowerWidget": {
+            "x": 1560,
+            "y": 80
+        },
+        "history": {
+            "x": 1560,
+            "y": 500
+        },
+        "graphLauncher": {
+            "x": 1300,
+            "y": 640
+        },
+        "activeBetsIcon": {
+            "x": 1300,
+            "y": 700
+        },
+        "detailedHistory": {
+            "x": 1800,
+            "y": 110
+        }
+    },
+    "status": "ATOMIC_SNAPSHOT_GOLD"
+}

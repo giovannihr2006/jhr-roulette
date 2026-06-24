@@ -1,0 +1,30 @@
+.wheel-container {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.5));
+}
+
+/* CRITICAL: TRANSITIONS */
+/* We target the class applied to the SVG */
+.wheel-svg {
+    /* 12 seconds duration, Ease-Out Quart (Long sleek spin) */
+    transition: transform 12s cubic-bezier(0.1, 0.8, 0.3, 1);
+    will-change: transform;
+}
+
+/* We target the ball layer div */
+.ball-layer {
+    /* 12 seconds duration, Ease-Out Quart */
+    transition: transform 12s cubic-bezier(0.1, 0.8, 0.3, 1);
+    will-change: transform;
+    z-index: 20;
+}
+
+text {
+    text-rendering: optimizeLegibility;
+    user-select: none;
+}

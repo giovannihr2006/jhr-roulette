@@ -1,0 +1,222 @@
+/* RESET & FONTS */
+:root {
+    --felt-primary: #005c35;
+    /* Deep Casino Green */
+    --felt-dark: #00331a;
+    /* Shadowed edges */
+    --gold-accent: #d4af37;
+    --text-light: #f0f0f0;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: var(--felt-dark);
+}
+
+/* MAIN TABLE CONTAINER */
+.casino-table {
+    width: 100vw;
+    height: 100vh;
+    /* Radial Gradient to simulate overhead lighting */
+    background: radial-gradient(circle at 50% 50%, var(--felt-primary) 0%, var(--felt-dark) 85%);
+    display: block;
+    /* Changed from flex to block to allow full scrolling */
+    position: relative;
+    overflow: auto;
+    /* Allow scrolling if zoomed */
+    min-width: 1280px;
+    /* Minimum width to prevent crushing */
+    min-height: 800px;
+    /* Subtle noise/texture overlay usually looks good, but keeping clean for now */
+}
+
+/* SECTORS */
+.table-sector {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    /* Temporary debug border */
+}
+
+.left-sector {
+    width: 35%;
+    /* European Wheel takes less space than board usually */
+    border-right: 2px solid rgba(212, 175, 55, 0.3);
+    /* Gold separator */
+}
+
+.right-sector {
+    width: 65%;
+}
+
+/* PLACEHOLDERS (To be removed) */
+.wheel-placeholder,
+.board-placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+/* UI OVERLAY */
+.ui-overlay {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    pointer-events: none;
+}
+
+.balance-box {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--gold-accent);
+    color: var(--gold-accent);
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 4px;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+}
+
+.chip-selector {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 8px;
+    /* Tighter gap */
+    margin-right: 30px;
+    pointer-events: auto;
+    align-items: center;
+    justify-items: center;
+}
+
+.chip-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    user-select: none;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.55rem;
+    /* Smaller for better fit */
+    line-height: 1;
+    /* Tight line height */
+    padding: 2px;
+    /* Inner air */
+    position: relative;
+    z-index: 10;
+    white-space: nowrap;
+    /* Prevent line breaks */
+    overflow: hidden;
+}
+
+.chip-btn::before {
+    /* Dashed ring effect inside */
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border: 1px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+}
+
+.chip-btn:hover {
+    transform: translateY(-5px) scale(1.1);
+    z-index: 20;
+}
+
+.chip-btn.selected {
+    transform: translateY(-10px) scale(1.4);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 10px 20px rgba(0, 0, 0, 0.5);
+    border-color: #fff;
+    z-index: 30;
+}
+
+/* CHIP COLORS */
+.chip-1 {
+    background: radial-gradient(circle at 30% 30%, #fff, #bbb);
+    color: #333;
+    border-color: #999;
+}
+
+.chip-2 {
+    background: radial-gradient(circle at 30% 30%, #ffb6c1, #db7093);
+    /* Pink */
+    color: #fff;
+    border-color: #fff;
+    text-shadow: 1px 1px 1px #000;
+}
+
+.chip-5 {
+    background: radial-gradient(circle at 30% 30%, #ff4d4d, #990000);
+    /* Red */
+    color: white;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-10 {
+    background: radial-gradient(circle at 30% 30%, #4da6ff, #004080);
+    /* Blue */
+    color: white;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-20 {
+    background: radial-gradient(circle at 30% 30%, #e6e600, #999900);
+    /* Yellow-ish */
+    color: #333;
+    border-color: #ffffe0;
+}
+
+.chip-50 {
+    background: radial-gradient(circle at 30% 30%, #ffa500, #8b4500);
+    /* Orange */
+    color: white;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-100 {
+    background: radial-gradient(circle at 30% 30%, #333, #000);
+    /* Black */
+    color: #ffd700;
+    border-color: #ffd700;
+}
+
+.chip-200 {
+    background: radial-gradient(circle at 30% 30%, #9933cc, #4b0082);
+    /* Purple */
+    color: white;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-500 {
+    background: radial-gradient(circle at 30% 30%, #ff00ff, #8b008b);
+    /* Magenta */
+    color: white;
+    text-shadow: 1px 1px 1px black;
+}
+
+.chip-1000 {
+    background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+    /* Gold */
+    color: #000;
+    border-color: #fff;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
