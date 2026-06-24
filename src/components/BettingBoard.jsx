@@ -283,6 +283,19 @@ export const BettingBoard = ({
     const [showSimpleEfficiencyModal, setShowSimpleEfficiencyModal] = React.useState(false) // NEW: Simple Ranking Modal
     const [showMethodsTable, setShowMethodsTable] = React.useState(false) // NEW: Methods Table Modal
     const [isNeighborMode, setIsNeighborMode] = React.useState(false) // NEW: Global Neighbor Mode
+    const [showWinningHighlights, setShowWinningHighlights] = React.useState(false)
+
+    React.useEffect(() => {
+        if (lastWin !== null && lastWin !== undefined) {
+            setShowWinningHighlights(true)
+            const timer = setTimeout(() => {
+                setShowWinningHighlights(false)
+            }, 5000)
+            return () => clearTimeout(timer)
+        } else {
+            setShowWinningHighlights(false)
+        }
+    }, [lastWin])
     const [hoveredTarget, setHoveredTarget] = React.useState(false) // NEW: Tooltip state
     const [maturityTypes, setMaturityTypes] = React.useState(DEFAULT_MATURITY_TYPES)
     const [maturityRanks, setMaturityRanks] = React.useState(DEFAULT_MATURITY_RANKS)
@@ -689,6 +702,7 @@ export const BettingBoard = ({
     }
 
     const checkWin = (betId) => {
+        if (!showWinningHighlights) return false
         if (lastWin === null || lastWin === undefined) return false
         if (betId === '0') return lastWin === 0
 
@@ -764,7 +778,7 @@ export const BettingBoard = ({
         }
 
         // WIN GLOW LOGIC
-        if (lastWin !== null && parseInt(betId) === lastWin) {
+        if (showWinningHighlights && lastWin !== null && parseInt(betId) === lastWin) {
             baseClass += ' win-glow'
         }
 
@@ -1051,34 +1065,30 @@ export const BettingBoard = ({
                         {matureRank !== -1 && (
                             <div className={`mature-street-badge rank-${matureRank + 1}`} style={{
                                 position: 'absolute',
-                                top: '-46px',
+                                top: '-8px',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
                                 backgroundColor: matureRank === 0 ? '#ffd700' : matureRank === 1 ? '#ff8c00' : matureRank === 2 ? '#ff4500' : '#ff6b6b',
                                 color: '#000',
-                                padding: '3px 6px',
-                                borderRadius: '5px',
-                                fontSize: '10px',
+                                padding: '1px 4px',
+                                borderRadius: '4px',
+                                fontSize: '9px',
                                 fontWeight: 'bold',
                                 whiteSpace: 'nowrap',
                                 pointerEvents: 'none',
-                                boxShadow: '0 3px 6px rgba(0,0,0,0.5)',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
                                 zIndex: 100,
-                                border: '1.5px solid rgba(0,0,0,0.25)',
+                                border: '1px solid rgba(0,0,0,0.25)',
                                 display: 'flex',
-                                flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '0px',
-                                lineHeight: '1.1'
+                                lineHeight: '1'
                             }}>
-                                <div style={{ fontSize: '9.5px', opacity: 0.85, display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 'bold' }}>
-                                    🔥 M{matureRank + 1}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px', marginTop: '1px' }}>
-                                    <span style={{ fontSize: '15px', fontWeight: '900' }}>{matureStreets[matureRank].percentage}%</span>
-                                    <span style={{ fontSize: '9.5px', opacity: 0.75, fontWeight: 'bold' }}>({matureStreets[matureRank].misses})</span>
-                                </div>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span>🔥 M{matureRank + 1}</span>
+                                    <span style={{ fontSize: '11px', fontWeight: '900' }}>{matureStreets[matureRank].percentage}%</span>
+                                    <span style={{ fontSize: '8.5px', opacity: 0.75 }}>({matureStreets[matureRank].misses})</span>
+                                </span>
                             </div>
                         )}
                     </div>
@@ -1239,7 +1249,7 @@ export const BettingBoard = ({
                     const isCovered = coveredNumbers.includes(0);
                     const isPlaced = placedNumbers.includes(0);
                     const isBestPayout = bestPayoutNumbers.includes(0);
-                    const isWin = lastWin === 0;
+                    const isWin = showWinningHighlights && lastWin === 0;
 
                     let highlightClass = '';
                     if (isWin) highlightClass = 'highlight-win';
@@ -1285,7 +1295,7 @@ export const BettingBoard = ({
                         const isCovered = coveredNumbers.includes(num);
                         const isPlaced = placedNumbers.includes(num);
                         const isBestPayout = bestPayoutNumbers.includes(num);
-                        const isWin = lastWin === num;
+                        const isWin = showWinningHighlights && lastWin === num;
 
                         const isSystem26 = hoveredBet && hoveredBet.includes('26');
                         const isSystem23 = hoveredBet && hoveredBet.includes('23');
@@ -1393,7 +1403,7 @@ export const BettingBoard = ({
                                 title={`${column.label} (${matureEntry ? matureEntry.percentage : 0}%)`}
                                 id={`bet-btn-${column.id}`}
                             >
-                                <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', right: '6px', opacity: 0.7, color: matureRank !== -1 ? '#111' : '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '4px', right: '6px', opacity: 0.95, color: matureRank !== -1 ? '#111' : '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
                                 <span className="payout-text" style={{ position: 'relative', zIndex: 5 }}>2 to 1</span>
                                 <span className="col-label" style={{ position: 'relative', zIndex: 5 }}>{column.label}</span>
                                 {renderChip(column.id)}
@@ -1419,7 +1429,7 @@ export const BettingBoard = ({
                                 title={`${dozen.label} (${matureEntry ? matureEntry.percentage : 0}%)`}
                                 id={`bet-btn-${dozen.id}`}
                             >
-                                <span style={{ fontSize: '0.55rem', position: 'absolute', top: '4px', left: '6px', opacity: 0.7, color: matureRank !== -1 ? '#111' : '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '4px', left: '6px', opacity: 0.95, color: matureRank !== -1 ? '#111' : '#ffeb3b', pointerEvents: 'none' }}>Min 5</span>
                                 <span style={{ position: 'relative', zIndex: 5 }}>{dozen.label}</span>
                                 {renderChip(dozen.id)}
                                 {!bets[dozen.id] && renderMaturityBadge(matureEntry, matureRank)}
@@ -1436,7 +1446,7 @@ export const BettingBoard = ({
                         id="bet-btn-LOW"
                     >
                         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.55rem', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.7, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.95, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
                             BAJOS {renderChip('LOW')}
                         </div>
                     </div >
@@ -1445,7 +1455,7 @@ export const BettingBoard = ({
                         id="bet-btn-EVEN"
                     >
                         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.55rem', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.7, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.95, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
                             PAR {renderChip('EVEN')}
                         </div>
                     </div>
@@ -1457,7 +1467,7 @@ export const BettingBoard = ({
                         id="bet-btn-RED"
                     >
                         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.55rem', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.8, color: '#fff', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.95, color: '#fff', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
                             ROJO {renderChip('RED')}
                         </div>
                     </div>
@@ -1467,7 +1477,7 @@ export const BettingBoard = ({
                         id="bet-btn-BLACK"
                     >
                         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.55rem', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.8, color: '#fff', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.95, color: '#fff', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
                             NEGRO {renderChip('BLACK')}
                         </div>
                     </div>
@@ -1478,7 +1488,7 @@ export const BettingBoard = ({
                         id="bet-btn-ODD"
                     >
                         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.55rem', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.7, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.95, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
                             IMPAR {renderChip('ODD')}
                         </div>
                     </div>
@@ -1487,7 +1497,7 @@ export const BettingBoard = ({
                         id="bet-btn-HIGH"
                     >
                         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.55rem', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.7, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 'bold', position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', opacity: 0.95, color: '#ffeb3b', whiteSpace: 'nowrap', pointerEvents: 'none' }}>Min 5</span>
                             ALTOS {renderChip('HIGH')}
                         </div>
                     </div>
@@ -1657,13 +1667,13 @@ export const BettingBoard = ({
                                                 {(() => {
                                                     return showNumbers ? getCoveredNumbers(nKey).join(', ') : (showEfficiency ? getEfficiencyStyle(`row${index}`, nKey, `${mN.decimal} F/N`) :
                                                         <>
-                                                            <div style={{ fontSize: '0.85rem' }}>NUCLEO {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mN.cost}F|{mN.nums}N]</span></div>
-                                                            <div style={{ fontSize: '0.85rem' }}>
+                                                            <div style={{ fontSize: '0.82rem' }}>NUCLEO {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mN.cost}F|{mN.nums}N]</span></div>
+                                                            <div style={{ fontSize: '0.82rem' }}>
                                                                 <span style={{ color: '#aaa', marginRight: '6px' }}>{mN.decimal}</span>
                                                                 <span style={{ color: '#ffd700' }}>{mN.percentage}%</span>
-                                                                <span style={{ marginLeft: '6px', fontSize: '0.8rem', ...getStaleStyle(stN) }}>{stN}↺</span>
+                                                                <span style={{ marginLeft: '6px', fontSize: '0.85rem', ...getStaleStyle(stN) }}>{stN}↺</span>
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                                                            <div style={{ fontSize: '0.88rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                                                                 ESP:{wait} <span style={{ color: maturity > 100 ? '#ff9800' : '#ccc', marginLeft: '5px' }}>MAD:{maturity}%</span>
                                                             </div>
                                                         </>
@@ -1701,13 +1711,13 @@ export const BettingBoard = ({
                                                 {(() => {
                                                     return showNumbers ? getCoveredNumbers(vKey).join(', ') : (showEfficiency ? getEfficiencyStyle(`row${index}`, vKey, `${mV.decimal} F/N`) :
                                                         <>
-                                                            <div style={{ fontSize: '0.85rem' }}>VECINOS {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mV.cost}F|{mV.nums}N]</span></div>
-                                                            <div style={{ fontSize: '0.85rem' }}>
+                                                            <div style={{ fontSize: '0.82rem' }}>VECINOS {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mV.cost}F|{mV.nums}N]</span></div>
+                                                            <div style={{ fontSize: '0.82rem' }}>
                                                                 <span style={{ color: '#aaa', marginRight: '6px' }}>{mV.decimal}</span>
                                                                 <span style={{ color: '#55ff55' }}>{mV.percentage}%</span>
-                                                                <span style={{ marginLeft: '6px', fontSize: '0.8rem', ...getStaleStyle(stV) }}>{stV}↺</span>
+                                                                <span style={{ marginLeft: '6px', fontSize: '0.85rem', ...getStaleStyle(stV) }}>{stV}↺</span>
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                                                            <div style={{ fontSize: '0.88rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                                                                 ESP:{wait} <span style={{ color: maturity > 100 ? '#ff9800' : '#ccc', marginLeft: '5px' }}>MAD:{maturity}%</span>
                                                             </div>
                                                         </>
@@ -1745,13 +1755,13 @@ export const BettingBoard = ({
                                                 {(() => {
                                                     return showNumbers ? getCoveredNumbers(hKey).join(', ') : (showEfficiency ? getEfficiencyStyle(`row${index}`, hKey, `${mH.decimal} F/N`) :
                                                         <>
-                                                            <div style={{ fontSize: '0.85rem' }}>HUÉRFANOS {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mH.cost}F|{mH.nums}N]</span></div>
-                                                            <div style={{ fontSize: '0.85rem' }}>
+                                                            <div style={{ fontSize: '0.82rem' }}>HUÉRFANOS {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mH.cost}F|{mH.nums}N]</span></div>
+                                                            <div style={{ fontSize: '0.82rem' }}>
                                                                 <span style={{ color: '#aaa', marginRight: '6px' }}>{mH.decimal}</span>
                                                                 <span style={{ color: '#44aaff' }}>{mH.percentage}%</span>
-                                                                <span style={{ marginLeft: '6px', fontSize: '0.8rem', ...getStaleStyle(stH) }}>{stH}↺</span>
+                                                                <span style={{ marginLeft: '6px', fontSize: '0.85rem', ...getStaleStyle(stH) }}>{stH}↺</span>
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                                                            <div style={{ fontSize: '0.88rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                                                                 ESP:{wait} <span style={{ color: maturity > 100 ? '#ff9800' : '#ccc', marginLeft: '5px' }}>MAD:{maturity}%</span>
                                                             </div>
                                                         </>
@@ -1789,13 +1799,13 @@ export const BettingBoard = ({
                                                 {(() => {
                                                     return showNumbers ? getCoveredNumbers(tKey).join(', ') : (showEfficiency ? getEfficiencyStyle(`row${index}`, tKey, `${mT.decimal} F/N`) :
                                                         <>
-                                                            <div style={{ fontSize: '0.85rem' }}>TERCIO {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mT.cost}F|{mT.nums}N]</span></div>
-                                                            <div style={{ fontSize: '0.85rem' }}>
+                                                            <div style={{ fontSize: '0.82rem' }}>TERCIO {centerNum} <span style={{ color: '#fff', opacity: 0.7 }}>[{mT.cost}F|{mT.nums}N]</span></div>
+                                                            <div style={{ fontSize: '0.82rem' }}>
                                                                 <span style={{ color: '#aaa', marginRight: '6px' }}>{mT.decimal}</span>
                                                                 <span style={{ color: '#ff4444' }}>{mT.percentage}%</span>
-                                                                <span style={{ marginLeft: '6px', fontSize: '0.8rem', ...getStaleStyle(stT) }}>{stT}↺</span>
+                                                                <span style={{ marginLeft: '6px', fontSize: '0.85rem', ...getStaleStyle(stT) }}>{stT}↺</span>
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                                                            <div style={{ fontSize: '0.88rem', color: '#ccc', marginTop: '3px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                                                                 ESP:{wait} <span style={{ color: maturity > 100 ? '#ff9800' : '#ccc', marginLeft: '5px' }}>MAD:{maturity}%</span>
                                                             </div>
                                                         </>

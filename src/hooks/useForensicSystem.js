@@ -17,7 +17,6 @@ export const useForensicSystem = (currentBets, setCurrentBets, balance, isSpinni
     // 1. CRASH RECOVERY: Restore bets if any exist in persistent storage
     useEffect(() => {
         if (storedActiveBets && Object.keys(storedActiveBets).length > 0) {
-            console.log("♻️ FORENSIC RECOVERY: Restoring active bets from crash/reload", storedActiveBets)
             setCurrentBets(storedActiveBets)
             addToast("Sesión Restaurada: Apuestas recuperadas", "info")
         }

@@ -117,7 +117,7 @@ class AudioPreloader {
         if (this.ctx && this.ctx.state === 'suspended') {
             try {
                 await this.ctx.resume()
-            } catch (e) {
+            } catch {
                 // Ignore resume errors
             }
         }
@@ -133,7 +133,7 @@ class AudioPreloader {
             }
             this.buffers.clear()
             this.isReady = false
-        } catch (e) {
+        } catch {
             // Ignore cleanup errors
         }
     }

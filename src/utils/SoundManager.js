@@ -93,7 +93,9 @@ class SoundManager {
             gain2.connect(this.sfxGain)
             osc2.start(t)
             osc2.stop(t + 0.1)
-        } catch (e) { }
+        } catch {
+            // Ignore audio synthesis errors.
+        }
     }
 
     // --- 2. SPIN START (WHOOSH) - SKIP ---
@@ -152,7 +154,9 @@ class SoundManager {
             // We won't simulate full physics here, just a pleasant texture
 
             this.ballLoopNodes = { noise, lfo, gain, filter }
-        } catch (e) { }
+        } catch {
+            // Ignore audio loop errors.
+        }
     }
 
     stopBallLoop() {
@@ -168,7 +172,9 @@ class SoundManager {
                 // Trigger Land
                 this.playBallLand()
             }
-        } catch (e) { }
+        } catch {
+            // Ignore audio stop errors.
+        }
     }
 
     // --- 4. BALL LAND (Clack-Clack) ---
@@ -177,7 +183,7 @@ class SoundManager {
         try {
             const t = this.ctx.currentTime
             // simulate 3 bounces
-            [0, 0.08, 0.18].forEach((offset, i) => {
+            ;[0, 0.08, 0.18].forEach((offset, i) => {
                 const osc = this.ctx.createOscillator()
                 const gain = this.ctx.createGain()
 
@@ -200,11 +206,13 @@ class SoundManager {
                 osc.start(t + offset)
                 osc.stop(t + offset + 0.1)
             })
-        } catch (e) { }
+        } catch {
+            // Ignore landing sound errors.
+        }
     }
 
     // --- 5. WIN ELEGANT (Harp/Piano) ---
-    playWin(amount) {
+    playWin(_amount) {
         if (this.isMuted) return
         try {
             if (!this.initialized) this.init()
@@ -230,7 +238,9 @@ class SoundManager {
                 osc.start(start)
                 osc.stop(start + 2)
             })
-        } catch (e) { }
+        } catch {
+            // Ignore win sound errors.
+        }
     }
 
     // --- 6. RECORD (Ovation) ---
@@ -243,7 +253,7 @@ class SoundManager {
             // Bright fanfare
             const notes = [523.25, 659.25, 783.99, 1046.50] // C Major Chord
 
-            notes.forEach((freq, i) => {
+            notes.forEach((freq) => {
                 const osc = this.ctx.createOscillator()
                 const gain = this.ctx.createGain()
                 osc.type = 'sawtooth' // Brassy
@@ -267,7 +277,9 @@ class SoundManager {
                 osc.start(start)
                 osc.stop(start + 2.5)
             })
-        } catch (e) { }
+        } catch {
+            // Ignore record sound errors.
+        }
     }
 
     // --- IGNORED ---
@@ -283,7 +295,9 @@ class SoundManager {
             } else {
                 this.initialized = false
             }
-        } catch (e) { }
+        } catch {
+            // Ignore audio shutdown errors.
+        }
     }
 }
 

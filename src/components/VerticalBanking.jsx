@@ -279,7 +279,7 @@ export const VerticalBanking = ({
                 {/* MULTIPLICADOR NX */}
                 <div style={gridItemStyle}>
                     <span style={gridLabelStyle}>Coeficiente Nx</span>
-                    <span style={{ ...gridValueStyle, color: nxMultiplier >= 0 ? '#4caf50' : '#e53935', fontWeight: 'bold' }}>
+                    <span style={{ ...gridValueStyle, color: nxMultiplier >= 0 ? '#4caf50' : '#e53935', fontWeight: 'bold', fontSize: '1.9rem' }}>
                         {nxMultiplier}x
                     </span>
                 </div>

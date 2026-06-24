@@ -254,7 +254,6 @@ export const useRouletteGame = ({
         lastWin,
         lastWinAmount,
         setLastWinAmount,
-        lastWin,
         setLastWin,
         physicsState
     }

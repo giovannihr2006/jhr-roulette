@@ -134,14 +134,14 @@ export const useRouletteLogic = ({
     }
 
     const handleRepeat = () => {
-        if (isSpinning || Object.keys(lastBets).length === 0) return
+        if (isSpinning || Object.keys(lastBets).length === 0) return false
 
         const cost = Object.values(lastBets).reduce((a, b) => a + b, 0)
         const result = placeBet(cost, 'BATCH')
 
         if (!result.success) {
             if (result.error === 'INSUFFICIENT_FUNDS') addToast("Saldo insuficiente", 'error')
-            return
+            return false
         }
 
         setCurrentBets(prev => {
@@ -153,6 +153,7 @@ export const useRouletteLogic = ({
         })
         setBetHistory(prev => [...prev, { bets: lastBets, totalCost: cost }])
         soundManager.playChip()
+        return true
     }
 
     const handleDouble = () => {

@@ -17,19 +17,17 @@
     display: grid;
     grid-template-columns: 50px repeat(12, 60px) 80px;
     /* Last column widened to 80px for alignment */
-    grid-template-rows: 0px repeat(3, 64px) 48px 48px repeat(4, 82px);
+    grid-template-rows: 0px repeat(3, 64px) 48px 48px repeat(4, 72px);
     gap: 2px;
     flex-shrink: 0;
     /* Prevent squashing, force cropping */
     width: max-content;
-    margin-top: 56px;
+    margin-top: 8px;
 }
 
 .maturity-filter-panel {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    margin: 4px auto 4px;
     width: max-content;
     max-width: 94%;
     box-sizing: border-box;
@@ -37,9 +35,8 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 8px 16px;
-    padding: 8px 12px;
-    margin: 0 0 8px;
+    gap: 6px 14px;
+    padding: 6px 10px;
     border: 1px solid rgba(255, 215, 0, 0.18);
     border-radius: 6px;
     background: rgba(8, 8, 8, 0.82);
@@ -51,20 +48,20 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .maturity-filter-chip {
-    min-height: 32px;
-    min-width: 52px;
+    min-height: 28px;
+    min-width: 50px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 5px;
     background: rgba(255, 255, 255, 0.06);
     color: #cfcfcf;
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     font-weight: 800;
     line-height: 1;
-    padding: 7px 12px;
+    padding: 5px 10px;
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -389,13 +386,15 @@
 }
 
 .column-cell {
+    display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
     font-size: 0.9rem;
-    line-height: 1.2;
-    padding: 2px;
+    line-height: 1.1;
+    padding: 8px 8px;
+    box-sizing: border-box;
 }
 
 .payout-text {
@@ -404,10 +403,11 @@
 }
 
 .col-label {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
+    font-weight: bold;
     color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
-    margin-top: 2px;
+    margin-top: 0;
 }
 
 /* DOZENS (Row 5) */
@@ -808,9 +808,9 @@
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
     text-shadow: none !important;
 }
-.rank-gold-card span {
+.rank-gold-card, .rank-gold-card div, .rank-gold-card span {
     color: #000000 !important;
-    opacity: 0.9 !important;
+    text-shadow: none !important;
 }
 
 .rank-orange-card {
@@ -820,9 +820,9 @@
     box-shadow: 0 0 15px rgba(255, 140, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
     text-shadow: none !important;
 }
-.rank-orange-card span {
+.rank-orange-card, .rank-orange-card div, .rank-orange-card span {
     color: #000000 !important;
-    opacity: 0.9 !important;
+    text-shadow: none !important;
 }
 
 .rank-red-card {
@@ -832,9 +832,9 @@
     box-shadow: 0 0 15px rgba(255, 69, 0, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
     text-shadow: none !important;
 }
-.rank-red-card span {
+.rank-red-card, .rank-red-card div, .rank-red-card span {
     color: #ffffff !important;
-    opacity: 0.9 !important;
+    text-shadow: none !important;
 }
 
 .rank-coral-card {
@@ -844,9 +844,9 @@
     box-shadow: 0 0 15px rgba(255, 107, 107, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.5) !important;
     text-shadow: none !important;
 }
-.rank-coral-card span {
+.rank-coral-card, .rank-coral-card div, .rank-coral-card span {
     color: #000000 !important;
-    opacity: 0.9 !important;
+    text-shadow: none !important;
 }
 
 /* MATURE CORNERS GLOWS (Dashed border for layout distinctness) */
@@ -889,4 +889,25 @@
 .mature-line-glow-coral {
     box-shadow: inset 0 0 12px rgba(255, 107, 107, 0.6), 0 0 10px rgba(255, 107, 107, 0.5) !important;
     border: 2px dotted #ff6b6b !important;
+}
+
+/* MATURE SPLITS (CABALLOS) GLOWS (Double border for layout distinctness) */
+.mature-split-glow-gold {
+    box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.5) !important;
+    border: 3px double #ffd700 !important;
+}
+
+.mature-split-glow-orange {
+    box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.6), 0 0 10px rgba(255, 140, 0, 0.5) !important;
+    border: 3px double #ff8c00 !important;
+}
+
+.mature-split-glow-red {
+    box-shadow: inset 0 0 12px rgba(255, 69, 0, 0.6), 0 0 10px rgba(255, 69, 0, 0.5) !important;
+    border: 3px double #ff4500 !important;
+}
+
+.mature-split-glow-coral {
+    box-shadow: inset 0 0 12px rgba(255, 107, 107, 0.6), 0 0 10px rgba(255, 107, 107, 0.5) !important;
+    border: 3px double #ff6b6b !important;
 }

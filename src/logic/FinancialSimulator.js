@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { LIMITS, PAYOUTS } from '../config/GameLimits'
 import {
   validateFinancialState,
-  createInitialFinancialState,
   sanitizeFinancialState
 } from './FinancialStateValidator'
 
@@ -184,7 +183,6 @@ export const useFinancialStore = create(
                 const state = get()
                 // PROTECTION: Only initialize if not already set (rehydration might have happened)
                 if (state.sessionStart && state.initialCapital) {
-                    console.log("Simulator already initialized, skipping reset.")
                     return
                 }
 
@@ -419,7 +417,6 @@ export const useFinancialStore = create(
 
                     // Intentar sanitizar datos parciales y aplicarlo en su lugar
                     const sanitized = sanitizeFinancialState(state)
-                    console.log('🔧 Financial state sanitized and applied')
                     Object.assign(state, sanitized)
                 }
             }

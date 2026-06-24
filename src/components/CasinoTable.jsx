@@ -123,10 +123,12 @@ import {
 
 export const CasinoTable = () => {
     const fileInputRef = useRef(null)
+    const autoPlaySpinInFlightRef = useRef(false)
     // Rotation State
     // Game State (Refactored to Hook)
     // const isSpinning... removed
     const [autoPlayCount, setAutoPlayCount] = useState(0)
+    const [autoPlayWaitingForBets, setAutoPlayWaitingForBets] = useState(false)
 
     // Potentials
     const [potentialWin, setPotentialWin] = useState(0)
@@ -140,6 +142,7 @@ export const CasinoTable = () => {
     const [timerMode, setTimerMode] = useState(false)
     const [timerDuration, setTimerDuration] = useState(15) // Default 15s
     const [timeLeft, setTimeLeft] = useState(15)
+    const [programmedPlayCount, setProgrammedPlayCount] = useState(12)
 
     // --- FULLSCREEN STATE ---
     const [isFullscreen, setIsFullscreen] = useState(false)
@@ -531,6 +534,34 @@ export const CasinoTable = () => {
         }
     }
 
+    const handleProgrammedPlayChange = (value) => {
+        const parsed = parseInt(value, 10)
+        if (Number.isNaN(parsed)) {
+            setProgrammedPlayCount(1)
+            return
+        }
+        setProgrammedPlayCount(Math.max(1, Math.min(999, parsed)))
+    }
+
+    const startProgrammedPlays = () => {
+        if (isSpinning) return
+        if (Object.keys(currentBets).length === 0 && Object.keys(lastBets).length === 0) {
+            addToast("Programa detenido: primero coloca o repite una apuesta", "error")
+            return
+        }
+        setTimerMode(false)
+        setAutoPlayWaitingForBets(false)
+        setAutoPlayCount(programmedPlayCount)
+        addToast(`Programa iniciado: ${programmedPlayCount} jugadas`, "success")
+    }
+
+    const stopProgrammedPlays = () => {
+        autoPlaySpinInFlightRef.current = false
+        setAutoPlayWaitingForBets(false)
+        setAutoPlayCount(0)
+        addToast("Programa de jugadas detenido", "info")
+    }
+
     // --- TIME BAR LOGIC (Moved here to access hooks) ---
     useEffect(() => {
         let interval = null
@@ -762,30 +793,47 @@ export const CasinoTable = () => {
 
     // --- AUTOPLAY LOGIC ---
     useEffect(() => {
+        if (!isSpinning && autoPlaySpinInFlightRef.current) {
+            autoPlaySpinInFlightRef.current = false
+            setAutoPlayCount(prev => Math.max(0, prev - 1))
+        }
+    }, [isSpinning])
+
+    useEffect(() => {
         if (!isSpinning && autoPlayCount > 0) {
             const timer = setTimeout(() => {
                 // 1. Repeat Bets
                 if (Object.keys(currentBets).length === 0 && Object.keys(lastBets).length > 0) {
-                    handleRepeat()
+                    const repeated = handleRepeat()
+                    if (!repeated) {
+                        setAutoPlayWaitingForBets(false)
+                        setAutoPlayCount(0)
+                    } else {
+                        setAutoPlayWaitingForBets(true)
+                    }
+                    return
                 } else if (Object.keys(currentBets).length === 0) {
                     // No bets to repeat and empty table? Stop.
                     addToast("Autoplay detenido: No hay apuestas para repetir", "error")
+                    setAutoPlayWaitingForBets(false)
                     setAutoPlayCount(0)
                     return
                 }
 
                 // 2. Spin
                 // Ensure we call spin only if valid
+                setAutoPlayWaitingForBets(false)
+                autoPlaySpinInFlightRef.current = true
                 handleSpin()
 
-                // 3. Decrement
-                setAutoPlayCount(prev => prev - 1)
-
-            }, 2000) // 2 seconds between spins
+            }, autoPlayWaitingForBets ? 150 : 2000) // Wait one state pass after repeating bets.
             return () => clearTimeout(timer)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isSpinning, autoPlayCount])
+        if (autoPlayCount <= 0) {
+            autoPlaySpinInFlightRef.current = false
+            setAutoPlayWaitingForBets(false)
+        }
+    }, [isSpinning, autoPlayCount, currentBets, lastBets, autoPlayWaitingForBets, handleRepeat, handleSpin, addToast])
 
 
 
@@ -1243,6 +1291,48 @@ export const CasinoTable = () => {
                     animation: 'pulseFlash 1s infinite'
                 }} />
             )}
+            <div className={`programmed-plays-panel ${autoPlayCount > 0 ? 'active' : ''}`}>
+                <div className="programmed-plays-copy">
+                    <span className="programmed-plays-label">JUGADAS PROGRAMADAS</span>
+                    <strong>{autoPlayCount > 0 ? `${autoPlayCount} restantes` : 'Listo para programar'}</strong>
+                </div>
+                <div className="programmed-plays-controls">
+                    <button
+                        type="button"
+                        className="programmed-step"
+                        onClick={() => handleProgrammedPlayChange(programmedPlayCount - 1)}
+                        disabled={autoPlayCount > 0}
+                    >
+                        -
+                    </button>
+                    <input
+                        type="number"
+                        min="1"
+                        max="999"
+                        value={programmedPlayCount}
+                        onChange={(e) => handleProgrammedPlayChange(e.target.value)}
+                        disabled={autoPlayCount > 0}
+                        aria-label="Numero de jugadas programadas"
+                    />
+                    <button
+                        type="button"
+                        className="programmed-step"
+                        onClick={() => handleProgrammedPlayChange(programmedPlayCount + 1)}
+                        disabled={autoPlayCount > 0}
+                    >
+                        +
+                    </button>
+                    {autoPlayCount > 0 ? (
+                        <button type="button" className="programmed-stop" onClick={stopProgrammedPlays}>
+                            DETENER
+                        </button>
+                    ) : (
+                        <button type="button" className="programmed-start" onClick={startProgrammedPlays} disabled={isSpinning}>
+                            INICIAR
+                        </button>
+                    )}
+                </div>
+            </div>
             {!isEditMode ? (
                 /* --- DUAL COLUMN ANTI-OVERLAP LAYOUT --- */
                 <div className="ct-layout-wrapper">
@@ -1367,8 +1457,8 @@ export const CasinoTable = () => {
                             </div>
 
                             {/* Board */}
-                            <div style={{ width: '756px', height: '615px', flex: 'none', display: 'flex', alignItems: 'flex-start', overflow: 'visible', paddingTop: '24px', boxSizing: 'border-box' }}>
-                                <div style={{ transform: 'scale(0.88)', transformOrigin: 'left top', width: '860px' }}>
+                            <div style={{ width: '774px', height: '615px', flex: 'none', display: 'flex', alignItems: 'flex-start', overflow: 'visible', paddingTop: '0px', boxSizing: 'border-box' }}>
+                                <div style={{ transform: 'scale(0.9)', transformOrigin: 'left top', width: '860px' }}>
                                     <BettingBoard
                                         bets={currentBets}
                                         onPlaceBet={onPlaceBet}
@@ -1846,6 +1936,13 @@ export const CasinoTable = () => {
                                 padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
                             }}>
                                 💾 GUARDAR
+                            </button>
+                            <button onClick={() => setIsEditMode(false)} style={{
+                                background: '#00bcd4', color: '#001014', border: '2px solid #ffffff',
+                                padding: '10px 22px', borderRadius: '4px', cursor: 'pointer', fontWeight: '900',
+                                boxShadow: '0 0 12px rgba(0, 188, 212, 0.55)'
+                            }}>
+                                MODO NORMAL
                             </button>
                             <input
                                 type="file"
