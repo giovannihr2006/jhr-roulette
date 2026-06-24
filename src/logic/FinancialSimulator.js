@@ -18,6 +18,7 @@ export const useFinancialStore = create(
 
             get balance() {
                 const s = get()
+                if (!s) return 0
                 return s.gameMode === 'REAL' ? s.realCapital : s.demoCapital
             },
 
