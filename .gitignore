@@ -1,0 +1,76 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.vite/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Build outputs and packaged apps
+release/
+out/
+build/
+*.exe
+*.msi
+*.dmg
+*.AppImage
+*.blockmap
+*.asar
+
+# Local previews, archives, and generated backups
+preview_*/
+_backups/
+backups/
+temp_archive/
+ruleta antigravity/
+*.zip
+*.7z
+*.rar
+*.backup.*
+
+# Local agents, vaults, and private runtime state
+.agent/
+.agents/
+SECURITY_VAULT/
+*.local.json
+
+# Python/local tooling
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Capacitor/Android generated artifacts
+android/app/build/
+android/build/
+android/.gradle/
+android/app/src/main/assets/public/
+
+# Generated analysis/runtime data
+data/logs/
+optimized_offsets.json
+src/utils/optimized_offsets.json
+
+# Superseded local Electron entrypoint; use electron/main.cjs
+electron/main.js
+
+# Office/editor lock files
+~$*
+desktop.ini

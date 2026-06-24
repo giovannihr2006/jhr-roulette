@@ -1,0 +1,170 @@
+﻿
+> baryonic-blazar@0.0.0 lint
+> eslint .
+
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\CasinoTable.jsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/purity')
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\Draggable.jsx
+  39:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  37 |     useEffect(() => {
+  38 |         if (initialPos) {
+> 39 |             setPos(initialPos)
+     |             ^^^^^^ Avoid calling setState() directly within an effect
+  40 |         }
+  41 |     }, [initialPos])
+  42 |  react-hooks/set-state-in-effect
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\ProjectionsPanel.jsx
+   61:13  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   59 |
+   60 |         return (
+>  61 |             <div style={{
+      |             ^^^^^^^^^^^^^
+>  62 |                 background: 'rgba(0,0,0,0.8)',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  63 |                 border: '1px solid #444',
+      ÔÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  150 |         )
+  151 |     } catch (e) {
+  152 |         console.error("ProjectionsPanel Error:", e)                                                                                                                                                                                                                                                                                                                                          react-hooks/error-boundaries
+   72:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  70 |                 boxShadow: '0:4px 15px rgba(0,0,0,0.5)'
+  71 |             }}>
+> 72 |                 <h3 style={{
+     |                 ^^^^^^^^^^^^
+> 73 |                     margin: '0:0 10px 0',
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 74 |                     fontSize: '0.9rem',
+     ÔÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 81 |                     Proyecci├│n de Ganancias
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 82 |                 </h3>
+     | ^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  83 |
+  84 |                 {/* HEADER */}
+  85 |                 <div style={{                                                                                                                                                                                                                                                                                                           react-hooks/error-boundaries
+   85:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   83 |
+   84 |                 {/* HEADER */}
+>  85 |                 <div style={{
+      |                 ^^^^^^^^^^^^^
+>  86 |                     display: 'grid',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  87 |                     gridTemplateColumns: '1fr 1.2fr 1fr',
+      ÔÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |                     <div style={{ textAlign: 'right' }}>Inter├®s</div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  102 |
+  103 |                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+  104 |                     {items.map((item) => {                                                                                                                                                                                                                                   react-hooks/error-boundaries
+   98:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   96 |                     letterSpacing: '1px'
+   97 |                 }}>
+>  98 |                     <div>Tiempo</div>
+      |                     ^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+   99 |                     <div style={{ textAlign: 'right' }}>Ganancia</div>
+  100 |                     <div style={{ textAlign: 'right' }}>Inter├®s</div>
+  101 |                 </div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/error-boundaries
+   99:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   97 |                 }}>
+   98 |                     <div>Tiempo</div>
+>  99 |                     <div style={{ textAlign: 'right' }}>Ganancia</div>
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  100 |                     <div style={{ textAlign: 'right' }}>Inter├®s</div>
+  101 |                 </div>
+  102 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/error-boundaries
+  100:21  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+   98 |                     <div>Tiempo</div>
+   99 |                     <div style={{ textAlign: 'right' }}>Ganancia</div>
+> 100 |                     <div style={{ textAlign: 'right' }}>Inter├®s</div>
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  101 |                 </div>
+  102 |
+  103 |                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/error-boundaries
+  103:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  101 |                 </div>
+  102 |
+> 103 |                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |                     {items.map((item) => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 105 |                         // Calculate Interest % relative to Initial Capital
+      ÔÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 137 |                     })}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 138 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  139 |
+  140 |                 <div style={{
+  141 |                     marginTop: '10px',                                                                                                                                                                                          react-hooks/error-boundaries
+  140:17  error  Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+  138 |                 </div>
+  139 |
+> 140 |                 <div style={{
+      |                 ^^^^^^^^^^^^^
+> 141 |                     marginTop: '10px',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |                     fontSize: '0.7rem',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |                     color: '#555',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |                     textAlign: 'center',
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |                     fontStyle: 'italic'
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |                 }}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |                     (R├®cord - Inicial) / Tiempo
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |                 </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  149 |             </div>
+  150 |         )
+  151 |     } catch (e) {  react-hooks/error-boundaries
+
+Ô£û 10 problems (9 errors, 1 warning)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

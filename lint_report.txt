@@ -1,0 +1,262 @@
+﻿
+> baryonic-blazar@0.0.0 lint
+> eslint .
+
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\BettingBoard.jsx
+  44:28  error  Error: Cannot access variable before it is declared
+
+`getCoveredNumbers` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  42 |         if (!onHoverNumbers) return
+  43 |         if (hoveredBet) {
+> 44 |             onHoverNumbers(getCoveredNumbers(hoveredBet))
+     |                            ^^^^^^^^^^^^^^^^^ `getCoveredNumbers` accessed before it is declared
+  45 |         } else {
+  46 |             onHoverNumbers([])
+  47 |         }
+
+   74 |
+   75 |     // Helper: Determine which numbers are covered by a bet ID
+>  76 |     const getCoveredNumbers = (betId) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  77 |         if (!betId) return []
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  78 |
+      ÔÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 114 |         return []
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 115 |     }
+      | ^^^^^^ `getCoveredNumbers` is declared here
+  116 |
+  117 |     const coveredNumbers = React.useMemo(() => getCoveredNumbers(hoveredBet), [hoveredBet])
+  118 |  react-hooks/immutability
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\CasinoTable.jsx
+  117:9   error  Error: Cannot access variable before it is declared
+
+`randomizePhysicsDisplay` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  115 |     // Init Random Physics on Mount
+  116 |     useEffect(() => {
+> 117 |         randomizePhysicsDisplay()
+      |         ^^^^^^^^^^^^^^^^^^^^^^^ `randomizePhysicsDisplay` accessed before it is declared
+  118 |     }, [])
+  119 |
+  120 |     const randomizePhysicsDisplay = () => {
+
+  118 |     }, [])
+  119 |
+> 120 |     const randomizePhysicsDisplay = () => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 121 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 122 |         const pSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+      ÔÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 138 |         })
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 139 |     }
+      | ^^^^^^ `randomizePhysicsDisplay` is declared here
+  140 |
+  141 |     // Spin Logic
+  142 |     const handleSpin = () => {  react-hooks/immutability
+  146:45  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  144 |
+  145 |         // 1. Randomize for this spin
+> 146 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+      |                                             ^^^^^^^^^^^^^ Cannot call impure function
+  147 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+  148 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+  149 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/purity
+  147:46  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  145 |         // 1. Randomize for this spin
+  146 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+> 147 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+      |                                              ^^^^^^^^^^^^^ Cannot call impure function
+  148 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+  149 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+  150 |         const pDirVal = Math.random() > 0.5 ? 1 : -1                                                                                                                                                                                                                                                                                                                                                     react-hooks/purity
+  148:53  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  146 |         const pBall = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)]
+  147 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+> 148 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+      |                                                     ^^^^^^^^^^^^^ Cannot call impure function
+  149 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+  150 |         const pDirVal = Math.random() > 0.5 ? 1 : -1
+  151 |                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/purity
+  149:48  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  147 |         const pBallSpeed = SPEEDS[Math.floor(Math.random() * SPEEDS.length)]
+  148 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+> 149 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+      |                                                ^^^^^^^^^^^^^ Cannot call impure function
+  150 |         const pDirVal = Math.random() > 0.5 ? 1 : -1
+  151 |
+  152 |         const wheelDirName = pDirVal === 1 ? 'Horario' : 'Anti-Horario'                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/purity
+  150:25  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  148 |         const pWheelSpeed = WHEEL_SPEEDS[Math.floor(Math.random() * WHEEL_SPEEDS.length)]
+  149 |         const pStart = START_POINTS[Math.floor(Math.random() * START_POINTS.length)]
+> 150 |         const pDirVal = Math.random() > 0.5 ? 1 : -1
+      |                         ^^^^^^^^^^^^^ Cannot call impure function
+  151 |
+  152 |         const wheelDirName = pDirVal === 1 ? 'Horario' : 'Anti-Horario'
+  153 |         const ballDirName = pDirVal === 1 ? 'Anti-Horario' : 'Horario'                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/purity
+  179:56  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  177 |
+  178 |         // 3. Winner
+> 179 |         const winningNumber = WHEEL_NUMBERS[Math.floor(Math.random() * WHEEL_NUMBERS.length)]
+      |                                                        ^^^^^^^^^^^^^ Cannot call impure function
+  180 |         const winningIndex = WHEEL_NUMBERS.indexOf(winningNumber)
+  181 |
+  182 |         // 4. Deltas                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/purity
+  183:59  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  181 |
+  182 |         // 4. Deltas
+> 183 |         const wheelDelta = pDirVal * ((wheelLaps * 360) + Math.random() * 360)
+      |                                                           ^^^^^^^^^^^^^ Cannot call impure function
+  184 |         const nextWheelRotation = wheelRotation + wheelDelta
+  185 |
+  186 |         const ballDirVal = -pDirVal                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/purity
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\Draggable.jsx
+  43:15  error  'currentLeft' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  44:15  error  'currentTop' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u   no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\components\RouletteWheel.jsx
+  24:29  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `radius`, but the source dependencies were [highlightedNumbers]. Inferred different dependency than source.
+
+  22 |
+  23 |     // GEOMETRY GENERATOR
+> 24 |     const sectors = useMemo(() => {
+     |                             ^^^^^^^
+> 25 |         const angleStep = 360 / 37
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |         const angleRad = (Math.PI * 2) / 37
+     ÔÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |         })
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 64 |     }, [highlightedNumbers])
+     | ^^^^^^ Could not preserve existing manual memoization
+  65 |
+  66 |     return (
+  67 |         <div className="wheel-container">      react-hooks/preserve-manual-memoization
+  24:29  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `center`, but the source dependencies were [highlightedNumbers]. Inferred different dependency than source.
+
+  22 |
+  23 |     // GEOMETRY GENERATOR
+> 24 |     const sectors = useMemo(() => {
+     |                             ^^^^^^^
+> 25 |         const angleStep = 360 / 37
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |         const angleRad = (Math.PI * 2) / 37
+     ÔÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |         })
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 64 |     }, [highlightedNumbers])
+     | ^^^^^^ Could not preserve existing manual memoization
+  65 |
+  66 |     return (
+  67 |         <div className="wheel-container">      react-hooks/preserve-manual-memoization
+  24:29  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `textRadius`, but the source dependencies were [highlightedNumbers]. Inferred different dependency than source.
+
+  22 |
+  23 |     // GEOMETRY GENERATOR
+> 24 |     const sectors = useMemo(() => {
+     |                             ^^^^^^^
+> 25 |         const angleStep = 360 / 37
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |         const angleRad = (Math.PI * 2) / 37
+     ÔÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |         })
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 64 |     }, [highlightedNumbers])
+     | ^^^^^^ Could not preserve existing manual memoization
+  65 |
+  66 |     return (
+  67 |         <div className="wheel-container">  react-hooks/preserve-manual-memoization
+  26:15  error    'angleRad' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  64:8   warning  React Hook useMemo has missing dependencies: 'center', 'radius', and 'textRadius'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\logic\FinancialSimulator.js
+  2:10  error  'useGenesisStore' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\logic\StatTracker.js
+  11:44  error  'get' is defined but never used  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\BalanceGraph.jsx
+  10:11  error  'currentCapital' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  11:11  error  'netProfit' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u       no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\ControlPanel.jsx
+   2:23  error  'folder' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+   9:13  error  'finance' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   9:22  error  'physics' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   9:31  error  'strategy' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   9:41  error  'targets' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   9:99  error  'setEnsayo' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  17:11  error  'uiValues' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  56:36  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  54 |     useControls('Control Manual (Debug)', {
+  55 |         'Girar (Random y $)': button(() => {
+> 56 |             const num = Math.floor(Math.random() * 37)
+     |                                    ^^^^^^^^^^^^^ Cannot call impure function
+  57 |             addResult(num)
+  58 |
+  59 |             // Simulaci├│n Financiera Simple para testing         react-hooks/purity
+  61:25  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  59 |             // Simulaci├│n Financiera Simple para testing
+  60 |             // 50/50 chance de ganar 1 fichas o perder 1
+> 61 |             const win = Math.random() > 0.5
+     |                         ^^^^^^^^^^^^^ Cannot call impure function
+  62 |             const delta = win ? 3500 : -100
+  63 |             registerSpin(delta)
+  64 |         }),  react-hooks/purity
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\ErrorBoundary.jsx
+  9:37  error  'error' is defined but never used  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\FinancialHUD.jsx
+  8:64  error  'registerSpin' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\GIOVANNIHR\.gemini\antigravity\playground\baryonic-blazar\src\ui\StatsHUD.jsx
+  35:13  error  'strategy' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+Ô£û 32 problems (31 errors, 1 warning)
+

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHR Manual: Glosario y Estrategia 1</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #f4f4f9;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 60px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1a237e;
+            text-transform: uppercase;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #303f9f;
+            margin-top: 40px;
+            border-left: 5px solid #303f9f;
+            padding-left: 15px;
+        }
+
+        .term-box {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .term-title {
+            font-weight: bold;
+            color: #d32f2f;
+            font-size: 1.1em;
+        }
+
+        .term-def {
+            margin-top: 5px;
+            text-align: justify;
+        }
+
+        .strategy-box {
+            background: #e8eaf6;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>GHR Manual: Fundamentos</h1>
+        <p>Documento de Referencia Técnica. Versión Web Local.</p>
+
+        <!-- GLOSARIO -->
+        <h2>1. GLOSARIO TÉCNICO (TOP 10 DEFINICIONES)</h2>
+
+        <div class="term-box">
+            <div class="term-title">1. CISNE NEGRO (Positive Black Swan)</div>
+            <div class="term-def">Evento de bajísima probabilidad pero impacto infinito positivo. En GHR, diseñamos
+                estrategias (como la Matriz) que pierden poco muchas veces, pero ganan masivamente cuando ocurre una
+                "alineación perfecta" (ej: Pleno repetido). Lo opuesto a la Martingala.</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">2. COHERENCIA DE PARIDAD</div>
+            <div class="term-def">Estado de armonía física y matemática. Ocurre cuando un número rojo es impar, o un
+                número negro es par. La Ruleta Europea tiene zonas "coherentes" (1-10, 19-28) y zonas "rotas" (11-18).
+                La Estrategia 1 solo ataca zonas coherentes.</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">3. DENSIDAD DE COLUMNA</div>
+            <div class="term-def">Desequilibrio estructural del paño. La Columna 3 tiene 8 Rojos y 4 Negros. La Columna
+                2 tiene 4 Rojos y 8 Negros. Apostar al Rojo en la Columna 2 es matemáticamente ineficiente. GHR explota
+                esto apostando fuerte a la Columna 3.</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">4. ROI (Retorno de Inversión)</div>
+            <div class="term-def">La única métrica que importa. Fórmula: <code>(Ganancia - Costo) / Costo * 100</code>.
+                Un ROI de 100% significa doblar tu dinero. GHR busca apuestas con ROI potencial de >300% (Plenos).</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">5. ESPERANZA MATEMÁTICA (EV)</div>
+            <div class="term-def">El valor promedio esperado. En una ruleta ideal es -2.7%. GHR busca "bolsas de EV
+                positivo" temporales basadas en imperfecciones físicas (Bias) o sesgos del dealer (Signature).</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">6. VARIANZA (Volatilidad)</div>
+            <div class="term-def">La "montaña rusa" de resultados. Una estrategia de baja varianza gana poco a poco
+                (Rojo/Negro). Una de alta varianza (GHR) pierde, pierde, pierde, y luego gana ENORME. Abrazamos la
+                varianza, no le tememos.</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">7. BANKROLL (Gestión de Capital)</div>
+            <div class="term-def">Tu munición. No es dinero, son "unidades de disparo". La regla GHR es tener 200
+                unidades para soportar la varianza de estrategias de Pleno (Tier 1).</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">8. TILT (Factor Psicológico)</div>
+            <div class="term-def">Estado mental "inclinado" por frustración. La causa #1 de pérdida no es la matemática,
+                es el Tilt. Nuestras estrategias son mecánicas para eliminar la emoción.</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">9. SESGO MECÁNICO (Wheel Bias)</div>
+            <div class="term-def">Desviación física. Un traste desgastado, una mesa desnivelada. Si el número 0 sale 3
+                veces en 20 giros, asumimos Sesgo, no suerte.</div>
+        </div>
+
+        <div class="term-box">
+            <div class="term-title">10. FALACIA DEL JUGADOR</div>
+            <div class="term-def">Creer que "como ha salido mucho Rojo, ahora toca Negro". Falso. La ruleta no tiene
+                memoria (independencia de eventos). GHR juega con la tendencia, nunca contra ella.</div>
+        </div>
+
+        <hr>
+
+        <!-- ESTRATEGIA 1 -->
+        <h2>2. ESTRATEGIA #1: LA MATRIZ DE PARIDAD</h2>
+        <div class="strategy-box">
+            <h3 style="margin-top:0;">Concepto Maestro</h3>
+            <p>La estrategia más pura del sistema. Intersecta los <strong>Cuadrados Perfectos</strong> ($1^2, 2^2,
+                3^2...$) con la <strong>Coherencia de Paridad</strong>.</p>
+            <p><strong>Ejecución:</strong>
+                <br>1. Apuesta 5 fichas al <strong>1</strong> (Rojo/Impar/Cuadrado).
+                <br>2. Apuesta 5 fichas al <strong>25</strong> (Rojo/Impar/Cuadrado).
+                <br>3. Cobertura en caballos <strong>19/22</strong> y <strong>6/9</strong>.
+            </p>
+            <p><strong>Puntuación Rúbrica:</strong> 374/400 (Rango SSS).</p>
+        </div>
+
+    </div>
+</body>
+
+</html>
