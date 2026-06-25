@@ -124,6 +124,7 @@ import {
 export const CasinoTable = () => {
     const fileInputRef = useRef(null)
     const autoPlaySpinInFlightRef = useRef(false)
+    const timerAutoSpinQueuedRef = useRef(false)
     const addToast = useToastStore(state => state.addToast)
     // Rotation State
     // Game State (Refactored to Hook)
@@ -511,6 +512,7 @@ export const CasinoTable = () => {
         handleBatchBets,
         handleRepeat,
         handleDouble,
+        handleRepeatDouble,
         handleUndo,
         handleClear,
         handleNeighborBet // NEW
@@ -570,6 +572,29 @@ export const CasinoTable = () => {
         addToast("Programa de jugadas detenido", "info")
     }
 
+    const handleTimerComplete = React.useCallback(() => {
+        if (timerAutoSpinQueuedRef.current || isSpinning) return
+
+        const hasCurrentBets = Object.keys(currentBets).length > 0
+        const hasLastBets = Object.keys(lastBets).length > 0
+        let prepared = false
+
+        if (hasCurrentBets) {
+            prepared = handleDouble()
+        } else if (hasLastBets) {
+            prepared = handleRepeatDouble()
+        } else {
+            addToast("Temporizador detenido: no hay apuesta para repetir", "error")
+        }
+
+        if (prepared) {
+            timerAutoSpinQueuedRef.current = true
+        } else {
+            setTimerMode(false)
+            setTimeLeft(timerDuration)
+        }
+    }, [isSpinning, currentBets, lastBets, handleDouble, handleRepeatDouble, addToast, timerDuration])
+
     // --- TIME BAR LOGIC (Moved here to access hooks) ---
     useEffect(() => {
         let interval = null
@@ -586,12 +611,19 @@ export const CasinoTable = () => {
                 })
             }, 1000)
         } else if (timeLeft === 0 && timerMode && !isSpinning) {
-            // RELEASE THE KRAKEN (SPIN)
-            handleSpin()
+            handleTimerComplete()
         }
 
         return () => clearInterval(interval)
-    }, [timerMode, isSpinning, timeLeft, handleSpin])
+    }, [timerMode, isSpinning, timeLeft, handleTimerComplete])
+
+    useEffect(() => {
+        if (!timerAutoSpinQueuedRef.current || isSpinning || !timerMode) return
+        if (Object.keys(currentBets).length === 0) return
+
+        timerAutoSpinQueuedRef.current = false
+        handleSpin()
+    }, [currentBets, isSpinning, timerMode, handleSpin])
 
     // RESET TIMER ON SPIN END
     useEffect(() => {
