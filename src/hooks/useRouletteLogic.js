@@ -158,9 +158,7 @@ export const useRouletteLogic = ({
 
     const handleDouble = () => {
         if (isSpinning || Object.keys(currentBets).length === 0) return false
-        const cost = Object.values(currentBets).reduce((sum, amount) => sum + amount, 0)
-        if (cost <= 0) return false
-
+        const cost = currentRoundBet // Amount to match
         const result = placeBet(cost, 'BATCH')
 
         if (!result.success) {
