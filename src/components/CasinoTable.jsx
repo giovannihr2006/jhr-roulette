@@ -125,7 +125,6 @@ export const CasinoTable = () => {
     const fileInputRef = useRef(null)
     const autoPlaySpinInFlightRef = useRef(false)
     const timerAutoSpinQueuedRef = useRef(false)
-    const programmedAutoSpinQueuedRef = useRef(false)
     const addToast = useToastStore(state => state.addToast)
     // Rotation State
     // Game State (Refactored to Hook)
@@ -568,7 +567,6 @@ export const CasinoTable = () => {
 
     const stopProgrammedPlays = () => {
         autoPlaySpinInFlightRef.current = false
-        programmedAutoSpinQueuedRef.current = false
         setAutoPlayWaitingForBets(false)
         setAutoPlayCount(0)
         addToast("Programa de jugadas detenido", "info")
@@ -842,48 +840,38 @@ export const CasinoTable = () => {
     useEffect(() => {
         if (!isSpinning && autoPlayCount > 0) {
             const timer = setTimeout(() => {
-                if (programmedAutoSpinQueuedRef.current) return
-
-                const hasCurrentBets = Object.keys(currentBets).length > 0
-                const hasLastBets = Object.keys(lastBets).length > 0
-                let prepared = false
-
-                if (hasCurrentBets) {
-                    prepared = handleDouble()
-                } else if (hasLastBets) {
-                    prepared = handleRepeatDouble()
-                } else {
+                // 1. Repeat Bets
+                if (Object.keys(currentBets).length === 0 && Object.keys(lastBets).length > 0) {
+                    const repeated = handleRepeat()
+                    if (!repeated) {
+                        setAutoPlayWaitingForBets(false)
+                        setAutoPlayCount(0)
+                    } else {
+                        setAutoPlayWaitingForBets(true)
+                    }
+                    return
+                } else if (Object.keys(currentBets).length === 0) {
+                    // No bets to repeat and empty table? Stop.
                     addToast("Autoplay detenido: No hay apuestas para repetir", "error")
-                }
-
-                if (!prepared) {
                     setAutoPlayWaitingForBets(false)
                     setAutoPlayCount(0)
                     return
                 }
 
-                programmedAutoSpinQueuedRef.current = true
-                setAutoPlayWaitingForBets(true)
+                // 2. Spin
+                // Ensure we call spin only if valid
+                setAutoPlayWaitingForBets(false)
+                autoPlaySpinInFlightRef.current = true
+                handleSpin()
 
-            }, autoPlayWaitingForBets ? 150 : 2000)
+            }, autoPlayWaitingForBets ? 150 : 2000) // Wait one state pass after repeating bets.
             return () => clearTimeout(timer)
         }
         if (autoPlayCount <= 0) {
             autoPlaySpinInFlightRef.current = false
-            programmedAutoSpinQueuedRef.current = false
             setAutoPlayWaitingForBets(false)
         }
-    }, [isSpinning, autoPlayCount, currentBets, lastBets, autoPlayWaitingForBets, handleDouble, handleRepeatDouble, addToast])
-
-    useEffect(() => {
-        if (!programmedAutoSpinQueuedRef.current || isSpinning || autoPlayCount <= 0) return
-        if (Object.keys(currentBets).length === 0) return
-
-        programmedAutoSpinQueuedRef.current = false
-        setAutoPlayWaitingForBets(false)
-        autoPlaySpinInFlightRef.current = true
-        handleSpin()
-    }, [currentBets, isSpinning, autoPlayCount, handleSpin])
+    }, [isSpinning, autoPlayCount, currentBets, lastBets, autoPlayWaitingForBets, handleRepeat, handleSpin, addToast])
 
 
 
