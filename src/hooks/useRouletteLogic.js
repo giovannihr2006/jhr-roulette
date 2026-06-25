@@ -157,13 +157,13 @@ export const useRouletteLogic = ({
     }
 
     const handleDouble = () => {
-        if (isSpinning || Object.keys(currentBets).length === 0) return false
+        if (isSpinning || Object.keys(currentBets).length === 0) return
         const cost = currentRoundBet // Amount to match
         const result = placeBet(cost, 'BATCH')
 
         if (!result.success) {
             if (result.error === 'INSUFFICIENT_FUNDS') addToast("Saldo insuficiente para doblar", 'error')
-            return false
+            return
         }
 
         const addedBets = { ...currentBets }
@@ -174,33 +174,6 @@ export const useRouletteLogic = ({
         })
         setBetHistory(prev => [...prev, { bets: addedBets, totalCost: cost }])
         soundManager.playChip()
-        return true
-    }
-
-    const handleRepeatDouble = () => {
-        if (isSpinning || Object.keys(lastBets).length === 0) return false
-
-        const doubledBets = Object.fromEntries(
-            Object.entries(lastBets).map(([id, amt]) => [id, amt * 2])
-        )
-        const cost = Object.values(doubledBets).reduce((a, b) => a + b, 0)
-        const result = placeBet(cost, 'BATCH')
-
-        if (!result.success) {
-            if (result.error === 'INSUFFICIENT_FUNDS') addToast("Saldo insuficiente para repetir y doblar", 'error')
-            return false
-        }
-
-        setCurrentBets(prev => {
-            const next = { ...prev }
-            Object.entries(doubledBets).forEach(([id, amt]) => {
-                next[id] = (next[id] || 0) + amt
-            })
-            return next
-        })
-        setBetHistory(prev => [...prev, { bets: doubledBets, totalCost: cost }])
-        soundManager.playChip()
-        return true
     }
 
     const handleUndo = () => {
@@ -243,7 +216,6 @@ export const useRouletteLogic = ({
         handleBatchBets,
         handleRepeat,
         handleDouble,
-        handleRepeatDouble,
         handleUndo,
         handleClear,
         handleNeighborBet // NEW
