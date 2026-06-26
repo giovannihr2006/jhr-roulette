@@ -7,6 +7,7 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
+    ReferenceLine,
     ResponsiveContainer
 } from 'recharts'
 
@@ -139,6 +140,31 @@ export const ProfitGraph = ({
         { key: 'year', label: 'Año', color: '#f44336', width: 2 }
     ]
 
+    const referenceLevels = useMemo(() => {
+        const activeKeys = LINES.filter(line => visibleLines[line.key]).map(line => line.key)
+        const values = chartData.flatMap(point =>
+            activeKeys
+                .map(key => point[key])
+                .filter(value => Number.isFinite(value))
+        )
+
+        if (values.length === 0) return []
+
+        let min = Math.min(...values)
+        let max = Math.max(...values)
+
+        if (min === max) {
+            const padding = Math.max(Math.abs(max) * 0.05, 1)
+            min -= padding
+            max += padding
+        }
+
+        const lineCount = isWidgetMode ? 5 : 7
+        const step = (max - min) / (lineCount - 1)
+
+        return Array.from({ length: lineCount }, (_, index) => min + step * index)
+    }, [chartData, visibleLines, isWidgetMode])
+
     return (
         <div style={{
             width: '100%',
@@ -196,6 +222,17 @@ export const ProfitGraph = ({
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                        {referenceLevels.map((level, index) => (
+                            <ReferenceLine
+                                key={`reference-${index}-${level}`}
+                                y={level}
+                                stroke={index === 0 || index === referenceLevels.length - 1 ? '#d4af37' : '#8a8a8a'}
+                                strokeOpacity={index === 0 || index === referenceLevels.length - 1 ? 0.35 : 0.22}
+                                strokeWidth={index === 0 || index === referenceLevels.length - 1 ? 1.2 : 1}
+                                strokeDasharray={index === 0 || index === referenceLevels.length - 1 ? '6 4' : '3 5'}
+                                ifOverflow="extendDomain"
+                            />
+                        ))}
                         <XAxis
                             dataKey="index"
                             stroke="#666"
