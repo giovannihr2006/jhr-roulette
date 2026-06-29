@@ -285,9 +285,9 @@ const ProjectionsPanel = ({ viewCurrency = 'COL', currentBets = {}, onExpand }) 
                             {activeMins < 60 ? `${activeMins.toFixed(1)}m` : `${(activeMins / 60).toFixed(1)}h`}
                         </div>
                     </div>
-                    <div style={{ background: '#222', padding: '5px', borderRadius: '4px', textAlign: 'center', border: isTrendPositive ? '1px solid #4f4' : '1px solid #f44' }}>
-                        <div style={{ fontSize: '0.6rem', color: '#888' }}>TENDENCIA (50)</div>
-                        <div style={{ fontSize: '0.9rem', color: isTrendPositive ? '#4f4' : '#f44', fontWeight: 'bold' }}>
+                    <div style={{ background: '#222', padding: '7px 5px', borderRadius: '4px', textAlign: 'center', border: isTrendPositive ? '1px solid #4f4' : '1px solid #f44' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#aaa', fontWeight: 'bold', letterSpacing: '0.2px' }}>TENDENCIA (50)</div>
+                        <div style={{ fontSize: '1.15rem', color: isTrendPositive ? '#4f4' : '#f44', fontWeight: 'bold', lineHeight: 1.15 }}>
                             {trendProfit > 0 ? '+' : ''}{formatValueExact(trendProfit)}
                         </div>
                     </div>
